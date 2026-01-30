@@ -52,3 +52,4 @@ export const WeeklyPlanSchema = z.object({
 export type Meal = z.infer<typeof MealSchema>;
 export type DayPlan = z.infer<typeof DayPlanSchema>;
 export type WeeklyPlan = z.infer<typeof WeeklyPlanSchema>;
+export type Macros = z.infer<typeof MacrosSchema>;
