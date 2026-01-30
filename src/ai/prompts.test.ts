@@ -1,0 +1,37 @@
+import { describe, it, expect } from 'vitest';
+import { buildWeeklyPlanPrompt, buildPlanningSystemPrompt } from './prompts';
+import { createDefaultProfile, createDefaultPantry } from '../schemas/defaults';
+
+describe('Planning Prompts', () => {
+  it('builds system prompt with guidelines', () => {
+    const prompt = buildPlanningSystemPrompt();
+    expect(prompt).toContain('meal planner');
+    expect(prompt).toContain('JSON');
+  });
+
+  it('builds weekly plan prompt with context', () => {
+    const profile = createDefaultProfile();
+    const pantry = createDefaultPantry();
+    const prompt = buildWeeklyPlanPrompt(profile, pantry, '2026-W05');
+
+    expect(prompt).toContain('2026-W05');
+    expect(prompt).toContain('1800'); // daily calories
+    expect(prompt).toContain('protein');
+  });
+
+  it('includes pantry items in prompt', () => {
+    const profile = createDefaultProfile();
+    const pantry = createDefaultPantry();
+    pantry.items.push({
+      name: 'chicken breast',
+      quantity: 2,
+      unit: 'lbs',
+      addedDate: '2026-01-27',
+      expirationDate: '2026-02-01',
+    });
+
+    const prompt = buildWeeklyPlanPrompt(profile, pantry, '2026-W05');
+    expect(prompt).toContain('chicken breast');
+    expect(prompt).toContain('expir');
+  });
+});
