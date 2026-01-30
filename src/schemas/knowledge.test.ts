@@ -1,41 +1,41 @@
 import { describe, it, expect } from 'vitest';
-import { IngredientsKnowledgeSchema, MealsKnowledgeSchema } from './knowledge';
+import { IngredientEntrySchema } from './knowledge';
 
 describe('Knowledge Schemas', () => {
-  it('validates ingredient knowledge entry', () => {
-    const ingredients = {
-      'chicken breast': {
-        pricePerUnit: 4.5,
-        unit: 'lb',
-        caloriesPer100g: 165,
+  describe('IngredientEntrySchema with confidence', () => {
+    it('validates ingredient with usda confidence', () => {
+      const ingredient = {
+        name: 'chicken breast',
+        pricePerUnit: 10,
+        unit: 'kg',
+        unitWeightGrams: 1000,
         proteinPer100g: 31,
         carbsPer100g: 0,
         fatPer100g: 3.6,
         fiberPer100g: 0,
-        lastUpdated: '2026-01-20',
-        source: 'manual',
-      },
-    };
+        confidence: 'usda',
+        usdaFdcId: 171477,
+        lastUpdated: '2026-01-30',
+      };
+      const result = IngredientEntrySchema.safeParse(ingredient);
+      expect(result.success).toBe(true);
+    });
 
-    const result = IngredientsKnowledgeSchema.safeParse(ingredients);
-    expect(result.success).toBe(true);
-  });
-
-  it('validates meal knowledge entry', () => {
-    const meals = {
-      'chipotle burrito bowl': {
-        estimatedCalories: 800,
-        estimatedProtein: 45,
-        estimatedCarbs: 70,
-        estimatedFat: 35,
-        estimatedFiber: 10,
-        estimatedCost: 12,
-        lastUpdated: '2026-01-15',
-        source: 'ai-estimate',
-      },
-    };
-
-    const result = MealsKnowledgeSchema.safeParse(meals);
-    expect(result.success).toBe(true);
+    it('validates ingredient with ai-estimate confidence', () => {
+      const ingredient = {
+        name: 'homemade granola',
+        pricePerUnit: 8,
+        unit: 'kg',
+        unitWeightGrams: 1000,
+        proteinPer100g: 10,
+        carbsPer100g: 65,
+        fatPer100g: 18,
+        fiberPer100g: 7,
+        confidence: 'ai-estimate',
+        lastUpdated: '2026-01-30',
+      };
+      const result = IngredientEntrySchema.safeParse(ingredient);
+      expect(result.success).toBe(true);
+    });
   });
 });
