@@ -33,7 +33,7 @@ export default tseslint.config(
           allowTypedFunctionExpressions: true,
         },
       ],
-      'no-console': 'warn',
+      'no-console': 'off',
       eqeqeq: ['error', 'always'],
     },
   },
