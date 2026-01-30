@@ -12,8 +12,13 @@ describe('ProfileSchema', () => {
         ],
       },
       goals: {
-        dailyCalories: 2000,
-        macros: { protein: 150, carbs: 200, fat: 70 },
+        dailyCalories: { min: 1800, max: 2200 },
+        macros: {
+          protein: { min: 120, max: 160 },
+          carbs: { min: 180, max: 240 },
+          fat: { min: 60, max: 80 },
+          fiber: { min: 25, max: 40 },
+        },
         weeklyBudget: 150,
       },
       dietary: {
@@ -22,7 +27,15 @@ describe('ProfileSchema', () => {
       },
       preferences: {
         cuisines: ['thai', 'mexican', 'mediterranean'],
-        maxPrepTime: { weekday: 30, weekend: 60 },
+        maxPrepTime: {
+          monday: 30,
+          tuesday: 30,
+          wednesday: 30,
+          thursday: 30,
+          friday: 30,
+          saturday: 60,
+          sunday: 60,
+        },
         complexityTolerance: 'medium',
       },
       constraints: {

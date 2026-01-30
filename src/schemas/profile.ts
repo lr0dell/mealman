@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+export const RangeSchema = z.object({
+  min: z.number().nonnegative(),
+  max: z.number().nonnegative(),
+}).refine(v => v.max >= v.min, {
+  message: 'max must be >= min',
+});
+
 export const HouseholdMemberSchema = z.object({
   name: z.string(),
   dietaryRestrictions: z.array(z.string()),
@@ -11,13 +18,14 @@ export const HouseholdSchema = z.object({
 });
 
 export const MacrosSchema = z.object({
-  protein: z.number().nonnegative(),
-  carbs: z.number().nonnegative(),
-  fat: z.number().nonnegative(),
+  protein: RangeSchema,
+  carbs: RangeSchema,
+  fat: RangeSchema,
+  fiber: RangeSchema,
 });
 
 export const GoalsSchema = z.object({
-  dailyCalories: z.number().positive(),
+  dailyCalories: RangeSchema,
   macros: MacrosSchema,
   weeklyBudget: z.number().positive(),
 });
@@ -28,8 +36,13 @@ export const DietarySchema = z.object({
 });
 
 export const PrepTimeSchema = z.object({
-  weekday: z.number().positive(),
-  weekend: z.number().positive(),
+  monday: z.number().positive(),
+  tuesday: z.number().positive(),
+  wednesday: z.number().positive(),
+  thursday: z.number().positive(),
+  friday: z.number().positive(),
+  saturday: z.number().positive(),
+  sunday: z.number().positive(),
 });
 
 export const PreferencesSchema = z.object({
