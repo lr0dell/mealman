@@ -12,7 +12,9 @@ import {
   generateWeeklyPlan,
   formatWeeklyPlan,
   getCurrentWeek,
-  formatProfile
+  formatProfile,
+  generateShoppingList, 
+  formatShoppingList
 } from '../commands';
 
 function getDataDir(): string {
@@ -142,6 +144,30 @@ export function createProgram(): Command {
     .description('Interactive profile update')
     .action(() => {
       console.log('Profile update - coming in Phase 7');
+    });
+
+const shop = program
+  .command('shop')
+  .description('Shopping list management');
+
+  shop
+    .command('list')
+    .description('Generate shopping list for current plan')
+    .action(async () => {
+    const store = new DataStore(getDataDir());
+    await store.init();
+
+    const week = getCurrentWeek();
+    const plan = await store.getWeeklyPlan(week);
+
+    if (!plan) {
+        console.log(`No plan found for ${week}. Run 'meal plan week' first.`);
+        return;
+    }
+
+    const pantry = await store.getPantry();
+    const list = generateShoppingList(plan, pantry);
+    console.log(formatShoppingList(list));
     });
 
   return program;
