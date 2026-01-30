@@ -1,3 +1,6 @@
 #!/usr/bin/env node
 
-console.log('AI Meal Planner');
+import { createProgram } from './cli/index';
+
+const program = createProgram();
+program.parse();
