@@ -6,7 +6,10 @@ export interface ShoppingItem {
   unit: string;
 }
 
-export function generateShoppingList(plan: WeeklyPlan, pantry: Pantry): ShoppingItem[] {
+export function generateShoppingList(
+  plan: WeeklyPlan,
+  pantry: Pantry
+): ShoppingItem[] {
   // Aggregate all ingredients from meals
   const ingredients = new Map<string, ShoppingItem>();
 
@@ -44,7 +47,9 @@ export function generateShoppingList(plan: WeeklyPlan, pantry: Pantry): Shopping
     }
   }
 
-  return Array.from(ingredients.values()).sort((a, b) => a.name.localeCompare(b.name));
+  return Array.from(ingredients.values()).sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
 }
 
 export function formatShoppingList(items: ShoppingItem[]): string {

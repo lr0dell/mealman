@@ -14,7 +14,7 @@ import {
   getCurrentWeek,
   formatProfile,
   generateShoppingList,
-  formatShoppingList
+  formatShoppingList,
 } from '../commands/index.js';
 
 function getDataDir(): string {
@@ -48,12 +48,25 @@ export function createProgram(): Command {
     .command('add <name> <quantity> <unit>')
     .description('Add item to pantry')
     .option('-e, --expires <date>', 'Expiration date (YYYY-MM-DD)')
-    .action(async (name: string, quantity: string, unit: string, options: { expires?: string }) => {
-      const store = new DataStore(getDataDir());
-      await store.init();
-      await addPantryItem(store, name, parseFloat(quantity), unit, options.expires);
-      console.log(`Added ${quantity} ${unit} of ${name}`);
-    });
+    .action(
+      async (
+        name: string,
+        quantity: string,
+        unit: string,
+        options: { expires?: string }
+      ) => {
+        const store = new DataStore(getDataDir());
+        await store.init();
+        await addPantryItem(
+          store,
+          name,
+          parseFloat(quantity),
+          unit,
+          options.expires
+        );
+        console.log(`Added ${quantity} ${unit} of ${name}`);
+      }
+    );
 
   pantry
     .command('remove <item>')
@@ -85,13 +98,14 @@ export function createProgram(): Command {
     .description('Generate and manage meal plans');
 
   plan
-    plan
     .command('week')
     .description('Generate next week plan')
     .action(async () => {
       const apiKey = process.env.ANTHROPIC_API_KEY;
       if (!apiKey) {
-        console.error('Error: ANTHROPIC_API_KEY environment variable is required');
+        console.error(
+          'Error: ANTHROPIC_API_KEY environment variable is required'
+        );
         process.exit(1);
       }
 
@@ -146,28 +160,26 @@ export function createProgram(): Command {
       console.log('Profile update - coming in Phase 7');
     });
 
-const shop = program
-  .command('shop')
-  .description('Shopping list management');
+  const shop = program.command('shop').description('Shopping list management');
 
   shop
     .command('list')
     .description('Generate shopping list for current plan')
     .action(async () => {
-    const store = new DataStore(getDataDir());
-    await store.init();
+      const store = new DataStore(getDataDir());
+      await store.init();
 
-    const week = getCurrentWeek();
-    const plan = await store.getWeeklyPlan(week);
+      const week = getCurrentWeek();
+      const plan = await store.getWeeklyPlan(week);
 
-    if (!plan) {
+      if (!plan) {
         console.log(`No plan found for ${week}. Run 'meal plan week' first.`);
         return;
-    }
+      }
 
-    const pantry = await store.getPantry();
-    const list = generateShoppingList(plan, pantry);
-    console.log(formatShoppingList(list));
+      const pantry = await store.getPantry();
+      const list = generateShoppingList(plan, pantry);
+      console.log(formatShoppingList(list));
     });
 
   return program;

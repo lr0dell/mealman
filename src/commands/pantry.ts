@@ -44,7 +44,9 @@ export function formatExpiringList(items: PantryItem[]): string {
 
   const lines = ['Items Expiring Soon:', ''];
   for (const item of items) {
-    lines.push(`  - ${item.name}: ${item.quantity} ${item.unit} (expires: ${item.expirationDate})`);
+    lines.push(
+      `  - ${item.name}: ${item.quantity} ${item.unit} (expires: ${item.expirationDate})`
+    );
   }
   return lines.join('\n');
 }
@@ -61,13 +63,17 @@ export async function addPantryItem(
 
   // Check if item already exists (same name and unit)
   const existing = pantry.items.find(
-    (item) => item.name.toLowerCase() === name.toLowerCase() && item.unit === unit
+    (item) =>
+      item.name.toLowerCase() === name.toLowerCase() && item.unit === unit
   );
 
   if (existing) {
     existing.quantity += quantity;
     // Update expiration if new one is sooner
-    if (expirationDate && (!existing.expirationDate || expirationDate < existing.expirationDate)) {
+    if (
+      expirationDate &&
+      (!existing.expirationDate || expirationDate < existing.expirationDate)
+    ) {
       existing.expirationDate = expirationDate;
     }
   } else {
@@ -86,7 +92,10 @@ export async function addPantryItem(
   await store.savePantry(pantry);
 }
 
-export async function removePantryItem(store: DataStore, name: string): Promise<boolean> {
+export async function removePantryItem(
+  store: DataStore,
+  name: string
+): Promise<boolean> {
   const pantry = await store.getPantry();
   const initialLength = pantry.items.length;
 

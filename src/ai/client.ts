@@ -35,10 +35,14 @@ export class AIClient {
     return textContent.text;
   }
 
-  async chatJSON<T>(userMessage: string, options: ChatOptions = {}): Promise<T> {
+  async chatJSON<T>(
+    userMessage: string,
+    options: ChatOptions = {}
+  ): Promise<T> {
     const response = await this.chat(userMessage, {
       ...options,
-      systemPrompt: `${options.systemPrompt || ''}\n\nRespond with valid JSON only. No markdown code blocks.`.trim(),
+      systemPrompt:
+        `${options.systemPrompt || ''}\n\nRespond with valid JSON only. No markdown code blocks.`.trim(),
     });
 
     // Extract JSON if wrapped in code blocks

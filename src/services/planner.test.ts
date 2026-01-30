@@ -68,6 +68,8 @@ describe('MealPlanner', () => {
     const profile = createDefaultProfile();
     const pantry = createDefaultPantry();
 
-    await expect(planner.generateWeeklyPlan(profile, pantry, '2026-W05')).rejects.toThrow();
+    await expect(
+      planner.generateWeeklyPlan(profile, pantry, '2026-W05')
+    ).rejects.toThrow();
   });
 });

@@ -4,12 +4,14 @@ import { join } from 'node:path';
 import {
   ProfileSchema,
   PantrySchema,
-  IngredientsKnowledgeSchema,
   WeeklyPlanSchema,
   type Profile,
   type Pantry,
 } from '../schemas/index.js';
-import { createDefaultProfile, createDefaultPantry } from '../schemas/defaults.js';
+import {
+  createDefaultProfile,
+  createDefaultPantry,
+} from '../schemas/defaults.js';
 
 export class DataStore {
   private dataDir: string;
@@ -46,7 +48,7 @@ export class DataStore {
 
   async getProfile(): Promise<Profile> {
     const content = await readFile(this.profilePath, 'utf-8');
-    const data = JSON.parse(content);
+    const data = JSON.parse(content) as unknown;
     return ProfileSchema.parse(data);
   }
 
@@ -57,7 +59,7 @@ export class DataStore {
 
   async getPantry(): Promise<Pantry> {
     const content = await readFile(this.pantryPath, 'utf-8');
-    const data = JSON.parse(content);
+    const data = JSON.parse(content) as unknown;
     return PantrySchema.parse(data);
   }
 
@@ -72,7 +74,7 @@ export class DataStore {
       return null;
     }
     const content = await readFile(path, 'utf-8');
-    const data = JSON.parse(content);
+    const data = JSON.parse(content) as unknown;
     return WeeklyPlanSchema.parse(data);
   }
 

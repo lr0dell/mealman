@@ -1,11 +1,13 @@
 import { z } from 'zod';
 
-export const RangeSchema = z.object({
-  min: z.number().nonnegative(),
-  max: z.number().nonnegative(),
-}).refine(v => v.max >= v.min, {
-  message: 'max must be >= min',
-});
+export const RangeSchema = z
+  .object({
+    min: z.number().nonnegative(),
+    max: z.number().nonnegative(),
+  })
+  .refine((v) => v.max >= v.min, {
+    message: 'max must be >= min',
+  });
 
 export const HouseholdMemberSchema = z.object({
   name: z.string(),

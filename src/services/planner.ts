@@ -1,5 +1,14 @@
-import { AIClient, buildPlanningSystemPrompt, buildWeeklyPlanPrompt } from '../ai/index.js';
-import { WeeklyPlanSchema, type WeeklyPlan, type Profile, type Pantry } from '../schemas/index.js';
+import {
+  AIClient,
+  buildPlanningSystemPrompt,
+  buildWeeklyPlanPrompt,
+} from '../ai/index.js';
+import {
+  WeeklyPlanSchema,
+  type WeeklyPlan,
+  type Profile,
+  type Pantry,
+} from '../schemas/index.js';
 
 export class MealPlanner {
   private client: AIClient;

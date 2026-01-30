@@ -2,7 +2,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { DataStore } from '../data';
-import { listPantry, formatPantryList, addPantryItem, removePantryItem } from './pantry';
+import {
+  listPantry,
+  formatPantryList,
+  addPantryItem,
+  removePantryItem,
+} from './pantry';
 
 describe('Pantry Commands', () => {
   const testDir = join(process.cwd(), 'test-data-pantry');
@@ -63,31 +68,31 @@ describe('Pantry Commands', () => {
       expect(output).toContain('1 gallon');
     });
   });
-  
+
   describe('addPantryItem', () => {
     it('adds a simple item', async () => {
-        await addPantryItem(store, 'eggs', 12, 'count');
+      await addPantryItem(store, 'eggs', 12, 'count');
 
-        const items = await listPantry(store);
-        expect(items).toHaveLength(1);
-        expect(items[0].name).toBe('eggs');
-        expect(items[0].quantity).toBe(12);
+      const items = await listPantry(store);
+      expect(items).toHaveLength(1);
+      expect(items[0].name).toBe('eggs');
+      expect(items[0].quantity).toBe(12);
     });
 
     it('adds item with expiration', async () => {
-        await addPantryItem(store, 'chicken breast', 2, 'lbs', '2026-02-01');
+      await addPantryItem(store, 'chicken breast', 2, 'lbs', '2026-02-01');
 
-        const items = await listPantry(store);
-        expect(items[0].expirationDate).toBe('2026-02-01');
+      const items = await listPantry(store);
+      expect(items[0].expirationDate).toBe('2026-02-01');
     });
 
     it('updates quantity of existing item', async () => {
-        await addPantryItem(store, 'eggs', 12, 'count');
-        await addPantryItem(store, 'eggs', 6, 'count');
+      await addPantryItem(store, 'eggs', 12, 'count');
+      await addPantryItem(store, 'eggs', 6, 'count');
 
-        const items = await listPantry(store);
-        expect(items).toHaveLength(1);
-        expect(items[0].quantity).toBe(18);
+      const items = await listPantry(store);
+      expect(items).toHaveLength(1);
+      expect(items[0].quantity).toBe(18);
     });
   });
 
@@ -114,4 +119,3 @@ describe('Pantry Commands', () => {
     });
   });
 });
-

@@ -62,7 +62,12 @@ describe('Shopping Commands', () => {
     it('subtracts pantry items', () => {
       const pantry: Pantry = {
         items: [
-          { name: 'chicken breast', quantity: 0.5, unit: 'lb', addedDate: '2026-01-27' },
+          {
+            name: 'chicken breast',
+            quantity: 0.5,
+            unit: 'lb',
+            addedDate: '2026-01-27',
+          },
         ],
       };
       const list = generateShoppingList(mockPlan, pantry);
@@ -74,7 +79,12 @@ describe('Shopping Commands', () => {
     it('excludes items fully covered by pantry', () => {
       const pantry: Pantry = {
         items: [
-          { name: 'chicken breast', quantity: 2, unit: 'lb', addedDate: '2026-01-27' },
+          {
+            name: 'chicken breast',
+            quantity: 2,
+            unit: 'lb',
+            addedDate: '2026-01-27',
+          },
         ],
       };
       const list = generateShoppingList(mockPlan, pantry);

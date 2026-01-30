@@ -12,7 +12,10 @@ export const IngredientEntrySchema = z.object({
   source: z.enum(['manual', 'ai-estimate', 'web']),
 });
 
-export const IngredientsKnowledgeSchema = z.record(z.string(), IngredientEntrySchema);
+export const IngredientsKnowledgeSchema = z.record(
+  z.string(),
+  IngredientEntrySchema
+);
 
 export const MealEntrySchema = z.object({
   estimatedCalories: z.number().nonnegative(),
