@@ -17,7 +17,7 @@ export const HouseholdSchema = z.object({
   members: z.array(HouseholdMemberSchema),
 });
 
-export const MacrosSchema = z.object({
+export const MacroGoalsSchema = z.object({
   protein: RangeSchema,
   carbs: RangeSchema,
   fat: RangeSchema,
@@ -26,7 +26,7 @@ export const MacrosSchema = z.object({
 
 export const GoalsSchema = z.object({
   dailyCalories: RangeSchema,
-  macros: MacrosSchema,
+  macros: MacroGoalsSchema,
   weeklyBudget: z.number().positive(),
 });
 
@@ -72,4 +72,3 @@ export const ProfileSchema = z.object({
 });
 
 export type Profile = z.infer<typeof ProfileSchema>;
-export type Macros = z.infer<typeof MacrosSchema>;
