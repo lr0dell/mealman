@@ -12,6 +12,7 @@ import {
   generateWeeklyPlan,
   formatWeeklyPlan,
   getCurrentWeek,
+  formatProfile
 } from '../commands';
 
 function getDataDir(): string {
@@ -129,8 +130,11 @@ export function createProgram(): Command {
   profile
     .command('show')
     .description('Show current profile')
-    .action(() => {
-      console.log('Profile show - coming in Phase 7');
+    .action(async () => {
+      const store = new DataStore(getDataDir());
+      await store.init();
+      const userProfile = await store.getProfile();
+      console.log(formatProfile(userProfile));
     });
 
   profile
