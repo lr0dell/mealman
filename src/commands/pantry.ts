@@ -1,5 +1,5 @@
-import type { DataStore } from '../data';
-import type { PantryItem } from '../schemas';
+import type { DataStore } from '../data/index.js';
+import type { PantryItem } from '../schemas/index.js';
 
 export async function listPantry(store: DataStore): Promise<PantryItem[]> {
   const pantry = await store.getPantry();

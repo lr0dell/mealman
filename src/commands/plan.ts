@@ -1,6 +1,6 @@
-import { MealPlanner } from '../services';
-import type { DataStore } from '../data';
-import type { WeeklyPlan, Meal } from '../schemas';
+import { MealPlanner } from '../services/index.js';
+import type { DataStore } from '../data/index.js';
+import type { WeeklyPlan, Meal } from '../schemas/index.js';
 
 export async function generateWeeklyPlan(
   store: DataStore,
@@ -51,7 +51,7 @@ export function formatWeeklyPlan(plan: WeeklyPlan): string {
 function formatMeal(type: string, meal: Meal): string {
   const lines = [
     `**${type.charAt(0).toUpperCase() + type.slice(1)}:** ${meal.name}`,
-    `  Calories: ${meal.calories} | P: ${meal.macros.protein}g C: ${meal.macros.carbs}g Ft: ${meal.macros.fat}g Fb: ${meal.macros.fat}g`,
+    `  Calories: ${meal.calories} | P: ${meal.macros.protein}g C: ${meal.macros.carbs}g Ft: ${meal.macros.fat}g Fb: ${meal.macros.fiber}g`,
     `  Prep: ${meal.prepTime}min | Cost: $${meal.estimatedCost.toFixed(2)}`,
   ];
 

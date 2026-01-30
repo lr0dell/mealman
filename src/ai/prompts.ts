@@ -1,4 +1,4 @@
-import type { Profile, Pantry } from '../schemas';
+import type { Profile, Pantry } from '../schemas/index.js';
 
 export function buildPlanningSystemPrompt(): string {
   return `You are an expert meal planner AI assistant. Your role is to create personalized weekly meal plans that:

@@ -1,1 +1,1 @@
-export { DataStore } from './store';
+export { DataStore } from './store.js';

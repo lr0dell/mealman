@@ -7,7 +7,7 @@ export interface ChatOptions {
 
 export class AIClient {
   private client: Anthropic;
-  private model = 'claude-sonnet-4-5';
+  private model = 'claude-sonnet-4-20250514';
 
   constructor(apiKey: string) {
     this.client = new Anthropic({ apiKey });
@@ -22,6 +22,10 @@ export class AIClient {
       system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],
     });
+
+    if (response.stop_reason === 'max_tokens') {
+      throw new Error('Response was truncated due to token limit');
+    }
 
     const textContent = response.content.find((block) => block.type === 'text');
     if (!textContent || textContent.type !== 'text') {
@@ -38,8 +42,15 @@ export class AIClient {
     });
 
     // Extract JSON if wrapped in code blocks
-    const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    const jsonStr = jsonMatch ? jsonMatch[1] : response;
+    let jsonStr = response.trim();
+
+    // Remove markdown code block wrapper if present
+    if (jsonStr.startsWith('```')) {
+      // Remove opening ```json or ```
+      jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/, '');
+      // Remove closing ```
+      jsonStr = jsonStr.replace(/\n?```\s*$/, '');
+    }
 
     return JSON.parse(jsonStr) as T;
   }

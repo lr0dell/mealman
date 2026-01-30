@@ -1,4 +1,4 @@
-import type { Profile } from '../schemas';
+import type { Profile } from '../schemas/index.js';
 
 export function formatProfile(profile: Profile): string {
   const lines: string[] = [

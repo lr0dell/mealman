@@ -8,8 +8,8 @@ import {
   WeeklyPlanSchema,
   type Profile,
   type Pantry,
-} from '../schemas';
-import { createDefaultProfile, createDefaultPantry } from '../schemas/defaults';
+} from '../schemas/index.js';
+import { createDefaultProfile, createDefaultPantry } from '../schemas/defaults.js';
 
 export class DataStore {
   private dataDir: string;
@@ -83,4 +83,4 @@ export class DataStore {
   }
 }
 
-type WeeklyPlan = import('../schemas').WeeklyPlan;
+type WeeklyPlan = import('../schemas/index.js').WeeklyPlan;

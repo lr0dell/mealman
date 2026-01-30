@@ -1,1 +1,1 @@
-export { MealPlanner } from './planner';
+export { MealPlanner } from './planner.js';

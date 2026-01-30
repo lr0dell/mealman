@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
-import { DataStore } from '../data';
+import { DataStore } from '../data/index.js';
 import {
   listPantry,
   formatPantryList,
@@ -13,9 +13,9 @@ import {
   formatWeeklyPlan,
   getCurrentWeek,
   formatProfile,
-  generateShoppingList, 
+  generateShoppingList,
   formatShoppingList
-} from '../commands';
+} from '../commands/index.js';
 
 function getDataDir(): string {
   return process.env.MEAL_DATA_DIR || join(homedir(), '.meal-planner', 'data');

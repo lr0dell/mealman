@@ -1,4 +1,4 @@
-import type { Profile, Pantry } from './index';
+import type { Profile, Pantry } from './index.js';
 
 export function createDefaultProfile(): Profile {
   return {

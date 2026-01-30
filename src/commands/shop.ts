@@ -1,4 +1,4 @@
-import type { WeeklyPlan, Pantry } from '../schemas';
+import type { WeeklyPlan, Pantry } from '../schemas/index.js';
 
 export interface ShoppingItem {
   name: string;
