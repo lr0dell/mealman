@@ -48,3 +48,40 @@ export function formatExpiringList(items: PantryItem[]): string {
   }
   return lines.join('\n');
 }
+
+export async function addPantryItem(
+  store: DataStore,
+  name: string,
+  quantity: number,
+  unit: string,
+  expirationDate?: string
+): Promise<void> {
+  const pantry = await store.getPantry();
+  const today = new Date().toISOString().split('T')[0];
+
+  // Check if item already exists (same name and unit)
+  const existing = pantry.items.find(
+    (item) => item.name.toLowerCase() === name.toLowerCase() && item.unit === unit
+  );
+
+  if (existing) {
+    existing.quantity += quantity;
+    // Update expiration if new one is sooner
+    if (expirationDate && (!existing.expirationDate || expirationDate < existing.expirationDate)) {
+      existing.expirationDate = expirationDate;
+    }
+  } else {
+    const newItem: PantryItem = {
+      name: name.toLowerCase(),
+      quantity,
+      unit,
+      addedDate: today,
+    };
+    if (expirationDate) {
+      newItem.expirationDate = expirationDate;
+    }
+    pantry.items.push(newItem);
+  }
+
+  await store.savePantry(pantry);
+}
