@@ -85,3 +85,19 @@ export async function addPantryItem(
 
   await store.savePantry(pantry);
 }
+
+export async function removePantryItem(store: DataStore, name: string): Promise<boolean> {
+  const pantry = await store.getPantry();
+  const initialLength = pantry.items.length;
+
+  pantry.items = pantry.items.filter(
+    (item) => item.name.toLowerCase() !== name.toLowerCase()
+  );
+
+  if (pantry.items.length === initialLength) {
+    return false; // Item not found
+  }
+
+  await store.savePantry(pantry);
+  return true;
+}
