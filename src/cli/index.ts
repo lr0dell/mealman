@@ -9,6 +9,9 @@ import {
   removePantryItem,
   getExpiringItems,
   formatExpiringList,
+  generateWeeklyPlan,
+  formatWeeklyPlan,
+  getCurrentWeek,
 } from '../commands';
 
 function getDataDir(): string {
@@ -79,10 +82,29 @@ export function createProgram(): Command {
     .description('Generate and manage meal plans');
 
   plan
+    plan
     .command('week')
     .description('Generate next week plan')
-    .action(() => {
-      console.log('Weekly plan - coming in Phase 6');
+    .action(async () => {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) {
+        console.error('Error: ANTHROPIC_API_KEY environment variable is required');
+        process.exit(1);
+      }
+
+      const store = new DataStore(getDataDir());
+      await store.init();
+
+      const week = getCurrentWeek();
+      console.log(`Generating meal plan for ${week}...`);
+
+      try {
+        const plan = await generateWeeklyPlan(store, apiKey, week);
+        console.log(formatWeeklyPlan(plan));
+      } catch (error) {
+        console.error('Failed to generate plan:', error);
+        process.exit(1);
+      }
     });
 
   plan
