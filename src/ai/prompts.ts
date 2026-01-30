@@ -53,7 +53,7 @@ Return a JSON object with this exact structure:
   ],
   "totals": {
     "calories": <number>,
-    "macros": { "protein": <g>, "carbs": <g>, "fat": <g> },
+    "macros": { "protein": <g>, "carbs": <g>, "fat": <g>, "fiber": <g> },
     "estimatedCost": <number>
   },
   "shoppingList": [
@@ -68,7 +68,7 @@ Each meal object:
   "ingredients": [{ "name": "<name>", "amount": <number>, "unit": "<unit>" }],
   "prepTime": <minutes>,
   "calories": <number>,
-  "macros": { "protein": <g>, "carbs": <g>, "fat": <g> },
+  "macros": { "protein": <g>, "carbs": <g>, "fat": <g>, "fiber": <g> },
   "estimatedCost": <number>,
   "servings": <number>,
   "leftoverOf": "<original meal name>" or null
