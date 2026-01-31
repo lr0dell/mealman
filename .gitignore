@@ -19,6 +19,3 @@ Thumbs.db
 
 # Worktrees
 .worktrees/
-
-# Data (user-specific)
-/data/
