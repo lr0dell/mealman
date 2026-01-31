@@ -32,7 +32,7 @@ export async function generateWeekPlan(dataDir: string): Promise<void> {
     usdaApiKey: process.env.USDA_API_KEY,
   });
 
-  const plan = await planner.generateWeeklyPlan(profile, pantry, week);
+  const plan = await planner.generateWeeklyPlan(profile, pantry, week, dataDir);
 
   await store.saveWeeklyPlan(plan);
 

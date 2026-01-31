@@ -4,6 +4,9 @@ import { PlanState } from './plan-state.js';
 import { USDAClient } from './usda-client.js';
 import { createToolHandlers } from '../agent/tool-handlers.js';
 import { PLANNING_TOOLS } from '../agent/tools.js';
+import { PlanningProgressTracker } from './planning-progress-tracker.js';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import type { Profile, Pantry } from '../schemas/index.js';
 import type { WeeklyPlan } from '../schemas/plan.js';
 
@@ -104,23 +107,46 @@ Start by checking get_plan_state, then add meals day by day. Use lookup_ingredie
   async generateWeeklyPlan(
     profile: Profile,
     pantry: Pantry,
-    week: string
+    week: string,
+    dataDir: string
   ): Promise<WeeklyPlan> {
     const planState = new PlanState(week, profile, pantry);
     const handlers = createToolHandlers(planState, this.kb, this.usdaClient);
 
-    const result = await this.aiClient.runAgentLoop({
-      systemPrompt: this.buildSystemPrompt(profile),
-      initialMessage: this.buildInitialMessage(profile, pantry, week),
-      tools: PLANNING_TOOLS,
-      toolHandler: handlers.handle,
-      maxIterations: 100,
-    });
+    const systemPrompt = this.buildSystemPrompt(profile);
+    const initialMessage = this.buildInitialMessage(profile, pantry, week);
 
-    console.log(
-      `Planning complete: ${result.toolCalls} tool calls, ${result.iterations} iterations`
+    // Set up progress tracking
+    const debugDir = join(homedir(), '.meal-planner', 'debug');
+    const tracker = new PlanningProgressTracker(
+      week,
+      dataDir,
+      debugDir,
+      'claude-haiku-4-5-20251001',
+      systemPrompt,
+      initialMessage
     );
 
-    return planState.toWeeklyPlan();
+    try {
+      const result = await this.aiClient.runAgentLoop({
+        systemPrompt,
+        initialMessage,
+        tools: PLANNING_TOOLS,
+        toolHandler: handlers.handle,
+        maxIterations: 100,
+        onProgress: tracker.handleEvent.bind(tracker),
+      });
+
+      console.log(
+        `\nPlanning complete: ${result.toolCalls} tool calls, ${result.iterations} iterations`
+      );
+      console.log(`Debug log: ${tracker.getLogPath()}`);
+
+      tracker.close();
+      return planState.toWeeklyPlan();
+    } catch (error) {
+      tracker.logError(error as Error);
+      throw error;
+    }
   }
 }

@@ -133,7 +133,8 @@ describe.skipIf(!ANTHROPIC_API_KEY)('AgentPlanner Integration', () => {
     const plan = await planner.generateWeeklyPlan(
       mockProfile,
       mockPantry,
-      '2026-W05'
+      '2026-W05',
+      testDir
     );
 
     expect(plan.week).toBe('2026-W05');
