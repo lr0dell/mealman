@@ -97,7 +97,18 @@ export class AIClient {
       toolHandler,
       maxIterations = 100,
       model = 'claude-haiku-4-5-20251001',
+      onProgress,
     } = options;
+
+    const safeProgress = (event: AgentProgressEvent) => {
+      if (!onProgress) return;
+      try {
+        onProgress(event);
+      } catch (error) {
+        // Log but don't crash - progress callbacks shouldn't break execution
+        console.warn('Progress callback error:', error);
+      }
+    };
 
     type MessageContent =
       | { type: 'text'; text: string }
@@ -114,6 +125,7 @@ export class AIClient {
     let finalText = '';
 
     while (iterations < maxIterations) {
+      safeProgress({ type: 'iteration_start', iteration: iterations + 1 });
       iterations++;
 
       const response = await this.client.messages.create({
@@ -131,6 +143,7 @@ export class AIClient {
         if (block.type === 'text') {
           finalText = block.text;
           assistantContent.push({ type: 'text', text: block.text });
+          safeProgress({ type: 'assistant_message', text: block.text });
         } else if (block.type === 'tool_use') {
           assistantContent.push({
             type: 'tool_use',
@@ -154,7 +167,23 @@ export class AIClient {
       for (const block of response.content) {
         if (block.type === 'tool_use') {
           toolCalls++;
+          safeProgress({
+            type: 'tool_call_start',
+            name: block.name,
+            input: block.input,
+          });
+
+          const startTime = Date.now();
           const result = await toolHandler(block.name, block.input);
+          const durationMs = Date.now() - startTime;
+
+          safeProgress({
+            type: 'tool_call_result',
+            name: block.name,
+            result,
+            durationMs,
+          });
+
           toolResults.push({
             type: 'tool_result',
             tool_use_id: block.id,
@@ -164,7 +193,19 @@ export class AIClient {
       }
 
       messages.push({ role: 'user', content: toolResults });
+
+      safeProgress({
+        type: 'iteration_complete',
+        iteration: iterations,
+        toolCalls: toolResults.length,
+      });
     }
+
+    safeProgress({
+      type: 'loop_complete',
+      totalIterations: iterations,
+      totalToolCalls: toolCalls,
+    });
 
     return { finalText, toolCalls, iterations };
   }
