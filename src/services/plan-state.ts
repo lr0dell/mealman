@@ -1,4 +1,3 @@
-// src/services/plan-state.ts
 import type { Profile, Pantry } from '../schemas/index.js';
 import type { Meal, DayPlan, WeeklyPlan } from '../schemas/plan.js';
 
