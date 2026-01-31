@@ -13,6 +13,7 @@ export interface AgentLoopOptions {
   toolHandler: (name: string, input: unknown) => Promise<unknown>;
   maxIterations?: number;
   model?: string;
+  onProgress?: (event: AgentProgressEvent) => void;
 }
 
 export interface AgentResult {
@@ -20,6 +21,19 @@ export interface AgentResult {
   toolCalls: number;
   iterations: number;
 }
+
+export type AgentProgressEvent =
+  | { type: 'iteration_start'; iteration: number }
+  | { type: 'assistant_message'; text: string }
+  | { type: 'tool_call_start'; name: string; input: unknown }
+  | {
+      type: 'tool_call_result';
+      name: string;
+      result: unknown;
+      durationMs: number;
+    }
+  | { type: 'iteration_complete'; iteration: number; toolCalls: number }
+  | { type: 'loop_complete'; totalIterations: number; totalToolCalls: number };
 
 export class AIClient {
   private client: Anthropic;
