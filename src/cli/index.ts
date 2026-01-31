@@ -9,8 +9,7 @@ import {
   removePantryItem,
   getExpiringItems,
   formatExpiringList,
-  generateWeeklyPlan,
-  formatWeeklyPlan,
+  generateWeekPlan,
   getCurrentWeek,
   formatProfile,
   generateShoppingList,
@@ -109,15 +108,11 @@ export function createProgram(): Command {
         process.exit(1);
       }
 
-      const store = new DataStore(getDataDir());
-      await store.init();
-
       const week = getCurrentWeek();
       console.log(`Generating meal plan for ${week}...`);
 
       try {
-        const plan = await generateWeeklyPlan(store, apiKey, week);
-        console.log(formatWeeklyPlan(plan));
+        await generateWeekPlan(getDataDir());
       } catch (error) {
         console.error('Failed to generate plan:', error);
         process.exit(1);

@@ -1,20 +1,45 @@
-import { MealPlanner } from '../services/index.js';
-import type { DataStore } from '../data/index.js';
 import type { WeeklyPlan, Meal } from '../schemas/index.js';
+import { AgentPlanner } from '../services/agent-planner.js';
+import { DataStore } from '../data/store.js';
 
-export async function generateWeeklyPlan(
-  store: DataStore,
-  apiKey: string,
-  week: string
-): Promise<WeeklyPlan> {
+export async function generateWeekPlan(dataDir: string): Promise<void> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY environment variable is required');
+  }
+
+  const store = new DataStore(dataDir);
+  await store.init();
+
   const profile = await store.getProfile();
   const pantry = await store.getPantry();
 
-  const planner = new MealPlanner(apiKey);
+  // Calculate current week
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const days = Math.floor(
+    (now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)
+  );
+  const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+  const week = `${now.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
+
+  console.log(`Generating meal plan for ${week}...`);
+  console.log('This may take a minute as the AI plans each meal.');
+
+  const planner = new AgentPlanner({
+    anthropicApiKey: apiKey,
+    dataDir,
+    usdaApiKey: process.env.USDA_API_KEY,
+  });
+
   const plan = await planner.generateWeeklyPlan(profile, pantry, week);
 
   await store.saveWeeklyPlan(plan);
-  return plan;
+
+  console.log(`\nPlan generated for ${week}:`);
+  console.log(`- ${plan.days.length} days planned`);
+  console.log(`- Total calories: ${plan.totals.calories}`);
+  console.log(`- Estimated cost: $${plan.totals.estimatedCost.toFixed(2)}`);
 }
 
 export function formatWeeklyPlan(plan: WeeklyPlan): string {
