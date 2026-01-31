@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createDefaultProfile, createDefaultPantry } from './defaults';
-import { ProfileSchema, PantrySchema } from './index';
+import { createDefaultProfile, createDefaultPantry } from './defaults.js';
+import { ProfileSchema, PantrySchema } from './index.js';
 
 describe('Default Data', () => {
   it('creates a valid default profile', () => {

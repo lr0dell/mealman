@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { generateShoppingList, formatShoppingList } from './shop';
-import type { WeeklyPlan, Pantry } from '../schemas';
+import {
+  generateShoppingList,
+  formatShoppingList,
+  type ShoppingItem,
+} from './shop.js';
+import type { WeeklyPlan, Pantry } from '../schemas/index.js';
 
 describe('Shopping Commands', () => {
   const mockPlan: WeeklyPlan = {
@@ -55,8 +59,10 @@ describe('Shopping Commands', () => {
       const list = generateShoppingList(mockPlan, pantry);
 
       expect(list).toHaveLength(4);
-      expect(list.find((i) => i.name === 'oats')).toBeDefined();
-      expect(list.find((i) => i.name === 'chicken breast')).toBeDefined();
+      expect(list.find((i: ShoppingItem) => i.name === 'oats')).toBeDefined();
+      expect(
+        list.find((i: ShoppingItem) => i.name === 'chicken breast')
+      ).toBeDefined();
     });
 
     it('subtracts pantry items', () => {
@@ -72,7 +78,9 @@ describe('Shopping Commands', () => {
       };
       const list = generateShoppingList(mockPlan, pantry);
 
-      const chicken = list.find((i) => i.name === 'chicken breast');
+      const chicken = list.find(
+        (i: ShoppingItem) => i.name === 'chicken breast'
+      );
       expect(chicken?.amount).toBe(0.5); // 1 - 0.5 = 0.5
     });
 
@@ -89,7 +97,9 @@ describe('Shopping Commands', () => {
       };
       const list = generateShoppingList(mockPlan, pantry);
 
-      const chicken = list.find((i) => i.name === 'chicken breast');
+      const chicken = list.find(
+        (i: ShoppingItem) => i.name === 'chicken breast'
+      );
       expect(chicken).toBeUndefined();
     });
   });

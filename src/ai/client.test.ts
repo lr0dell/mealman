@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AIClient } from './client';
+import { AIClient } from './client.js';
 
 // Mock the Anthropic SDK
 vi.mock('@anthropic-ai/sdk', () => {

@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { DataStore } from '../data';
+import { DataStore } from '../data/index.js';
 import {
   listPantry,
   formatPantryList,
   addPantryItem,
   removePantryItem,
-} from './pantry';
+} from './pantry.js';
 
 describe('Pantry Commands', () => {
   const testDir = join(process.cwd(), 'test-data-pantry');

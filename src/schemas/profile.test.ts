@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ProfileSchema } from './profile';
+import { ProfileSchema } from './profile.js';
 
 describe('ProfileSchema', () => {
   it('validates a complete profile', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { IngredientEntrySchema } from './knowledge';
+import { IngredientEntrySchema } from './knowledge.js';
 
 describe('Knowledge Schemas', () => {
   describe('IngredientEntrySchema with confidence', () => {

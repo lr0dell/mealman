@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { DataStore } from './data';
-import { addPantryItem, listPantry } from './commands';
+import { DataStore } from './data/index.js';
+import { addPantryItem, listPantry } from './commands/index.js';
 
 describe('Integration: Full Workflow', () => {
   const testDir = join(process.cwd(), 'test-data-integration');

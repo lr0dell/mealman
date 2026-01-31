@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { WeeklyPlanSchema, MealSchema } from './plan';
+import { WeeklyPlanSchema, MealSchema } from './plan.js';
 
 describe('Plan Schemas', () => {
   it('validates a meal entry', () => {

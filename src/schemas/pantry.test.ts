@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PantrySchema, PantryItemSchema } from './pantry';
+import { PantrySchema, PantryItemSchema } from './pantry.js';
 
 describe('PantrySchema', () => {
   it('validates a pantry item', () => {

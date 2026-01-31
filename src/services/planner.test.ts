@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { MealPlanner } from './planner';
-import { WeeklyPlanSchema } from '../schemas';
-import { createDefaultProfile, createDefaultPantry } from '../schemas/defaults';
+import { MealPlanner } from './planner.js';
+import { WeeklyPlanSchema } from '../schemas/index.js';
+import {
+  createDefaultProfile,
+  createDefaultPantry,
+} from '../schemas/defaults.js';
 
 // Mock AI client
 const mockChatJSON = vi.fn();

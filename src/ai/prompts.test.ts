@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { buildWeeklyPlanPrompt, buildPlanningSystemPrompt } from './prompts';
-import { createDefaultProfile, createDefaultPantry } from '../schemas/defaults';
+import { buildWeeklyPlanPrompt, buildPlanningSystemPrompt } from './prompts.js';
+import {
+  createDefaultProfile,
+  createDefaultPantry,
+} from '../schemas/defaults.js';
 
 describe('Planning Prompts', () => {
   it('builds system prompt with guidelines', () => {

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { DataStore } from './store';
-import { ProfileSchema, PantrySchema } from '../schemas';
+import { DataStore } from './store.js';
+import { ProfileSchema, PantrySchema } from '../schemas/index.js';
 
 describe('DataStore', () => {
   const testDir = join(process.cwd(), 'test-data');

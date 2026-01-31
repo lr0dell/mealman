@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { DataStore } from '../data';
-import { formatProfile } from './profile';
-import { createDefaultProfile } from '../schemas/defaults';
+import { DataStore } from '../data/index.js';
+import { formatProfile } from './profile.js';
+import { createDefaultProfile } from '../schemas/defaults.js';
 
 describe('Profile Commands', () => {
   const testDir = join(process.cwd(), 'test-data-profile');
