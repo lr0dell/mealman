@@ -263,4 +263,30 @@ describe('viewPlan', () => {
       "No meal plan found for 2026-W01. Run 'meal plan week' to generate one."
     );
   });
+
+  it('returns day summary for "today"', async () => {
+    await store.saveWeeklyPlan(samplePlan);
+
+    const result = await viewPlan(store, 'today');
+
+    expect(result).toContain('Meals for Tuesday (2026-02-03)');
+    expect(result).toContain('Oatmeal (10min)');
+  });
+
+  it('returns day summary for specific date', async () => {
+    await store.saveWeeklyPlan(samplePlan);
+
+    const result = await viewPlan(store, '2026-02-03');
+
+    expect(result).toContain('Meals for Tuesday (2026-02-03)');
+    expect(result).toContain('Oatmeal (10min)');
+  });
+
+  it('returns not found for day not in plan', async () => {
+    await store.saveWeeklyPlan(samplePlan);
+
+    const result = await viewPlan(store, '2026-02-04');
+
+    expect(result).toContain('No meals found for 2026-02-04');
+  });
 });

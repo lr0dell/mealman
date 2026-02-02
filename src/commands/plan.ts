@@ -81,7 +81,7 @@ export function formatWeeklyPlan(plan: WeeklyPlan): string {
   return lines.join('\n');
 }
 
-function formatMeal(type: string, meal: Meal): string {
+export function formatMeal(type: string, meal: Meal): string {
   const lines = [
     `**${type.charAt(0).toUpperCase() + type.slice(1)}:** ${meal.name}`,
     `  Calories: ${meal.calories} | P: ${meal.macros.protein}g C: ${meal.macros.carbs}g Ft: ${meal.macros.fat}g Fb: ${meal.macros.fiber}g`,
@@ -201,5 +201,24 @@ export async function viewPlan(
     return detailed ? formatWeeklyPlan(plan) : formatWeeklyPlanSummary(plan);
   }
 
-  throw new Error('Day view not implemented');
+  // Day view
+  const day = plan.days.find((d) => d.date === parsed.date);
+  if (!day) {
+    return `No meals found for ${parsed.date} in plan ${parsed.week}.`;
+  }
+
+  if (detailed) {
+    const lines = [`Meals for ${getDayName(day.date)} (${day.date})`, ''];
+    const mealTypes = ['breakfast', 'lunch', 'dinner'] as const;
+    for (const mealType of mealTypes) {
+      const meal = day.meals[mealType];
+      if (meal) {
+        lines.push(formatMeal(mealType, meal));
+        lines.push('');
+      }
+    }
+    return lines.join('\n').trim();
+  }
+
+  return formatDayPlanSummary(day);
 }
