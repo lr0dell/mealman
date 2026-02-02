@@ -1,6 +1,5 @@
-- reconfigure USDA API usage (should not use SR Legacy data type, should also rename ingredient to fit USDA description {"fish" -> https://fdc.nal.usda.gov/food-details/174195 which is not correct})
-- prioritize daily reqs instead of weekly ones for simplicity (maybe throw out weekly macro reqs altogether?)
+- prioritize daily reqs instead of weekly ones
 - encourage AI to use much less vague ingredients ('fish': what fish? 'beans': what beans?)
 - allow AI to plan leftovers when doing 'add_meal' either forwards or backwards
-- AI is assuming $5/kg for every ingredient type, whats with that?
 - why is only unit in meal plans 'g'? we should store a unit-conversion table per ingredient
+- force AI to keep shopping list small
