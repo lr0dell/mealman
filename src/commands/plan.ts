@@ -29,7 +29,6 @@ export async function generateWeekPlan(dataDir: string): Promise<void> {
   const planner = new AgentPlanner({
     anthropicApiKey: apiKey,
     dataDir,
-    usdaApiKey: process.env.USDA_API_KEY,
   });
 
   const plan = await planner.generateWeeklyPlan(profile, pantry, week, dataDir);
