@@ -57,4 +57,16 @@ describe('parseViewTarget', () => {
       date: '2026-01-27',
     });
   });
+
+  it('throws for invalid week format', () => {
+    expect(() => parseViewTarget('2026-W5')).toThrow(
+      "Invalid target '2026-W5'. Use format YYYY-Www (e.g., 2026-W05) or YYYY-MM-DD."
+    );
+  });
+
+  it('throws for random string', () => {
+    expect(() => parseViewTarget('next-week')).toThrow(
+      "Invalid target 'next-week'. Use format YYYY-Www (e.g., 2026-W05) or YYYY-MM-DD."
+    );
+  });
 });

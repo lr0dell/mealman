@@ -128,5 +128,7 @@ export function parseViewTarget(target?: string): ViewTarget {
     return { type: 'day', week: getWeekIdentifier(date), date: target };
   }
 
-  throw new Error('Not implemented');
+  throw new Error(
+    `Invalid target '${target}'. Use format YYYY-Www (e.g., 2026-W05) or YYYY-MM-DD.`
+  );
 }
