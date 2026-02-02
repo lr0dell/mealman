@@ -21,7 +21,9 @@
     "format:check": "prettier --check \"src/**/*.ts\"",
     "prepare": "husky",
     "seed-kb": "tsx scripts/seed-kb.ts",
-    "download-usda": "tsx scripts/build-ingredient-db.ts"
+    "download-usda": "tsx scripts/build-ingredient-db.ts",
+    "embed-ingredients": "tsx scripts/embed-ingredients.ts",
+    "build-ingredient-db": "npm run download-usda && npm run embed-ingredients"
   },
   "keywords": [],
   "author": "",
