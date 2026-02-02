@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { parseViewTarget } from './plan.js';
+import { parseViewTarget, formatWeeklyPlanSummary } from './plan.js';
+import type { WeeklyPlan } from '../schemas/index.js';
 
 describe('parseViewTarget', () => {
   beforeEach(() => {
@@ -68,5 +69,59 @@ describe('parseViewTarget', () => {
     expect(() => parseViewTarget('next-week')).toThrow(
       "Invalid target 'next-week'. Use format YYYY-Www (e.g., 2026-W05) or YYYY-MM-DD."
     );
+  });
+});
+
+describe('formatWeeklyPlanSummary', () => {
+  it('formats week plan with meal names and prep times', () => {
+    const plan: WeeklyPlan = {
+      week: '2026-W06',
+      generatedAt: '2026-02-03T10:00:00Z',
+      days: [
+        {
+          date: '2026-02-03',
+          meals: {
+            breakfast: {
+              name: 'Oatmeal with Berries',
+              recipe: 'Cook oats...',
+              ingredients: [],
+              prepTime: 10,
+              calories: 350,
+              macros: { protein: 12, carbs: 45, fat: 8, fiber: 6 },
+              estimatedCost: 1.5,
+              servings: 1,
+              leftoverOf: null,
+            },
+            lunch: {
+              name: 'Chicken Salad Wrap',
+              recipe: 'Mix chicken...',
+              ingredients: [],
+              prepTime: 15,
+              calories: 520,
+              macros: { protein: 35, carbs: 40, fat: 18, fiber: 4 },
+              estimatedCost: 4.0,
+              servings: 1,
+              leftoverOf: null,
+            },
+            dinner: null,
+          },
+        },
+      ],
+      totals: {
+        calories: 870,
+        macros: { protein: 47, carbs: 85, fat: 26, fiber: 10 },
+        estimatedCost: 5.5,
+      },
+    };
+
+    const output = formatWeeklyPlanSummary(plan);
+
+    expect(output).toContain('Meal Plan for 2026-W06');
+    expect(output).toContain('Tuesday (2026-02-03)');
+    expect(output).toContain('Breakfast: Oatmeal with Berries (10min)');
+    expect(output).toContain('Lunch: Chicken Salad Wrap (15min)');
+    expect(output).not.toContain('Dinner');
+    expect(output).not.toContain('calories');
+    expect(output).not.toContain('$');
   });
 });

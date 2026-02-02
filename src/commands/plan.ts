@@ -132,3 +132,39 @@ export function parseViewTarget(target?: string): ViewTarget {
     `Invalid target '${target}'. Use format YYYY-Www (e.g., 2026-W05) or YYYY-MM-DD.`
   );
 }
+
+function getDayName(dateStr: string): string {
+  const days = [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ];
+  const date = new Date(dateStr + 'T00:00:00');
+  return days[date.getDay()];
+}
+
+export function formatWeeklyPlanSummary(plan: WeeklyPlan): string {
+  const lines: string[] = [`Meal Plan for ${plan.week}`, ''];
+
+  for (const day of plan.days) {
+    const dayName = getDayName(day.date);
+    lines.push(`## ${dayName} (${day.date})`);
+
+    const mealTypes = ['breakfast', 'lunch', 'dinner'] as const;
+    for (const mealType of mealTypes) {
+      const meal = day.meals[mealType];
+      if (meal) {
+        const label = mealType.charAt(0).toUpperCase() + mealType.slice(1);
+        lines.push(`  ${label}: ${meal.name} (${meal.prepTime}min)`);
+      }
+    }
+
+    lines.push('');
+  }
+
+  return lines.join('\n').trim();
+}
