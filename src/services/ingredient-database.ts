@@ -4,6 +4,7 @@ import { Embedder } from './embedder.js';
 import type {
   Ingredient,
   NewIngredient,
+  IngredientMatch,
   IngredientCategory,
 } from '../schemas/knowledge.js';
 
@@ -143,6 +144,37 @@ export class IngredientDatabase {
       usdaFdcId: row.usda_fdc_id,
       createdAt: row.created_at,
     };
+  }
+
+  async searchIngredient(query: string): Promise<IngredientMatch | null> {
+    const matches = await this.searchIngredients(query, 1);
+    return matches.length > 0 ? matches[0] : null;
+  }
+
+  async searchIngredients(
+    query: string,
+    limit: number = 10
+  ): Promise<IngredientMatch[]> {
+    const queryEmbedding = await this.embedder.embed(query);
+
+    const rows = this.db
+      .prepare(
+        `SELECT
+          i.*,
+          vec_distance_cosine(e.embedding, ?) as distance
+        FROM ingredient_embeddings e
+        JOIN ingredients i ON i.id = e.ingredient_id
+        ORDER BY distance ASC
+        LIMIT ?`
+      )
+      .all(Buffer.from(queryEmbedding.buffer), limit) as Array<
+      IngredientRow & { distance: number }
+    >;
+
+    return rows.map((row) => ({
+      ingredient: this.rowToIngredient(row),
+      similarity: 1 - row.distance, // Convert distance to similarity
+    }));
   }
 
   getStats(): { total: number; byCategory: Record<string, number> } {

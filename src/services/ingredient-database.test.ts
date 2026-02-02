@@ -47,4 +47,64 @@ describe('IngredientDatabase', () => {
     expect(retrieved).not.toBeNull();
     expect(retrieved!.name).toBe('Chicken Breast');
   });
+
+  it('finds ingredient by semantic search', async () => {
+    await db.addIngredient({
+      name: 'Fish, raw, mixed species',
+      proteinPer100g: 20,
+      carbsPer100g: 0,
+      fatPer100g: 1.5,
+      fiberPer100g: 0,
+      pricePerUnit: 15,
+      unit: 'kg',
+      unitWeightGrams: 1000,
+      category: 'seafood',
+    });
+
+    await db.addIngredient({
+      name: 'Fish sticks, frozen, prepared',
+      proteinPer100g: 12,
+      carbsPer100g: 20,
+      fatPer100g: 10,
+      fiberPer100g: 1,
+      pricePerUnit: 8,
+      unit: 'kg',
+      unitWeightGrams: 1000,
+      category: 'seafood',
+    });
+
+    const match = await db.searchIngredient('fish');
+    expect(match).not.toBeNull();
+    expect(match!.ingredient.name).toBe('Fish, raw, mixed species');
+    expect(match!.similarity).toBeGreaterThan(0);
+  });
+
+  it('returns multiple matches with searchIngredients', async () => {
+    await db.addIngredient({
+      name: 'Chicken breast, raw',
+      proteinPer100g: 31,
+      carbsPer100g: 0,
+      fatPer100g: 3.6,
+      fiberPer100g: 0,
+      pricePerUnit: 12,
+      unit: 'kg',
+      unitWeightGrams: 1000,
+      category: 'meat',
+    });
+
+    await db.addIngredient({
+      name: 'Chicken thigh, raw',
+      proteinPer100g: 26,
+      carbsPer100g: 0,
+      fatPer100g: 6,
+      fiberPer100g: 0,
+      pricePerUnit: 10,
+      unit: 'kg',
+      unitWeightGrams: 1000,
+      category: 'meat',
+    });
+
+    const matches = await db.searchIngredients('chicken', 5);
+    expect(matches.length).toBe(2);
+  });
 });
