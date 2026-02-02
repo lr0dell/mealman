@@ -154,15 +154,6 @@ export const PLANNING_TOOLS: ToolDefinition[] = [
     },
   },
   {
-    name: 'check_weekly_totals',
-    description:
-      'Get nutrition totals for the entire week so far and remaining budget.',
-    input_schema: {
-      type: 'object',
-      properties: {},
-    },
-  },
-  {
     name: 'finalize_plan',
     description:
       'Signal that planning is complete. Call this when all meals are planned or when you cannot meet constraints.',

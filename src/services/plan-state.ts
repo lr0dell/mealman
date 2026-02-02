@@ -26,13 +26,21 @@ interface PlanSummary {
   >;
 }
 
+type BudgetStatus = 'under' | 'in_range' | 'over';
+
+interface MacroBudget {
+  min: number;
+  max: number;
+  status: BudgetStatus;
+}
+
 interface RemainingBudget {
-  calories: { min: number; max: number };
+  calories: MacroBudget;
   macros: {
-    protein: { min: number; max: number };
-    carbs: { min: number; max: number };
-    fat: { min: number; max: number };
-    fiber: { min: number; max: number };
+    protein: MacroBudget;
+    carbs: MacroBudget;
+    fat: MacroBudget;
+    fiber: MacroBudget;
   };
   cost: number;
 }
@@ -140,6 +148,16 @@ export class PlanState {
     };
   }
 
+  private computeStatus(min: number, max: number): BudgetStatus {
+    // min = weeklyTarget.min - current, max = weeklyTarget.max - current
+    // If min > 0: need more (under target minimum)
+    // If max < 0: have too much (over target maximum)
+    // If min <= 0 && max >= 0: within range
+    if (min > 0) return 'under';
+    if (max < 0) return 'over';
+    return 'in_range';
+  }
+
   getRemainingBudget(): RemainingBudget {
     const summary = this.getSummary();
     const { goals } = this.profile;
@@ -148,29 +166,53 @@ export class PlanState {
     const weeklyCalMin = goals.dailyCalories.min * 7;
     const weeklyCalMax = goals.dailyCalories.max * 7;
 
+    const calMin = weeklyCalMin - summary.weeklyTotals.calories;
+    const calMax = weeklyCalMax - summary.weeklyTotals.calories;
+
+    const proteinMin =
+      goals.macros.protein.min * 7 - summary.weeklyTotals.macros.protein;
+    const proteinMax =
+      goals.macros.protein.max * 7 - summary.weeklyTotals.macros.protein;
+
+    const carbsMin =
+      goals.macros.carbs.min * 7 - summary.weeklyTotals.macros.carbs;
+    const carbsMax =
+      goals.macros.carbs.max * 7 - summary.weeklyTotals.macros.carbs;
+
+    const fatMin = goals.macros.fat.min * 7 - summary.weeklyTotals.macros.fat;
+    const fatMax = goals.macros.fat.max * 7 - summary.weeklyTotals.macros.fat;
+
+    const fiberMin =
+      goals.macros.fiber.min * 7 - summary.weeklyTotals.macros.fiber;
+    const fiberMax =
+      goals.macros.fiber.max * 7 - summary.weeklyTotals.macros.fiber;
+
     return {
       calories: {
-        min: weeklyCalMin - summary.weeklyTotals.calories,
-        max: weeklyCalMax - summary.weeklyTotals.calories,
+        min: calMin,
+        max: calMax,
+        status: this.computeStatus(calMin, calMax),
       },
       macros: {
         protein: {
-          min:
-            goals.macros.protein.min * 7 - summary.weeklyTotals.macros.protein,
-          max:
-            goals.macros.protein.max * 7 - summary.weeklyTotals.macros.protein,
+          min: proteinMin,
+          max: proteinMax,
+          status: this.computeStatus(proteinMin, proteinMax),
         },
         carbs: {
-          min: goals.macros.carbs.min * 7 - summary.weeklyTotals.macros.carbs,
-          max: goals.macros.carbs.max * 7 - summary.weeklyTotals.macros.carbs,
+          min: carbsMin,
+          max: carbsMax,
+          status: this.computeStatus(carbsMin, carbsMax),
         },
         fat: {
-          min: goals.macros.fat.min * 7 - summary.weeklyTotals.macros.fat,
-          max: goals.macros.fat.max * 7 - summary.weeklyTotals.macros.fat,
+          min: fatMin,
+          max: fatMax,
+          status: this.computeStatus(fatMin, fatMax),
         },
         fiber: {
-          min: goals.macros.fiber.min * 7 - summary.weeklyTotals.macros.fiber,
-          max: goals.macros.fiber.max * 7 - summary.weeklyTotals.macros.fiber,
+          min: fiberMin,
+          max: fiberMax,
+          status: this.computeStatus(fiberMin, fiberMax),
         },
       },
       cost: goals.weeklyBudget - summary.weeklyTotals.estimatedCost,

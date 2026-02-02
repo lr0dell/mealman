@@ -54,12 +54,26 @@ export class AgentPlanner {
 - Cuisines: ${preferences.cuisines.length ? preferences.cuisines.join(', ') : 'any'}
 - Complexity: ${preferences.complexityTolerance}
 
+## Understanding remainingBudget
+Each macro in the response has a status field:
+- "under" = below minimum target, need to ADD more of this macro
+- "in_range" = within target range, this macro is GOOD
+- "over" = above maximum target, need to REDUCE this macro
+
+## Success Condition
+The plan is COMPLETE when:
+1. All 21 meals are planned (7 days × 3 meals)
+2. calories.status is "in_range"
+3. All macro statuses are "in_range" OR acceptable ("under" for fat is fine)
+
+When status is "in_range", STOP adjusting that macro. Call finalize_plan when done.
+
 ## Process
 1. Use lookup_ingredient before adding meals to ensure ingredients are in the knowledge base
-2. Add meals one at a time with add_meal
-3. Check remaining budget after each meal
+2. Add meals one at a time with add_meal (response includes remainingBudget)
+3. Check the status fields - only adjust if status is "under" or "over"
 4. If off-track, use modify_meal to adjust earlier meals
-5. Call finalize_plan when complete
+5. Call finalize_plan when all statuses are acceptable
 
 Be efficient with tokens. Don't explain your reasoning, just call tools.`;
   }

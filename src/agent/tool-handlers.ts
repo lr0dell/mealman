@@ -280,24 +280,6 @@ export function createToolHandlers(
     };
   }
 
-  function handleCheckWeeklyTotals(): {
-    totals: {
-      calories: number;
-      macros: { protein: number; carbs: number; fat: number; fiber: number };
-      estimatedCost: number;
-    };
-    remainingBudget: ReturnType<typeof planState.getRemainingBudget>;
-    mealsPlanned: number;
-  } {
-    const summary = planState.getSummary();
-    const remaining = planState.getRemainingBudget();
-    return {
-      totals: summary.weeklyTotals,
-      remainingBudget: remaining,
-      mealsPlanned: summary.mealsPlanned,
-    };
-  }
-
   function handleFinalizePlan(input: FinalizePlanInput): {
     success: true;
     plan: ReturnType<typeof planState.toWeeklyPlan>;
@@ -330,8 +312,6 @@ export function createToolHandlers(
           return handleGetKnownIngredients();
         case 'check_daily_totals':
           return handleCheckDailyTotals(input as CheckDailyTotalsInput);
-        case 'check_weekly_totals':
-          return handleCheckWeeklyTotals();
         case 'finalize_plan':
           return handleFinalizePlan(input as FinalizePlanInput);
         default:

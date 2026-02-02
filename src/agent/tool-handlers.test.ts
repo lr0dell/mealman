@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createToolHandlers } from './tool-handlers.js';
+import { PLANNING_TOOLS } from './tools.js';
 import { PlanState } from '../services/plan-state.js';
 import { IngredientDatabase } from '../services/ingredient-database.js';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
@@ -167,5 +168,29 @@ describe('ToolHandlers', () => {
       expect(similarity).toBeGreaterThan(0.5);
       expect(similarity).toBeLessThan(1);
     });
+  });
+
+  describe('check_weekly_totals (removed)', () => {
+    it('returns unknown tool error since check_weekly_totals was removed', async () => {
+      const result = await handlers.handle('check_weekly_totals', {});
+      expect(result).toMatchObject({
+        error: 'Unknown tool: check_weekly_totals',
+      });
+    });
+  });
+});
+
+describe('PLANNING_TOOLS', () => {
+  it('does not include check_weekly_totals (redundant with add_meal/modify_meal response)', () => {
+    const toolNames = PLANNING_TOOLS.map((t) => t.name);
+    expect(toolNames).not.toContain('check_weekly_totals');
+  });
+
+  it('includes essential tools', () => {
+    const toolNames = PLANNING_TOOLS.map((t) => t.name);
+    expect(toolNames).toContain('get_plan_state');
+    expect(toolNames).toContain('add_meal');
+    expect(toolNames).toContain('modify_meal');
+    expect(toolNames).toContain('finalize_plan');
   });
 });

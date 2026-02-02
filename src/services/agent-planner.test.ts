@@ -86,4 +86,31 @@ describe('AgentPlanner', () => {
     expect(prompt).toContain('2200');
     expect(prompt).toContain('150'); // budget
   });
+
+  it('system prompt includes success condition guidance', () => {
+    const planner = new AgentPlanner({
+      anthropicApiKey: 'test-key',
+      dataDir: testDir,
+    });
+
+    const prompt = planner.buildSystemPrompt(mockProfile);
+
+    // Should explain the status field semantics
+    expect(prompt).toContain('in_range');
+    expect(prompt).toContain('status');
+    // Should tell agent when to stop adjusting
+    expect(prompt).toContain('finalize_plan');
+  });
+
+  it('system prompt explains when plan is complete', () => {
+    const planner = new AgentPlanner({
+      anthropicApiKey: 'test-key',
+      dataDir: testDir,
+    });
+
+    const prompt = planner.buildSystemPrompt(mockProfile);
+
+    // Should explain that in_range means success, stop adjusting
+    expect(prompt.toLowerCase()).toMatch(/in.range.*stop|stop.*in.range/i);
+  });
 });

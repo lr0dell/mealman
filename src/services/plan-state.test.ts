@@ -142,4 +142,88 @@ describe('PlanState', () => {
     expect(remaining.calories.min).toBe(12600 - 500);
     expect(remaining.cost).toBe(150 - 10);
   });
+
+  describe('getRemainingBudget status field', () => {
+    it('returns "under" status when below minimum', () => {
+      // No meals added, protein is 0, weekly min is 700 (100*7)
+      const remaining = state.getRemainingBudget();
+
+      expect(remaining.macros.protein.status).toBe('under');
+      expect(remaining.calories.status).toBe('under');
+    });
+
+    it('returns "in_range" status when between min and max', () => {
+      // Add meals to put protein in range (700-1050 weekly)
+      // Need ~750g protein total (7 meals at ~107g each)
+      for (let day = 1; day <= 7; day++) {
+        const meal: Meal = {
+          name: `Day ${day} Protein Meal`,
+          recipe: 'High protein',
+          ingredients: [],
+          prepTime: 10,
+          calories: 1800, // Daily min
+          macros: { protein: 110, carbs: 220, fat: 55, fiber: 28 }, // All in range
+          estimatedCost: 15,
+          servings: 1,
+          leftoverOf: null,
+        };
+        state.addMeal(`2026-02-0${day}`, 'lunch', meal);
+      }
+
+      const remaining = state.getRemainingBudget();
+
+      // protein: 770g total, range is 700-1050, so in_range
+      expect(remaining.macros.protein.status).toBe('in_range');
+      expect(remaining.calories.status).toBe('in_range');
+    });
+
+    it('returns "over" status when above maximum', () => {
+      // Add excessive protein meals
+      for (let day = 1; day <= 7; day++) {
+        const meal: Meal = {
+          name: `Day ${day} Excessive Protein`,
+          recipe: 'Too much protein',
+          ingredients: [],
+          prepTime: 10,
+          calories: 3000,
+          macros: { protein: 200, carbs: 300, fat: 100, fiber: 50 }, // All over max
+          estimatedCost: 20,
+          servings: 1,
+          leftoverOf: null,
+        };
+        state.addMeal(`2026-02-0${day}`, 'lunch', meal);
+      }
+
+      const remaining = state.getRemainingBudget();
+
+      // protein: 1400g total, max is 1050 (150*7), so over
+      expect(remaining.macros.protein.status).toBe('over');
+      expect(remaining.calories.status).toBe('over');
+    });
+
+    it('correctly identifies mixed statuses across macros', () => {
+      // Add meals that are in range for protein but under for fiber
+      for (let day = 1; day <= 7; day++) {
+        const meal: Meal = {
+          name: `Day ${day} Low Fiber`,
+          recipe: 'Good protein, low fiber',
+          ingredients: [],
+          prepTime: 10,
+          calories: 2000,
+          macros: { protein: 120, carbs: 250, fat: 65, fiber: 10 }, // protein in range, fiber under
+          estimatedCost: 18,
+          servings: 1,
+          leftoverOf: null,
+        };
+        state.addMeal(`2026-02-0${day}`, 'lunch', meal);
+      }
+
+      const remaining = state.getRemainingBudget();
+
+      // protein: 840g, range 700-1050 = in_range
+      expect(remaining.macros.protein.status).toBe('in_range');
+      // fiber: 70g, range 175-280 = under
+      expect(remaining.macros.fiber.status).toBe('under');
+    });
+  });
 });
