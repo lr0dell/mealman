@@ -184,3 +184,22 @@ export function formatDayPlanSummary(day: DayPlan): string {
 
   return lines.join('\n').trim();
 }
+
+export async function viewPlan(
+  store: DataStore,
+  target?: string,
+  detailed?: boolean
+): Promise<string> {
+  const parsed = parseViewTarget(target);
+  const plan = await store.getWeeklyPlan(parsed.week);
+
+  if (!plan) {
+    return `No meal plan found for ${parsed.week}. Run 'meal plan week' to generate one.`;
+  }
+
+  if (parsed.type === 'week') {
+    return detailed ? formatWeeklyPlan(plan) : formatWeeklyPlanSummary(plan);
+  }
+
+  throw new Error('Day view not implemented');
+}

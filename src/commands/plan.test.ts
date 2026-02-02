@@ -1,10 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { WeeklyPlan, DayPlan } from '../schemas/index.js';
+import { mkdirSync, rmSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { DataStore } from '../data/index.js';
 import {
   parseViewTarget,
   formatWeeklyPlanSummary,
   formatDayPlanSummary,
+  viewPlan,
 } from './plan.js';
-import type { WeeklyPlan, DayPlan } from '../schemas/index.js';
 
 describe('parseViewTarget', () => {
   beforeEach(() => {
@@ -179,5 +183,68 @@ describe('formatDayPlanSummary', () => {
     expect(output).toContain('Dinner: Pasta Primavera (25min)');
     expect(output).not.toContain('calories');
     expect(output).not.toContain('$');
+  });
+});
+
+describe('viewPlan', () => {
+  const testDir = join(process.cwd(), 'test-data-plan-view');
+  let store: DataStore;
+
+  beforeEach(async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-02-03'));
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true });
+    }
+    mkdirSync(testDir, { recursive: true });
+    store = new DataStore(testDir);
+    await store.init();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true });
+    }
+  });
+
+  const samplePlan: WeeklyPlan = {
+    week: '2026-W06',
+    generatedAt: '2026-02-03T10:00:00Z',
+    days: [
+      {
+        date: '2026-02-03',
+        meals: {
+          breakfast: {
+            name: 'Oatmeal',
+            recipe: 'Cook oats',
+            ingredients: [],
+            prepTime: 10,
+            calories: 350,
+            macros: { protein: 12, carbs: 45, fat: 8, fiber: 6 },
+            estimatedCost: 1.5,
+            servings: 1,
+            leftoverOf: null,
+          },
+          lunch: null,
+          dinner: null,
+        },
+      },
+    ],
+    totals: {
+      calories: 350,
+      macros: { protein: 12, carbs: 45, fat: 8, fiber: 6 },
+      estimatedCost: 1.5,
+    },
+  };
+
+  it('returns summary for current week when plan exists', async () => {
+    await store.saveWeeklyPlan(samplePlan);
+
+    const result = await viewPlan(store);
+
+    expect(result).toContain('Meal Plan for 2026-W06');
+    expect(result).toContain('Oatmeal (10min)');
+    expect(result).not.toContain('calories');
   });
 });
