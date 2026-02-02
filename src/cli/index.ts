@@ -14,6 +14,7 @@ import {
   formatProfile,
   generateShoppingList,
   formatShoppingList,
+  viewPlan,
 } from '../commands/index.js';
 
 function getDataDir(): string {
@@ -132,6 +133,34 @@ export function createProgram(): Command {
     .action((description: string) => {
       console.log('Adjusting:', description, '- coming in Phase 6');
     });
+
+  plan
+    .command('view [target]')
+    .description(
+      'View meal plan (current week, specific week, date, or "today")'
+    )
+    .option(
+      '-d, --detailed',
+      'Show full details including recipes and nutrition'
+    )
+    .action(
+      async (target: string | undefined, options: { detailed?: boolean }) => {
+        const store = new DataStore(getDataDir());
+        await store.init();
+
+        try {
+          const output = await viewPlan(store, target, options.detailed);
+          console.log(output);
+        } catch (error) {
+          if (error instanceof Error) {
+            console.error(error.message);
+          } else {
+            console.error('An error occurred');
+          }
+          process.exit(1);
+        }
+      }
+    );
 
   // Profile management (placeholders)
   const profile = program
