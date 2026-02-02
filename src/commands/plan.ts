@@ -72,10 +72,10 @@ export function formatWeeklyPlan(plan: WeeklyPlan): string {
   lines.push('---');
   lines.push('## Weekly Totals');
   lines.push(`Calories: ${plan.totals.calories}`);
-  lines.push(`Protein: ${plan.totals.macros.protein}g`);
-  lines.push(`Carbs: ${plan.totals.macros.carbs}g`);
-  lines.push(`Fat: ${plan.totals.macros.fat}g`);
-  lines.push(`Fat: ${plan.totals.macros.fiber}g`);
+  lines.push(`Protein: ${plan.totals.macros.protein.toFixed(1)}g`);
+  lines.push(`Carbs: ${plan.totals.macros.carbs.toFixed(1)}g`);
+  lines.push(`Fat: ${plan.totals.macros.fat.toFixed(1)}g`);
+  lines.push(`Fat: ${plan.totals.macros.fiber.toFixed(1)}g`);
   lines.push(`Estimated Cost: $${plan.totals.estimatedCost.toFixed(2)}`);
 
   return lines.join('\n');
@@ -84,7 +84,7 @@ export function formatWeeklyPlan(plan: WeeklyPlan): string {
 export function formatMeal(type: string, meal: Meal): string {
   const lines = [
     `**${type.charAt(0).toUpperCase() + type.slice(1)}:** ${meal.name}`,
-    `  Calories: ${meal.calories} | P: ${meal.macros.protein}g C: ${meal.macros.carbs}g Ft: ${meal.macros.fat}g Fb: ${meal.macros.fiber}g`,
+    `  Calories: ${meal.calories} | P: ${meal.macros.protein.toFixed(1)}g C: ${meal.macros.carbs.toFixed(1)}g Ft: ${meal.macros.fat.toFixed(1)}g Fb: ${meal.macros.fiber.toFixed(1)}g`,
     `  Prep: ${meal.prepTime}min | Cost: $${meal.estimatedCost.toFixed(2)}`,
   ];
 
