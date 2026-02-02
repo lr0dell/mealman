@@ -94,7 +94,9 @@ export function formatMeal(type: string, meal: Meal): string {
     lines.push(`  Ingredients: `);
 
     meal.ingredients.forEach((ing) => {
-      lines.push(`    - ${ing.name.toUpperCase()} (${ing.amount} ${ing.unit})`);
+      lines.push(
+        `    - ${ing.name.charAt(0).toUpperCase() + ing.name.slice(1)} (${ing.amount} ${ing.unit})`
+      );
     });
 
     lines.push(`  Directions: `);
