@@ -107,4 +107,38 @@ describe('IngredientDatabase', () => {
     const matches = await db.searchIngredients('chicken', 5);
     expect(matches.length).toBe(2);
   });
+
+  it('lists all ingredient names', async () => {
+    await db.addIngredient({
+      name: 'Rice',
+      proteinPer100g: 2.7,
+      carbsPer100g: 28,
+      fatPer100g: 0.3,
+      fiberPer100g: 0.4,
+      pricePerUnit: 3,
+      unit: 'kg',
+      unitWeightGrams: 1000,
+      category: 'grains',
+    });
+
+    const names = db.getAllIngredientNames();
+    expect(names).toContain('Rice');
+  });
+
+  it('updates ingredient', async () => {
+    const ingredient = await db.addIngredient({
+      name: 'Salmon',
+      proteinPer100g: 20,
+      carbsPer100g: 0,
+      fatPer100g: 13,
+      fiberPer100g: 0,
+      pricePerUnit: 15,
+      unit: 'kg',
+      unitWeightGrams: 1000,
+      category: 'seafood',
+    });
+
+    const updated = db.updateIngredient(ingredient.id, { pricePerUnit: 18 });
+    expect(updated.pricePerUnit).toBe(18);
+  });
 });

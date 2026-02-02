@@ -177,6 +177,52 @@ export class IngredientDatabase {
     }));
   }
 
+  getAllIngredientNames(): string[] {
+    const rows = this.db
+      .prepare('SELECT name FROM ingredients ORDER BY name')
+      .all() as Array<{ name: string }>;
+    return rows.map((r) => r.name);
+  }
+
+  updateIngredient(
+    id: number,
+    updates: Partial<Omit<Ingredient, 'id' | 'createdAt'>>
+  ): Ingredient {
+    const fields: string[] = [];
+    const values: unknown[] = [];
+
+    const fieldMap: Record<string, string> = {
+      name: 'name',
+      searchName: 'search_name',
+      proteinPer100g: 'protein_per_100g',
+      carbsPer100g: 'carbs_per_100g',
+      fatPer100g: 'fat_per_100g',
+      fiberPer100g: 'fiber_per_100g',
+      pricePerUnit: 'price_per_unit',
+      unit: 'unit',
+      unitWeightGrams: 'unit_weight_grams',
+      category: 'category',
+      source: 'source',
+      usdaFdcId: 'usda_fdc_id',
+    };
+
+    for (const [key, value] of Object.entries(updates)) {
+      if (value !== undefined && fieldMap[key]) {
+        fields.push(`${fieldMap[key]} = ?`);
+        values.push(value);
+      }
+    }
+
+    if (fields.length > 0) {
+      values.push(id);
+      this.db
+        .prepare(`UPDATE ingredients SET ${fields.join(', ')} WHERE id = ?`)
+        .run(...values);
+    }
+
+    return this.getIngredientById(id)!;
+  }
+
   getStats(): { total: number; byCategory: Record<string, number> } {
     const total = this.db
       .prepare('SELECT COUNT(*) as count FROM ingredients')
