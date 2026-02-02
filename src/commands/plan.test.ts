@@ -20,4 +20,13 @@ describe('parseViewTarget', () => {
     const result = parseViewTarget(undefined);
     expect(result).toEqual({ type: 'week', week: '2026-W06' });
   });
+
+  it('returns current week and date for "today"', () => {
+    const result = parseViewTarget('today');
+    expect(result).toEqual({
+      type: 'day',
+      week: '2026-W06',
+      date: '2026-02-03',
+    });
+  });
 });

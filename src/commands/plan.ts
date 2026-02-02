@@ -105,5 +105,12 @@ export function parseViewTarget(target?: string): ViewTarget {
   if (!target) {
     return { type: 'week', week: getCurrentWeek() };
   }
+
+  if (target === 'today') {
+    const now = new Date();
+    const date = now.toISOString().split('T')[0];
+    return { type: 'day', week: getCurrentWeek(), date };
+  }
+
   throw new Error('Not implemented');
 }
