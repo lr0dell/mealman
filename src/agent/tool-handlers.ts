@@ -1,6 +1,5 @@
 import { PlanState } from '../services/plan-state.js';
-import { KnowledgeBase } from '../services/knowledge-base.js';
-import { USDAClient } from '../services/usda-client.js';
+import { IngredientDatabase } from '../services/ingredient-database.js';
 import {
   calculateMealNutrition,
   type IngredientWithNutrition,
@@ -18,8 +17,7 @@ import type { Meal } from '../schemas/plan.js';
 
 export function createToolHandlers(
   planState: PlanState,
-  kb: KnowledgeBase,
-  usdaClient: USDAClient | null
+  ingredientDb: IngredientDatabase
 ): {
   handle: (toolName: string, input: unknown) => Promise<unknown>;
 } {
@@ -77,13 +75,14 @@ export function createToolHandlers(
     const ingredientsWithNutrition: IngredientWithNutrition[] = [];
 
     for (const ing of input.ingredients) {
-      const entry = await kb.getIngredient(ing.name);
-      if (!entry) {
+      const match = await ingredientDb.searchIngredient(ing.name);
+      if (!match) {
         return {
           success: false,
-          error: `Ingredient "${ing.name}" not found in knowledge base. Use lookup_ingredient first.`,
+          error: `Ingredient "${ing.name}" not found. Try a different search term.`,
         };
       }
+      const entry = match.ingredient;
       ingredientsWithNutrition.push({
         name: entry.name,
         amountGrams: ing.amountGrams,
@@ -178,60 +177,45 @@ export function createToolHandlers(
     };
   }
 
-  async function handleLookupIngredient(
-    input: LookupIngredientInput
-  ): Promise<
+  async function handleLookupIngredient(input: LookupIngredientInput): Promise<
     | {
         found: true;
-        source: string;
-        ingredient: Awaited<ReturnType<typeof kb.getIngredient>>;
+        ingredient: {
+          name: string;
+          matchedName: string;
+          similarity: number;
+          proteinPer100g: number;
+          carbsPer100g: number;
+          fatPer100g: number;
+          fiberPer100g: number;
+          pricePerUnit: number;
+          unit: string;
+        };
       }
     | { found: false; message: string }
   > {
-    // Check KB first
-    const existing = await kb.getIngredient(input.name);
-    if (existing) {
+    const match = await ingredientDb.searchIngredient(input.name);
+
+    if (match) {
       return {
         found: true,
-        source: 'knowledge_base',
-        ingredient: existing,
+        ingredient: {
+          name: input.name,
+          matchedName: match.ingredient.name,
+          similarity: match.similarity,
+          proteinPer100g: match.ingredient.proteinPer100g,
+          carbsPer100g: match.ingredient.carbsPer100g,
+          fatPer100g: match.ingredient.fatPer100g,
+          fiberPer100g: match.ingredient.fiberPer100g,
+          pricePerUnit: match.ingredient.pricePerUnit,
+          unit: match.ingredient.unit,
+        },
       };
     }
 
-    // Try USDA
-    if (usdaClient) {
-      try {
-        const results = await usdaClient.searchFood(input.name);
-        if (results.length > 0) {
-          const best = results[0];
-          const entry = {
-            name: input.name,
-            pricePerUnit: 5, // Default estimate
-            unit: 'kg',
-            unitWeightGrams: 1000,
-            ...best.nutrients,
-            confidence: 'usda' as const,
-            usdaFdcId: best.fdcId,
-            lastUpdated: new Date().toISOString().split('T')[0],
-          };
-          await kb.saveIngredient(input.name, entry);
-          return {
-            found: true,
-            source: 'usda',
-            ingredient: entry,
-          };
-        }
-      } catch {
-        // Fall through to AI estimate
-      }
-    }
-
-    // No USDA client or not found
     return {
       found: false,
-      message: usdaClient
-        ? 'Ingredient not found in USDA database.'
-        : 'Ingredient not found. No USDA API configured.',
+      message: 'No matching ingredient found in database.',
     };
   }
 
@@ -240,24 +224,24 @@ export function createToolHandlers(
   ): Promise<{
     results: Array<{
       name: string;
-      confidence: string;
+      similarity: number;
       proteinPer100g: number;
     }>;
   }> {
-    const results = await kb.searchIngredients(input.query);
+    const matches = await ingredientDb.searchIngredients(input.query, 10);
     return {
-      results: results.map((r) => ({
-        name: r.name,
-        confidence: r.confidence,
-        proteinPer100g: r.proteinPer100g,
+      results: matches.map((m) => ({
+        name: m.ingredient.name,
+        similarity: m.similarity,
+        proteinPer100g: m.ingredient.proteinPer100g,
       })),
     };
   }
 
-  async function handleGetKnownIngredients(): Promise<{
-    ingredients: Awaited<ReturnType<typeof kb.getAllIngredients>>;
-  }> {
-    const ingredients = await kb.getAllIngredients();
+  function handleGetKnownIngredients(): {
+    ingredients: string[];
+  } {
+    const ingredients = ingredientDb.getAllIngredientNames();
     return { ingredients };
   }
 
