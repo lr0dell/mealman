@@ -1,4 +1,4 @@
-import type { WeeklyPlan, Meal } from '../schemas/index.js';
+import type { WeeklyPlan, Meal, DayPlan } from '../schemas/index.js';
 import { AgentPlanner } from '../services/agent-planner.js';
 import { DataStore } from '../data/store.js';
 
@@ -164,6 +164,22 @@ export function formatWeeklyPlanSummary(plan: WeeklyPlan): string {
     }
 
     lines.push('');
+  }
+
+  return lines.join('\n').trim();
+}
+
+export function formatDayPlanSummary(day: DayPlan): string {
+  const dayName = getDayName(day.date);
+  const lines: string[] = [`Meals for ${dayName} (${day.date})`, ''];
+
+  const mealTypes = ['breakfast', 'lunch', 'dinner'] as const;
+  for (const mealType of mealTypes) {
+    const meal = day.meals[mealType];
+    if (meal) {
+      const label = mealType.charAt(0).toUpperCase() + mealType.slice(1);
+      lines.push(`  ${label}: ${meal.name} (${meal.prepTime}min)`);
+    }
   }
 
   return lines.join('\n').trim();

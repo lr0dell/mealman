@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { parseViewTarget, formatWeeklyPlanSummary } from './plan.js';
-import type { WeeklyPlan } from '../schemas/index.js';
+import {
+  parseViewTarget,
+  formatWeeklyPlanSummary,
+  formatDayPlanSummary,
+} from './plan.js';
+import type { WeeklyPlan, DayPlan } from '../schemas/index.js';
 
 describe('parseViewTarget', () => {
   beforeEach(() => {
@@ -121,6 +125,58 @@ describe('formatWeeklyPlanSummary', () => {
     expect(output).toContain('Breakfast: Oatmeal with Berries (10min)');
     expect(output).toContain('Lunch: Chicken Salad Wrap (15min)');
     expect(output).not.toContain('Dinner');
+    expect(output).not.toContain('calories');
+    expect(output).not.toContain('$');
+  });
+});
+
+describe('formatDayPlanSummary', () => {
+  it('formats single day with meal names and prep times', () => {
+    const day: DayPlan = {
+      date: '2026-02-03',
+      meals: {
+        breakfast: {
+          name: 'Oatmeal with Berries',
+          recipe: 'Cook oats...',
+          ingredients: [],
+          prepTime: 10,
+          calories: 350,
+          macros: { protein: 12, carbs: 45, fat: 8, fiber: 6 },
+          estimatedCost: 1.5,
+          servings: 1,
+          leftoverOf: null,
+        },
+        lunch: {
+          name: 'Chicken Salad Wrap',
+          recipe: 'Mix chicken...',
+          ingredients: [],
+          prepTime: 15,
+          calories: 520,
+          macros: { protein: 35, carbs: 40, fat: 18, fiber: 4 },
+          estimatedCost: 4.0,
+          servings: 1,
+          leftoverOf: null,
+        },
+        dinner: {
+          name: 'Pasta Primavera',
+          recipe: 'Boil pasta...',
+          ingredients: [],
+          prepTime: 25,
+          calories: 680,
+          macros: { protein: 20, carbs: 90, fat: 22, fiber: 8 },
+          estimatedCost: 6.0,
+          servings: 2,
+          leftoverOf: null,
+        },
+      },
+    };
+
+    const output = formatDayPlanSummary(day);
+
+    expect(output).toContain('Meals for Tuesday (2026-02-03)');
+    expect(output).toContain('Breakfast: Oatmeal with Berries (10min)');
+    expect(output).toContain('Lunch: Chicken Salad Wrap (15min)');
+    expect(output).toContain('Dinner: Pasta Primavera (25min)');
     expect(output).not.toContain('calories');
     expect(output).not.toContain('$');
   });
