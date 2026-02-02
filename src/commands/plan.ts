@@ -2,6 +2,12 @@ import type { WeeklyPlan, Meal } from '../schemas/index.js';
 import { AgentPlanner } from '../services/agent-planner.js';
 import { DataStore } from '../data/store.js';
 
+export type ViewTarget = {
+  type: 'week' | 'day';
+  week: string;
+  date?: string;
+};
+
 export async function generateWeekPlan(dataDir: string): Promise<void> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -93,4 +99,11 @@ export function getCurrentWeek(): string {
   const oneWeek = 604800000;
   const weekNum = Math.ceil((diff + start.getDay() * 86400000) / oneWeek);
   return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+export function parseViewTarget(target?: string): ViewTarget {
+  if (!target) {
+    return { type: 'week', week: getCurrentWeek() };
+  }
+  throw new Error('Not implemented');
 }
