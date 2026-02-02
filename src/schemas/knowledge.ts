@@ -32,5 +32,52 @@ export const MealEntrySchema = z.object({
 
 export const MealsKnowledgeSchema = z.record(z.string(), MealEntrySchema);
 
+export const IngredientCategorySchema = z.enum([
+  'meat',
+  'seafood',
+  'dairy',
+  'produce',
+  'grains',
+  'legumes',
+  'oils',
+  'other',
+]);
+
+export interface Ingredient {
+  id: number;
+  name: string;
+  searchName: string;
+  proteinPer100g: number;
+  carbsPer100g: number;
+  fatPer100g: number;
+  fiberPer100g: number;
+  pricePerUnit: number;
+  unit: string;
+  unitWeightGrams: number;
+  category: IngredientCategory;
+  source: 'usda' | 'custom';
+  usdaFdcId: number | null;
+  createdAt: string;
+}
+
+export interface IngredientMatch {
+  ingredient: Ingredient;
+  similarity: number;
+}
+
+export interface NewIngredient {
+  name: string;
+  proteinPer100g: number;
+  carbsPer100g: number;
+  fatPer100g: number;
+  fiberPer100g: number;
+  pricePerUnit: number;
+  unit: string;
+  unitWeightGrams: number;
+  category: IngredientCategory;
+  usdaFdcId?: number;
+}
+
+export type IngredientCategory = z.infer<typeof IngredientCategorySchema>;
 export type IngredientEntry = z.infer<typeof IngredientEntrySchema>;
 export type MealEntry = z.infer<typeof MealEntrySchema>;
