@@ -1,8 +1,25 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdirSync, rmSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { AgentPlanner } from './agent-planner.js';
 import type { Profile } from '../schemas/index.js';
 
 describe('AgentPlanner', () => {
+  const testDir = join(process.cwd(), 'test-data-agent-planner');
+
+  beforeEach(() => {
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true });
+    }
+    mkdirSync(testDir, { recursive: true });
+  });
+
+  afterEach(() => {
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true });
+    }
+  });
+
   const mockProfile: Profile = {
     goals: {
       dailyCalories: { min: 1800, max: 2200 },
@@ -52,7 +69,7 @@ describe('AgentPlanner', () => {
   it('can be instantiated with API key and data directory', () => {
     const planner = new AgentPlanner({
       anthropicApiKey: 'test-key',
-      dataDir: '/tmp/test',
+      dataDir: testDir,
     });
     expect(planner).toBeDefined();
   });
@@ -60,7 +77,7 @@ describe('AgentPlanner', () => {
   it('builds system prompt with profile info', () => {
     const planner = new AgentPlanner({
       anthropicApiKey: 'test-key',
-      dataDir: '/tmp/test',
+      dataDir: testDir,
     });
 
     const prompt = planner.buildSystemPrompt(mockProfile);
