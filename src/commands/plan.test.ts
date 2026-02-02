@@ -289,4 +289,23 @@ describe('viewPlan', () => {
 
     expect(result).toContain('No meals found for 2026-02-04');
   });
+
+  it('returns detailed output for week when flag is true', async () => {
+    await store.saveWeeklyPlan(samplePlan);
+
+    const result = await viewPlan(store, undefined, true);
+
+    expect(result).toContain('Meal Plan for 2026-W06');
+    expect(result).toContain('Calories: 350');
+    expect(result).toContain('Weekly Totals');
+  });
+
+  it('returns detailed output for day when flag is true', async () => {
+    await store.saveWeeklyPlan(samplePlan);
+
+    const result = await viewPlan(store, 'today', true);
+
+    expect(result).toContain('Calories: 350');
+    expect(result).toContain('P: 12g');
+  });
 });
