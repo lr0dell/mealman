@@ -247,4 +247,20 @@ describe('viewPlan', () => {
     expect(result).toContain('Oatmeal (10min)');
     expect(result).not.toContain('calories');
   });
+
+  it('returns helpful message when no plan exists', async () => {
+    const result = await viewPlan(store);
+
+    expect(result).toBe(
+      "No meal plan found for 2026-W06. Run 'meal plan week' to generate one."
+    );
+  });
+
+  it('returns helpful message for specific week not found', async () => {
+    const result = await viewPlan(store, '2026-W01');
+
+    expect(result).toBe(
+      "No meal plan found for 2026-W01. Run 'meal plan week' to generate one."
+    );
+  });
 });
