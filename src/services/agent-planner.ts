@@ -1,7 +1,6 @@
 import { AIClient } from '../ai/client.js';
-import { KnowledgeBase } from './knowledge-base.js';
+import { IngredientDatabase } from './ingredient-database.js';
 import { PlanState } from './plan-state.js';
-import { USDAClient } from './usda-client.js';
 import { createToolHandlers } from '../agent/tool-handlers.js';
 import { PLANNING_TOOLS } from '../agent/tools.js';
 import { PlanningProgressTracker } from './planning-progress-tracker.js';
@@ -13,22 +12,26 @@ import type { WeeklyPlan } from '../schemas/plan.js';
 export interface AgentPlannerOptions {
   anthropicApiKey: string;
   dataDir: string;
-  usdaApiKey?: string;
 }
 
 export class AgentPlanner {
   private aiClient: AIClient;
-  private kb: KnowledgeBase;
-  private usdaClient: USDAClient | null;
+  private ingredientDb: IngredientDatabase;
+  private initialized = false;
 
   constructor(options: AgentPlannerOptions) {
     this.aiClient = new AIClient(options.anthropicApiKey);
-    this.kb = new KnowledgeBase(options.dataDir);
-    this.usdaClient = options.usdaApiKey
-      ? new USDAClient(options.usdaApiKey)
-      : null;
+    this.ingredientDb = new IngredientDatabase(
+      join(options.dataDir, 'ingredients.db')
+    );
   }
 
+  private async ensureInitialized(): Promise<void> {
+    if (!this.initialized) {
+      await this.ingredientDb.init();
+      this.initialized = true;
+    }
+  }
   buildSystemPrompt(profile: Profile): string {
     const { goals, dietary, preferences, household } = profile;
 
@@ -110,8 +113,10 @@ Start by checking get_plan_state, then add meals day by day. Use lookup_ingredie
     week: string,
     dataDir: string
   ): Promise<WeeklyPlan> {
+    await this.ensureInitialized();
+
     const planState = new PlanState(week, profile, pantry);
-    const handlers = createToolHandlers(planState, this.kb, this.usdaClient);
+    const handlers = createToolHandlers(planState, this.ingredientDb);
 
     const systemPrompt = this.buildSystemPrompt(profile);
     const initialMessage = this.buildInitialMessage(profile, pantry, week);
