@@ -39,4 +39,22 @@ describe('parseViewTarget', () => {
     const result = parseViewTarget('2025-W52');
     expect(result).toEqual({ type: 'week', week: '2025-W52' });
   });
+
+  it('returns day and derived week for valid date', () => {
+    const result = parseViewTarget('2026-02-03');
+    expect(result).toEqual({
+      type: 'day',
+      week: '2026-W06',
+      date: '2026-02-03',
+    });
+  });
+
+  it('returns day and derived week for date in different week', () => {
+    const result = parseViewTarget('2026-01-27');
+    expect(result).toEqual({
+      type: 'day',
+      week: '2026-W05',
+      date: '2026-01-27',
+    });
+  });
 });

@@ -3,6 +3,7 @@ import { AgentPlanner } from '../services/agent-planner.js';
 import { DataStore } from '../data/store.js';
 
 const WEEK_REGEX = /^\d{4}-W\d{2}$/;
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 export type ViewTarget = {
   type: 'week' | 'day';
@@ -94,13 +95,17 @@ function formatMeal(type: string, meal: Meal): string {
   return lines.join('\n');
 }
 
-export function getCurrentWeek(): string {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 1);
-  const diff = now.getTime() - start.getTime();
+function getWeekIdentifier(date: Date): string {
+  const start = new Date(date.getFullYear(), 0, 1);
+  const diff = date.getTime() - start.getTime();
   const oneWeek = 604800000;
   const weekNum = Math.ceil((diff + start.getDay() * 86400000) / oneWeek);
-  return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+  return `${date.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+export function getCurrentWeek(): string {
+  const now = new Date();
+  return getWeekIdentifier(now);
 }
 
 export function parseViewTarget(target?: string): ViewTarget {
@@ -116,6 +121,11 @@ export function parseViewTarget(target?: string): ViewTarget {
 
   if (WEEK_REGEX.test(target)) {
     return { type: 'week', week: target };
+  }
+
+  if (DATE_REGEX.test(target)) {
+    const date = new Date(target + 'T00:00:00');
+    return { type: 'day', week: getWeekIdentifier(date), date: target };
   }
 
   throw new Error('Not implemented');
