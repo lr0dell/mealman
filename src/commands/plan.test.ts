@@ -29,4 +29,14 @@ describe('parseViewTarget', () => {
       date: '2026-02-03',
     });
   });
+
+  it('returns week for valid week identifier', () => {
+    const result = parseViewTarget('2026-W05');
+    expect(result).toEqual({ type: 'week', week: '2026-W05' });
+  });
+
+  it('returns week for another valid week identifier', () => {
+    const result = parseViewTarget('2025-W52');
+    expect(result).toEqual({ type: 'week', week: '2025-W52' });
+  });
 });

@@ -2,6 +2,8 @@ import type { WeeklyPlan, Meal } from '../schemas/index.js';
 import { AgentPlanner } from '../services/agent-planner.js';
 import { DataStore } from '../data/store.js';
 
+const WEEK_REGEX = /^\d{4}-W\d{2}$/;
+
 export type ViewTarget = {
   type: 'week' | 'day';
   week: string;
@@ -110,6 +112,10 @@ export function parseViewTarget(target?: string): ViewTarget {
     const now = new Date();
     const date = now.toISOString().split('T')[0];
     return { type: 'day', week: getCurrentWeek(), date };
+  }
+
+  if (WEEK_REGEX.test(target)) {
+    return { type: 'week', week: target };
   }
 
   throw new Error('Not implemented');
