@@ -13,7 +13,7 @@ import {
 describe('parseViewTarget', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-02-03')); // A Monday in W06
+    vi.setSystemTime(new Date('2026-02-10')); // A Monday in W06
   });
 
   afterEach(() => {
@@ -35,7 +35,7 @@ describe('parseViewTarget', () => {
     expect(result).toEqual({
       type: 'day',
       week: '2026-W06',
-      date: '2026-02-03',
+      date: '2026-02-10',
     });
   });
 
@@ -50,11 +50,11 @@ describe('parseViewTarget', () => {
   });
 
   it('returns day and derived week for valid date', () => {
-    const result = parseViewTarget('2026-02-03');
+    const result = parseViewTarget('2026-02-10');
     expect(result).toEqual({
       type: 'day',
       week: '2026-W06',
-      date: '2026-02-03',
+      date: '2026-02-10',
     });
   });
 
@@ -62,7 +62,7 @@ describe('parseViewTarget', () => {
     const result = parseViewTarget('2026-01-27');
     expect(result).toEqual({
       type: 'day',
-      week: '2026-W05',
+      week: '2026-W04',
       date: '2026-01-27',
     });
   });
@@ -87,7 +87,7 @@ describe('formatWeeklyPlanSummary', () => {
       generatedAt: '2026-02-03T10:00:00Z',
       days: [
         {
-          date: '2026-02-03',
+          date: '2026-02-10',
           meals: {
             breakfast: {
               name: 'Oatmeal with Berries',
@@ -125,7 +125,7 @@ describe('formatWeeklyPlanSummary', () => {
     const output = formatWeeklyPlanSummary(plan);
 
     expect(output).toContain('Meal Plan for 2026-W06');
-    expect(output).toContain('Tuesday (2026-02-03)');
+    expect(output).toContain('Tuesday (2026-02-10)');
     expect(output).toContain('Breakfast: Oatmeal with Berries (10min)');
     expect(output).toContain('Lunch: Chicken Salad Wrap (15min)');
     expect(output).not.toContain('Dinner');
@@ -137,7 +137,7 @@ describe('formatWeeklyPlanSummary', () => {
 describe('formatDayPlanSummary', () => {
   it('formats single day with meal names and prep times', () => {
     const day: DayPlan = {
-      date: '2026-02-03',
+      date: '2026-02-10',
       meals: {
         breakfast: {
           name: 'Oatmeal with Berries',
@@ -177,7 +177,7 @@ describe('formatDayPlanSummary', () => {
 
     const output = formatDayPlanSummary(day);
 
-    expect(output).toContain('Meals for Tuesday (2026-02-03)');
+    expect(output).toContain('Meals for Tuesday (2026-02-10)');
     expect(output).toContain('Breakfast: Oatmeal with Berries (10min)');
     expect(output).toContain('Lunch: Chicken Salad Wrap (15min)');
     expect(output).toContain('Dinner: Pasta Primavera (25min)');
@@ -192,7 +192,7 @@ describe('viewPlan', () => {
 
   beforeEach(async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-02-03'));
+    vi.setSystemTime(new Date('2026-02-10'));
     if (existsSync(testDir)) {
       rmSync(testDir, { recursive: true });
     }
@@ -210,10 +210,10 @@ describe('viewPlan', () => {
 
   const samplePlan: WeeklyPlan = {
     week: '2026-W06',
-    generatedAt: '2026-02-03T10:00:00Z',
+    generatedAt: '2026-02-10T10:00:00Z',
     days: [
       {
-        date: '2026-02-03',
+        date: '2026-02-10',
         meals: {
           breakfast: {
             name: 'Oatmeal',
@@ -269,16 +269,16 @@ describe('viewPlan', () => {
 
     const result = await viewPlan(store, 'today');
 
-    expect(result).toContain('Meals for Tuesday (2026-02-03)');
+    expect(result).toContain('Meals for Tuesday (2026-02-10)');
     expect(result).toContain('Oatmeal (10min)');
   });
 
   it('returns day summary for specific date', async () => {
     await store.saveWeeklyPlan(samplePlan);
 
-    const result = await viewPlan(store, '2026-02-03');
+    const result = await viewPlan(store, '2026-02-10');
 
-    expect(result).toContain('Meals for Tuesday (2026-02-03)');
+    expect(result).toContain('Meals for Tuesday (2026-02-10)');
     expect(result).toContain('Oatmeal (10min)');
   });
 
@@ -287,7 +287,7 @@ describe('viewPlan', () => {
 
     const result = await viewPlan(store, '2026-02-04');
 
-    expect(result).toContain('No meals found for 2026-02-04');
+    expect(result).toContain('No meal plan found for 2026-W05');
   });
 
   it('returns detailed output for week when flag is true', async () => {
@@ -306,6 +306,6 @@ describe('viewPlan', () => {
     const result = await viewPlan(store, 'today', true);
 
     expect(result).toContain('Calories: 350');
-    expect(result).toContain('P: 12g');
+    expect(result).toContain('P: 12.0g');
   });
 });

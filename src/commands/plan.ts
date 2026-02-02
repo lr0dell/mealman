@@ -85,11 +85,20 @@ export function formatMeal(type: string, meal: Meal): string {
   const lines = [
     `**${type.charAt(0).toUpperCase() + type.slice(1)}:** ${meal.name}`,
     `  Calories: ${meal.calories} | P: ${meal.macros.protein.toFixed(1)}g C: ${meal.macros.carbs.toFixed(1)}g Ft: ${meal.macros.fat.toFixed(1)}g Fb: ${meal.macros.fiber.toFixed(1)}g`,
-    `  Prep: ${meal.prepTime}min | Cost: $${meal.estimatedCost.toFixed(2)}`,
+    `  Prep: ${meal.prepTime}min | Serves: ${meal.servings}`,
   ];
 
   if (meal.leftoverOf) {
     lines.push(`  (Leftover from: ${meal.leftoverOf})`);
+  } else {
+    lines.push(`  Ingredients: `);
+
+    meal.ingredients.forEach((ing) => {
+      lines.push(`    - ${ing.name.toUpperCase()} (${ing.amount} ${ing.unit})`);
+    });
+
+    lines.push(`  Directions: `);
+    lines.push(`    ${meal.recipe}`);
   }
 
   return lines.join('\n');
@@ -99,7 +108,7 @@ function getWeekIdentifier(date: Date): string {
   const start = new Date(date.getFullYear(), 0, 1);
   const diff = date.getTime() - start.getTime();
   const oneWeek = 604800000;
-  const weekNum = Math.ceil((diff + start.getDay() * 86400000) / oneWeek);
+  const weekNum = Math.floor((diff + start.getDay() * 86400000) / oneWeek);
   return `${date.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
 }
 
