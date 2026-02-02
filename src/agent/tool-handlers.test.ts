@@ -1,7 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createToolHandlers } from './tool-handlers.js';
 import { PlanState } from '../services/plan-state.js';
-import { KnowledgeBase } from '../services/knowledge-base.js';
+import { IngredientDatabase } from '../services/ingredient-database.js';
+import { mkdirSync, rmSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Profile, Pantry } from '../schemas/index.js';
 
 describe('ToolHandlers', () => {
@@ -53,19 +55,65 @@ describe('ToolHandlers', () => {
 
   const mockPantry: Pantry = { items: [] };
 
+  const testDir = join(process.cwd(), 'test-data-tool-handlers');
   let planState: PlanState;
-  let kb: KnowledgeBase;
+  let ingredientDb: IngredientDatabase;
   let handlers: ReturnType<typeof createToolHandlers>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Create fresh test database
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true });
+    }
+    mkdirSync(testDir, { recursive: true });
+
     planState = new PlanState('2026-W05', mockProfile, mockPantry);
-    kb = {
-      getIngredient: vi.fn(),
-      saveIngredient: vi.fn(),
-      searchIngredients: vi.fn(),
-      getAllIngredients: vi.fn(),
-    } as unknown as KnowledgeBase;
-    handlers = createToolHandlers(planState, kb, null);
+    ingredientDb = new IngredientDatabase(join(testDir, 'test-ingredients.db'));
+    await ingredientDb.init();
+
+    // Add test ingredients
+    await ingredientDb.addIngredient({
+      name: 'chicken breast',
+      proteinPer100g: 31,
+      carbsPer100g: 0,
+      fatPer100g: 3.6,
+      fiberPer100g: 0,
+      pricePerUnit: 10,
+      unit: 'kg',
+      unitWeightGrams: 1000,
+      category: 'meat',
+    });
+
+    await ingredientDb.addIngredient({
+      name: 'brown rice',
+      proteinPer100g: 2.7,
+      carbsPer100g: 23,
+      fatPer100g: 0.9,
+      fiberPer100g: 1.8,
+      pricePerUnit: 3,
+      unit: 'kg',
+      unitWeightGrams: 1000,
+      category: 'grains',
+    });
+
+    await ingredientDb.addIngredient({
+      name: 'broccoli',
+      proteinPer100g: 2.8,
+      carbsPer100g: 7,
+      fatPer100g: 0.4,
+      fiberPer100g: 2.6,
+      pricePerUnit: 4,
+      unit: 'kg',
+      unitWeightGrams: 1000,
+      category: 'produce',
+    });
+
+    handlers = createToolHandlers(planState, ingredientDb);
+  });
+
+  afterEach(() => {
+    ingredientDb.close();
+    rmSync(testDir, { recursive: true });
   });
 
   describe('get_plan_state', () => {
@@ -78,45 +126,46 @@ describe('ToolHandlers', () => {
   });
 
   describe('lookup_ingredient', () => {
-    it('returns ingredient from knowledge base if found', async () => {
-      const ingredient = {
-        name: 'chicken breast',
-        pricePerUnit: 10,
-        unit: 'kg',
-        unitWeightGrams: 1000,
-        proteinPer100g: 31,
-        carbsPer100g: 0,
-        fatPer100g: 3.6,
-        fiberPer100g: 0,
-        confidence: 'usda' as const,
-        lastUpdated: '2026-01-30',
-      };
-      (kb.getIngredient as ReturnType<typeof vi.fn>).mockResolvedValue(
-        ingredient
-      );
-
+    it('returns ingredient from database if found', async () => {
       const result = await handlers.handle('lookup_ingredient', {
         name: 'chicken breast',
       });
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         found: true,
-        source: 'knowledge_base',
-        ingredient,
+        ingredient: {
+          name: 'chicken breast',
+          matchedName: 'chicken breast',
+          proteinPer100g: 31,
+          carbsPer100g: 0,
+          fatPer100g: 3.6,
+          fiberPer100g: 0,
+          pricePerUnit: 10,
+          unit: 'kg',
+        },
       });
+      expect(
+        (result as { ingredient: { similarity: number } }).ingredient.similarity
+      ).toBeGreaterThan(0);
     });
 
-    it('returns not found if ingredient missing and no USDA client', async () => {
-      (kb.getIngredient as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-
+    it('returns best semantic match even for unusual queries', async () => {
       const result = await handlers.handle('lookup_ingredient', {
-        name: 'unknown food',
+        name: 'poultry',
       });
 
-      expect(result).toEqual({
-        found: false,
-        message: 'Ingredient not found. No USDA API configured.',
+      expect(result).toMatchObject({
+        found: true,
+        ingredient: {
+          matchedName: 'chicken breast', // Should match chicken due to semantic similarity
+          proteinPer100g: 31,
+        },
       });
+      // Similarity should be decent but not perfect
+      const similarity = (result as { ingredient: { similarity: number } })
+        .ingredient.similarity;
+      expect(similarity).toBeGreaterThan(0.5);
+      expect(similarity).toBeLessThan(1);
     });
   });
 });
