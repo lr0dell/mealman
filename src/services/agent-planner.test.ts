@@ -126,4 +126,31 @@ describe('AgentPlanner', () => {
     expect(prompt).toContain('chicken breast');
     expect(prompt).toContain('black beans');
   });
+
+  it('encourages pantry usage without requiring it', () => {
+    const planner = new AgentPlanner({
+      anthropicApiKey: 'test-key',
+      dataDir: testDir,
+    });
+
+    const prompt = planner.buildSystemPrompt(mockProfile);
+
+    expect(prompt).toContain('pantry');
+    expect(prompt).toContain('encouraged');
+    expect(prompt).not.toContain('MUST use pantry');
+    expect(prompt).not.toContain('required to use');
+  });
+
+  it('mentions shopping list limit', () => {
+    const planner = new AgentPlanner({
+      anthropicApiKey: 'test-key',
+      dataDir: testDir,
+    });
+
+    const prompt = planner.buildSystemPrompt(mockProfile);
+
+    expect(prompt).toContain('shopping list');
+    expect(prompt).toContain('20');
+    expect(prompt).toContain('reus');
+  });
 });
