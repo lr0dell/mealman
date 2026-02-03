@@ -113,4 +113,17 @@ describe('AgentPlanner', () => {
     // Should explain that in_range means success, stop adjusting
     expect(prompt.toLowerCase()).toMatch(/in.range.*stop|stop.*in.range/i);
   });
+
+  it('instructs agent to use recipe-accurate ingredient names', () => {
+    const planner = new AgentPlanner({
+      anthropicApiKey: 'test-key',
+      dataDir: testDir,
+    });
+
+    const prompt = planner.buildSystemPrompt(mockProfile);
+
+    expect(prompt).toContain('recipe-accurate ingredient names');
+    expect(prompt).toContain('chicken breast');
+    expect(prompt).toContain('black beans');
+  });
 });

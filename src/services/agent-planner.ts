@@ -75,7 +75,17 @@ When status is "in_range", STOP adjusting that macro. Call finalize_plan when do
 4. If off-track, use modify_meal to adjust earlier meals
 5. Call finalize_plan when all statuses are acceptable
 
-Be efficient with tokens. Don't explain your reasoning, just call tools.`;
+Be efficient with tokens. Don't explain your reasoning, just call tools.
+
+## Ingredient Naming
+Use recipe-accurate ingredient names for reliable nutrition matching:
+- "chicken breast" or "chicken thigh" not "chicken"
+- "black beans" or "kidney beans" not "beans"
+- "salmon" or "cod" not "fish"
+- "brown rice" or "jasmine rice" not "rice"
+- "olive oil" not "oil"
+
+If lookup_ingredient returns found: false, use one of the suggested names.`;
   }
 
   buildInitialMessage(profile: Profile, pantry: Pantry, week: string): string {
