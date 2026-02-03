@@ -226,4 +226,74 @@ describe('PlanState', () => {
       expect(remaining.macros.fiber.status).toBe('under');
     });
   });
+
+  describe('ingredient tracking', () => {
+    it('tracks unique ingredients across all meals', () => {
+      const state = new PlanState('2026-W05', mockProfile, mockPantry);
+
+      state.addMeal('2026-01-27', 'breakfast', {
+        name: 'Eggs',
+        recipe: 'Scrambled',
+        ingredients: [
+          { name: 'whole egg', amount: 100, unit: 'g' },
+          { name: 'butter', amount: 10, unit: 'g' },
+        ],
+        prepTime: 10,
+        calories: 200,
+        macros: { protein: 15, carbs: 1, fat: 15, fiber: 0 },
+        estimatedCost: 2,
+        servings: 1,
+        leftoverOf: null,
+      });
+
+      state.addMeal('2026-01-27', 'lunch', {
+        name: 'Chicken',
+        recipe: 'Grilled',
+        ingredients: [
+          { name: 'chicken breast', amount: 200, unit: 'g' },
+          { name: 'butter', amount: 10, unit: 'g' }, // duplicate
+        ],
+        prepTime: 20,
+        calories: 300,
+        macros: { protein: 40, carbs: 0, fat: 8, fiber: 0 },
+        estimatedCost: 4,
+        servings: 1,
+        leftoverOf: null,
+      });
+
+      const ingredients = state.getUniqueIngredients();
+      expect(ingredients).toHaveLength(3); // whole egg, butter, chicken breast
+      expect(ingredients).toContain('whole egg');
+      expect(ingredients).toContain('butter');
+      expect(ingredients).toContain('chicken breast');
+    });
+
+    it('returns shopping list status with count and warning', () => {
+      const state = new PlanState('2026-W05', mockProfile, mockPantry);
+
+      // Add meal with many ingredients
+      state.addMeal('2026-01-27', 'breakfast', {
+        name: 'Complex meal',
+        recipe: 'Cook it',
+        ingredients: Array.from({ length: 18 }, (_, i) => ({
+          name: `ingredient-${i}`,
+          amount: 100,
+          unit: 'g',
+        })),
+        prepTime: 30,
+        calories: 500,
+        macros: { protein: 20, carbs: 50, fat: 20, fiber: 5 },
+        estimatedCost: 15,
+        servings: 1,
+        leftoverOf: null,
+      });
+
+      const status = state.getShoppingListStatus();
+      expect(status.count).toBe(18);
+      expect(status.limit).toBe(20);
+      expect(status.warning).toBe(
+        'Approaching limit: 18/20 unique ingredients'
+      );
+    });
+  });
 });

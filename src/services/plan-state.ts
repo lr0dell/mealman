@@ -50,6 +50,7 @@ export class PlanState {
   private profile: Profile;
   private pantry: Pantry;
   private days: Map<string, DayMeals> = new Map();
+  private readonly SHOPPING_LIST_LIMIT = 20;
 
   constructor(week: string, profile: Profile, pantry: Pantry) {
     this.week = week;
@@ -259,5 +260,39 @@ export class PlanState {
         estimatedCost: summary.weeklyTotals.estimatedCost,
       },
     };
+  }
+
+  getUniqueIngredients(): string[] {
+    const ingredients = new Set<string>();
+
+    for (const [, day] of this.days) {
+      for (const meal of [day.breakfast, day.lunch, day.dinner]) {
+        if (meal) {
+          for (const ing of meal.ingredients) {
+            ingredients.add(ing.name.toLowerCase());
+          }
+        }
+      }
+    }
+
+    return Array.from(ingredients);
+  }
+
+  getShoppingListStatus(): {
+    count: number;
+    limit: number;
+    warning: string | null;
+  } {
+    const ingredients = this.getUniqueIngredients();
+    const count = ingredients.length;
+
+    let warning: string | null = null;
+    if (count >= this.SHOPPING_LIST_LIMIT) {
+      warning = `Shopping list limit reached: ${count}/${this.SHOPPING_LIST_LIMIT} unique ingredients. Reuse existing ingredients.`;
+    } else if (count >= this.SHOPPING_LIST_LIMIT - 5) {
+      warning = `Approaching limit: ${count}/${this.SHOPPING_LIST_LIMIT} unique ingredients`;
+    }
+
+    return { count, limit: this.SHOPPING_LIST_LIMIT, warning };
   }
 }
