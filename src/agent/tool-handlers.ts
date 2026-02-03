@@ -71,6 +71,11 @@ export function createToolHandlers(
             }
           | undefined;
         remainingBudget: ReturnType<typeof planState.getRemainingBudget>;
+        shoppingList: {
+          count: number;
+          limit: number;
+          warning: string | null;
+        };
       }
   > {
     // Look up all ingredients
@@ -132,6 +137,7 @@ export function createToolHandlers(
       },
       dayTotals,
       remainingBudget: planState.getRemainingBudget(),
+      shoppingList: planState.getShoppingListStatus(),
     };
   }
 

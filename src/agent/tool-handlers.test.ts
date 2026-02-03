@@ -196,6 +196,28 @@ describe('ToolHandlers', () => {
       });
     });
   });
+
+  describe('add_meal shopping list tracking', () => {
+    it('includes shopping list status in add_meal response', async () => {
+      const result = await handlers.handle('add_meal', {
+        date: '2026-01-27',
+        slot: 'breakfast',
+        name: 'Test meal',
+        recipe: 'Cook it',
+        ingredients: [
+          { name: 'chicken breast', amountGrams: 200 },
+          { name: 'brown rice', amountGrams: 150 },
+        ],
+        prepTime: 20,
+        servings: 2,
+      });
+
+      expect(result).toHaveProperty('shoppingList');
+      expect(
+        (result as { shoppingList: { count: number } }).shoppingList.count
+      ).toBe(2);
+    });
+  });
 });
 
 describe('PLANNING_TOOLS', () => {
