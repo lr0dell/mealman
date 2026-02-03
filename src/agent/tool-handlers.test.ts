@@ -264,7 +264,7 @@ describe('ToolHandlers', () => {
       const typedResult = result as { autoNotes: string };
       expect(typedResult.autoNotes).toBeDefined();
       expect(typedResult.autoNotes).not.toContain('9999');
-      expect(typedResult.autoNotes).toContain('calories');
+      expect(typedResult.autoNotes).toContain('Calories');
     });
   });
 });
