@@ -218,6 +218,31 @@ describe('ToolHandlers', () => {
       ).toBe(2);
     });
   });
+
+  describe('get_plan_state with pantry', () => {
+    it('includes unused pantry items in response', async () => {
+      // Create handlers with pantry items
+      const pantryState = new PlanState('2026-W05', mockProfile, {
+        items: [
+          {
+            name: 'eggs',
+            quantity: 12,
+            unit: 'count',
+            addedDate: '2026-02-03',
+          },
+        ],
+      });
+      const handlersWithPantry = createToolHandlers(pantryState, ingredientDb);
+
+      const result = await handlersWithPantry.handle('get_plan_state', {});
+
+      expect(result).toHaveProperty('pantryStatus');
+      expect(
+        (result as { pantryStatus: { unusedItems: string[] } }).pantryStatus
+          .unusedItems
+      ).toContain('eggs');
+    });
+  });
 });
 
 describe('PLANNING_TOOLS', () => {

@@ -32,6 +32,11 @@ export function createToolHandlers(
       estimatedCost: number;
     };
     remainingBudget: ReturnType<typeof planState.getRemainingBudget>;
+    shoppingList: ReturnType<typeof planState.getShoppingListStatus>;
+    pantryStatus: {
+      items: ReturnType<typeof planState.getPantryStatus>;
+      unusedItems: string[];
+    };
   } {
     const summary = planState.getSummary();
     const remaining = planState.getRemainingBudget();
@@ -40,6 +45,11 @@ export function createToolHandlers(
       mealsPlanned: summary.mealsPlanned,
       weeklyTotals: summary.weeklyTotals,
       remainingBudget: remaining,
+      shoppingList: planState.getShoppingListStatus(),
+      pantryStatus: {
+        items: planState.getPantryStatus(),
+        unusedItems: planState.getUnusedPantryItems(),
+      },
     };
   }
 
