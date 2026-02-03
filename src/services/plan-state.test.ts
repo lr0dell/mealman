@@ -296,4 +296,79 @@ describe('PlanState', () => {
       );
     });
   });
+
+  describe('pantry tracking', () => {
+    it('tracks when pantry items are used in meals', () => {
+      const pantryWithItems: Pantry = {
+        items: [
+          {
+            name: 'eggs',
+            quantity: 12,
+            unit: 'count',
+            addedDate: '2026-02-03',
+          },
+          { name: 'butter', quantity: 500, unit: 'g', addedDate: '2026-02-03' },
+        ],
+      };
+
+      const state = new PlanState('2026-W05', mockProfile, pantryWithItems);
+
+      state.addMeal('2026-01-27', 'breakfast', {
+        name: 'Eggs',
+        recipe: 'Scrambled',
+        ingredients: [
+          { name: 'eggs', amount: 100, unit: 'g' },
+          { name: 'butter', amount: 20, unit: 'g' },
+        ],
+        prepTime: 10,
+        calories: 200,
+        macros: { protein: 15, carbs: 1, fat: 15, fiber: 0 },
+        estimatedCost: 2,
+        servings: 1,
+        leftoverOf: null,
+      });
+
+      const status = state.getPantryStatus();
+      expect(status).toHaveLength(2);
+
+      const eggsStatus = status.find((s) => s.name === 'eggs');
+      expect(eggsStatus?.used).toBe(true);
+
+      const butterStatus = status.find((s) => s.name === 'butter');
+      expect(butterStatus?.used).toBe(true);
+    });
+
+    it('identifies unused pantry items', () => {
+      const pantryWithItems: Pantry = {
+        items: [
+          {
+            name: 'eggs',
+            quantity: 12,
+            unit: 'count',
+            addedDate: '2026-02-03',
+          },
+          { name: 'milk', quantity: 1000, unit: 'ml', addedDate: '2026-02-03' },
+        ],
+      };
+
+      const state = new PlanState('2026-W05', mockProfile, pantryWithItems);
+
+      // Only use eggs
+      state.addMeal('2026-01-27', 'breakfast', {
+        name: 'Eggs',
+        recipe: 'Boiled',
+        ingredients: [{ name: 'eggs', amount: 100, unit: 'g' }],
+        prepTime: 10,
+        calories: 150,
+        macros: { protein: 12, carbs: 1, fat: 10, fiber: 0 },
+        estimatedCost: 1,
+        servings: 1,
+        leftoverOf: null,
+      });
+
+      const unused = state.getUnusedPantryItems();
+      expect(unused).toHaveLength(1);
+      expect(unused[0]).toBe('milk');
+    });
+  });
 });

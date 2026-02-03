@@ -295,4 +295,28 @@ export class PlanState {
 
     return { count, limit: this.SHOPPING_LIST_LIMIT, warning };
   }
+
+  getPantryStatus(): Array<{
+    name: string;
+    quantity: number;
+    unit: string;
+    used: boolean;
+  }> {
+    const usedIngredients = new Set(
+      this.getUniqueIngredients().map((i) => i.toLowerCase())
+    );
+
+    return this.pantry.items.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      unit: item.unit,
+      used: usedIngredients.has(item.name.toLowerCase()),
+    }));
+  }
+
+  getUnusedPantryItems(): string[] {
+    return this.getPantryStatus()
+      .filter((item) => !item.used)
+      .map((item) => item.name);
+  }
 }
