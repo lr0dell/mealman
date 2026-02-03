@@ -15,6 +15,8 @@ import type {
 } from './types.js';
 import type { Meal } from '../schemas/plan.js';
 
+const MINIMUM_SIMILARITY = 0.8;
+
 export function createToolHandlers(
   planState: PlanState,
   ingredientDb: IngredientDatabase
@@ -192,30 +194,51 @@ export function createToolHandlers(
           unit: string;
         };
       }
-    | { found: false; message: string }
+    | {
+        found: false;
+        message: string;
+        suggestions: Array<{ name: string; similarity: number }>;
+      }
   > {
-    const match = await ingredientDb.searchIngredient(input.name);
+    const matches = await ingredientDb.searchIngredients(input.name, 5);
 
-    if (match) {
+    if (matches.length === 0) {
+      return {
+        found: false,
+        message: `No ingredients found for "${input.name}".`,
+        suggestions: [],
+      };
+    }
+
+    const topMatch = matches[0];
+
+    if (topMatch.similarity >= MINIMUM_SIMILARITY) {
       return {
         found: true,
         ingredient: {
           name: input.name,
-          matchedName: match.ingredient.name,
-          similarity: match.similarity,
-          proteinPer100g: match.ingredient.proteinPer100g,
-          carbsPer100g: match.ingredient.carbsPer100g,
-          fatPer100g: match.ingredient.fatPer100g,
-          fiberPer100g: match.ingredient.fiberPer100g,
-          pricePerUnit: match.ingredient.pricePerUnit,
-          unit: match.ingredient.unit,
+          matchedName: topMatch.ingredient.name,
+          similarity: topMatch.similarity,
+          proteinPer100g: topMatch.ingredient.proteinPer100g,
+          carbsPer100g: topMatch.ingredient.carbsPer100g,
+          fatPer100g: topMatch.ingredient.fatPer100g,
+          fiberPer100g: topMatch.ingredient.fiberPer100g,
+          pricePerUnit: topMatch.ingredient.pricePerUnit,
+          unit: topMatch.ingredient.unit,
         },
       };
     }
 
+    // Low confidence - return suggestions
+    const suggestions = matches.map((m) => ({
+      name: m.ingredient.name,
+      similarity: m.similarity,
+    }));
+
     return {
       found: false,
-      message: 'No matching ingredient found in database.',
+      message: `No confident match for "${input.name}". Please be more specific (e.g., "black beans" instead of "beans", "chicken breast" instead of "chicken").`,
+      suggestions,
     };
   }
 

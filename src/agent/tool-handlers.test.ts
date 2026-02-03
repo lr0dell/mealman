@@ -150,23 +150,41 @@ describe('ToolHandlers', () => {
       ).toBeGreaterThan(0);
     });
 
-    it('returns best semantic match even for unusual queries', async () => {
+    it('rejects low-confidence matches and returns suggestions', async () => {
+      // "eggs" should not match "chicken breast" with high confidence
       const result = await handlers.handle('lookup_ingredient', {
-        name: 'poultry',
+        name: 'eggs',
+      });
+
+      expect(result).toMatchObject({
+        found: false,
+      });
+      expect((result as { suggestions: unknown[] }).suggestions).toBeDefined();
+    });
+
+    it('accepts high-confidence matches', async () => {
+      const result = await handlers.handle('lookup_ingredient', {
+        name: 'breast of chicken',
       });
 
       expect(result).toMatchObject({
         found: true,
         ingredient: {
-          matchedName: 'chicken breast', // Should match chicken due to semantic similarity
-          proteinPer100g: 31,
+          matchedName: 'chicken breast',
         },
       });
-      // Similarity should be decent but not perfect
-      const similarity = (result as { ingredient: { similarity: number } })
-        .ingredient.similarity;
-      expect(similarity).toBeGreaterThan(0.5);
-      expect(similarity).toBeLessThan(1);
+    });
+
+    it('suggests being more specific when match is ambiguous', async () => {
+      const result = await handlers.handle('lookup_ingredient', {
+        name: 'meat',
+      });
+
+      // Should suggest specific options
+      expect(result).toHaveProperty('suggestions');
+      expect((result as { message: string }).message).toContain(
+        'more specific'
+      );
     });
   });
 
