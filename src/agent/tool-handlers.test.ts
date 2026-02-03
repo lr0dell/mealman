@@ -243,6 +243,30 @@ describe('ToolHandlers', () => {
       ).toContain('eggs');
     });
   });
+
+  describe('finalize_plan', () => {
+    it('generates accurate notes from actual plan state', async () => {
+      // Add a meal first
+      await handlers.handle('add_meal', {
+        date: '2026-01-27',
+        slot: 'breakfast',
+        name: 'Test meal',
+        recipe: 'Cook it',
+        ingredients: [{ name: 'chicken breast', amountGrams: 200 }],
+        prepTime: 20,
+        servings: 2,
+      });
+
+      const result = await handlers.handle('finalize_plan', {
+        notes: 'Agent notes with wrong numbers: 9999 calories',
+      });
+
+      const typedResult = result as { autoNotes: string };
+      expect(typedResult.autoNotes).toBeDefined();
+      expect(typedResult.autoNotes).not.toContain('9999');
+      expect(typedResult.autoNotes).toContain('calories');
+    });
+  });
 });
 
 describe('PLANNING_TOOLS', () => {

@@ -323,12 +323,30 @@ export function createToolHandlers(
     success: true;
     plan: ReturnType<typeof planState.toWeeklyPlan>;
     notes: string | undefined;
+    autoNotes: string;
   } {
     const plan = planState.toWeeklyPlan();
+    const summary = planState.getSummary();
+    const shoppingList = planState.getShoppingListStatus();
+    const unusedPantry = planState.getUnusedPantryItems();
+
+    const autoNotes = [
+      `Week ${plan.week} complete.`,
+      `${summary.mealsPlanned} meals planned.`,
+      `Calories: ${Math.round(plan.totals.calories)}.`,
+      `Protein: ${Math.round(plan.totals.macros.protein)}g.`,
+      `Cost: $${plan.totals.estimatedCost.toFixed(2)}.`,
+      `Shopping list: ${shoppingList.count} items.`,
+      unusedPantry.length > 0
+        ? `Unused pantry: ${unusedPantry.join(', ')}.`
+        : 'All pantry items incorporated.',
+    ].join(' ');
+
     return {
       success: true,
       plan,
       notes: input.notes,
+      autoNotes,
     };
   }
 
