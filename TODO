@@ -5,3 +5,5 @@
 - implement "meal plan adjust" and "meal plan today" commands
 - fix weird stuff w/ dates (20XX-WXX format is inconsistent)
 - implement commands for adjusting profile and pantry
+- add creating custom recipes, saving generated recipes for reuse
+- add feature to crawl web for recipes
