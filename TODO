@@ -1,5 +1,7 @@
-- prioritize daily reqs instead of weekly ones
-- encourage AI to use much less vague ingredients ('fish': what fish? 'beans': what beans?)
+- prioritize daily reqs instead of weekly ones to an extent
 - allow AI to plan leftovers when doing 'add_meal' either forwards or backwards
 - why is only unit in meal plans 'g'? we should store a unit-conversion table per ingredient
-- force AI to keep shopping list small
+- add agent for making educated guesses for meal nutrition (burger and fries at a diner, cookies from work, etc)
+- implement "meal plan adjust" and "meal plan today" commands
+- fix weird stuff w/ dates (20XX-WXX format is inconsistent)
+- implement commands for adjusting profile and pantry
