@@ -16,6 +16,8 @@ import {
   formatShoppingList,
   viewPlan,
 } from '../commands/index.js';
+import select from '@inquirer/select';
+import { IngredientDatabase } from '../services/ingredient-database.js';
 
 function getDataDir(): string {
   return process.env.MEAL_DATA_DIR || join(homedir(), '.meal-planner', 'data');
@@ -57,14 +59,46 @@ export function createProgram(): Command {
       ) => {
         const store = new DataStore(getDataDir());
         await store.init();
-        await addPantryItem(
-          store,
-          name,
-          parseFloat(quantity),
-          unit,
-          options.expires
-        );
-        console.log(`Added ${quantity} ${unit} of ${name}`);
+
+        const dbPath = join(getDataDir(), 'knowledge', 'ingredients.db');
+        const ingredientDb = new IngredientDatabase(dbPath);
+        await ingredientDb.init();
+
+        try {
+          const matches = await ingredientDb.searchIngredients(name, 5);
+
+          if (matches.length === 0) {
+            console.log(`No ingredients found matching "${name}".`);
+            return;
+          }
+
+          const choices = matches.map((m) => ({
+            name: `${m.ingredient.name} (${Math.round(m.similarity * 100)}% match)`,
+            value: { id: m.ingredient.id, name: m.ingredient.name },
+          }));
+
+          const selected = await select({
+            message: 'Select the ingredient to add:',
+            choices: [...choices, { name: 'Cancel', value: null }],
+          });
+
+          if (!selected) {
+            console.log('Cancelled.');
+            return;
+          }
+
+          await addPantryItem(
+            store,
+            selected.id,
+            selected.name,
+            parseFloat(quantity),
+            unit,
+            options.expires
+          );
+          console.log(`Added ${quantity} ${unit} of ${selected.name}`);
+        } finally {
+          ingredientDb.close();
+        }
       }
     );
 
