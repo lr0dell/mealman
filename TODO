@@ -7,3 +7,5 @@
 - implement commands for adjusting profile and pantry
 - add creating custom recipes, saving generated recipes for reuse
 - add feature to crawl web for recipes
+- fiber is missing from some nutrition info, causing inaccurate results
+- mandate that all ingredients in pantry should match ingredients in database (and allow adding of custom ingredients) (we can improve pantry food usage via this)
