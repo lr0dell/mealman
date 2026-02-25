@@ -60,7 +60,7 @@ export function createProgram(): Command {
         const store = new DataStore(getDataDir());
         await store.init();
 
-        const dbPath = join(getDataDir(), 'knowledge', 'ingredients.db');
+        const dbPath = join(getDataDir(), 'ingredients.db');
         const ingredientDb = new IngredientDatabase(dbPath);
         await ingredientDb.init();
 
