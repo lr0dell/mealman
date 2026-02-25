@@ -53,6 +53,7 @@ export function formatExpiringList(items: PantryItem[]): string {
 
 export async function addPantryItem(
   store: DataStore,
+  ingredientId: number,
   name: string,
   quantity: number,
   unit: string,
@@ -61,10 +62,9 @@ export async function addPantryItem(
   const pantry = await store.getPantry();
   const today = new Date().toISOString().split('T')[0];
 
-  // Check if item already exists (same name and unit)
+  // Check if item already exists (same ingredientId and unit)
   const existing = pantry.items.find(
-    (item) =>
-      item.name.toLowerCase() === name.toLowerCase() && item.unit === unit
+    (item) => item.ingredientId === ingredientId && item.unit === unit
   );
 
   if (existing) {
@@ -78,6 +78,7 @@ export async function addPantryItem(
     }
   } else {
     const newItem: PantryItem = {
+      ingredientId,
       name: name.toLowerCase(),
       quantity,
       unit,
