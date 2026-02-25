@@ -59,7 +59,23 @@ export class DataStore {
 
   async getPantry(): Promise<Pantry> {
     const content = await readFile(this.pantryPath, 'utf-8');
-    const data = JSON.parse(content) as unknown;
+    const data = JSON.parse(content) as { items?: unknown[] };
+
+    // Filter out items missing ingredientId (migration cleanup)
+    if (Array.isArray(data.items)) {
+      const before = data.items.length;
+      data.items = data.items.filter(
+        (item: unknown) =>
+          typeof item === 'object' &&
+          item !== null &&
+          'ingredientId' in item &&
+          typeof (item as Record<string, unknown>).ingredientId === 'number'
+      );
+      if (data.items.length < before) {
+        await writeFile(this.pantryPath, JSON.stringify(data, null, 2));
+      }
+    }
+
     return PantrySchema.parse(data);
   }
 
