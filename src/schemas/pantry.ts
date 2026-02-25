@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const PantryItemSchema = z.object({
+  ingredientId: z.number(),
   name: z.string(),
   quantity: z.number().positive(),
   unit: z.string(),
