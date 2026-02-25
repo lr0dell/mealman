@@ -26,6 +26,7 @@ describe('Planning Prompts', () => {
     const profile = createDefaultProfile();
     const pantry = createDefaultPantry();
     pantry.items.push({
+      ingredientId: 1,
       name: 'chicken breast',
       quantity: 2,
       unit: 'lbs',

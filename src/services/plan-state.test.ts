@@ -302,12 +302,19 @@ describe('PlanState', () => {
       const pantryWithItems: Pantry = {
         items: [
           {
+            ingredientId: 1,
             name: 'eggs',
             quantity: 12,
             unit: 'count',
             addedDate: '2026-02-03',
           },
-          { name: 'butter', quantity: 500, unit: 'g', addedDate: '2026-02-03' },
+          {
+            ingredientId: 2,
+            name: 'butter',
+            quantity: 500,
+            unit: 'g',
+            addedDate: '2026-02-03',
+          },
         ],
       };
 
@@ -342,12 +349,19 @@ describe('PlanState', () => {
       const pantryWithItems: Pantry = {
         items: [
           {
+            ingredientId: 1,
             name: 'eggs',
             quantity: 12,
             unit: 'count',
             addedDate: '2026-02-03',
           },
-          { name: 'milk', quantity: 1000, unit: 'ml', addedDate: '2026-02-03' },
+          {
+            ingredientId: 2,
+            name: 'milk',
+            quantity: 1000,
+            unit: 'ml',
+            addedDate: '2026-02-03',
+          },
         ],
       };
 

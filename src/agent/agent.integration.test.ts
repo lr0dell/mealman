@@ -58,8 +58,15 @@ describe.skipIf(!ANTHROPIC_API_KEY)('AgentPlanner Integration', () => {
 
   const mockPantry: Pantry = {
     items: [
-      { name: 'rice', quantity: 2, unit: 'kg', addedDate: '2026-01-30' },
       {
+        ingredientId: 1,
+        name: 'rice',
+        quantity: 2,
+        unit: 'kg',
+        addedDate: '2026-01-30',
+      },
+      {
+        ingredientId: 2,
         name: 'olive oil',
         quantity: 1,
         unit: 'liter',

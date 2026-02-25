@@ -225,6 +225,7 @@ describe('ToolHandlers', () => {
       const pantryState = new PlanState('2026-W05', mockProfile, {
         items: [
           {
+            ingredientId: 1,
             name: 'eggs',
             quantity: 12,
             unit: 'count',

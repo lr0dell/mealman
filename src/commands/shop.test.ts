@@ -69,6 +69,7 @@ describe('Shopping Commands', () => {
       const pantry: Pantry = {
         items: [
           {
+            ingredientId: 1,
             name: 'chicken breast',
             quantity: 0.5,
             unit: 'lb',
@@ -88,6 +89,7 @@ describe('Shopping Commands', () => {
       const pantry: Pantry = {
         items: [
           {
+            ingredientId: 1,
             name: 'chicken breast',
             quantity: 2,
             unit: 'lb',
