@@ -68,7 +68,11 @@ describe('ToolHandlers', () => {
     }
     mkdirSync(testDir, { recursive: true });
 
-    planState = new PlanState('2026-W05', mockProfile, mockPantry);
+    planState = new PlanState(
+      '2026-01-26--2026-02-01',
+      mockProfile,
+      mockPantry
+    );
     ingredientDb = new IngredientDatabase(join(testDir, 'test-ingredients.db'));
     await ingredientDb.init();
 
@@ -222,7 +226,7 @@ describe('ToolHandlers', () => {
   describe('get_plan_state with pantry', () => {
     it('includes unused pantry items in response', async () => {
       // Create handlers with pantry items
-      const pantryState = new PlanState('2026-W05', mockProfile, {
+      const pantryState = new PlanState('2026-01-26--2026-02-01', mockProfile, {
         items: [
           {
             ingredientId: 1,

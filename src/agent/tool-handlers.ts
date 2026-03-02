@@ -14,6 +14,7 @@ import type {
   FinalizePlanInput,
 } from './types.js';
 import type { Meal } from '../schemas/plan.js';
+import { parseWeekKey } from '../utils/week.js';
 
 const MINIMUM_SIMILARITY = 0.8;
 
@@ -329,9 +330,10 @@ export function createToolHandlers(
     const summary = planState.getSummary();
     const shoppingList = planState.getShoppingListStatus();
     const unusedPantry = planState.getUnusedPantryItems();
+    const { start, end } = parseWeekKey(plan.week);
 
     const autoNotes = [
-      `Week ${plan.week} complete.`,
+      `Plan ${start} to ${end} complete.`,
       `${summary.mealsPlanned} meals planned.`,
       `Calories: ${Math.round(plan.totals.calories)}.`,
       `Protein: ${Math.round(plan.totals.macros.protein)}g.`,
