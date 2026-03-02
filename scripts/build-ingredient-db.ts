@@ -54,7 +54,7 @@ const NUTRIENT_IDS = {
   FIBER: 1079,
 };
 
-interface USDAFood {
+export interface USDAFood {
   fdcId: number;
   description: string;
   foodCategory?: { description: string };
@@ -86,9 +86,36 @@ async function downloadAndExtract(url: string): Promise<USDAFood[]> {
   return data.FoundationFoods || data.SRLegacyFoods || [];
 }
 
-function getNutrient(food: USDAFood, nutrientId: number): number {
+export function getNutrient(food: USDAFood, nutrientId: number): number {
   const nutrient = food.foodNutrients.find((n) => n.nutrient.id === nutrientId);
   return nutrient?.amount ?? 0;
+}
+
+export function mergeNutrients(
+  existing: USDAFood,
+  incoming: USDAFood
+): USDAFood {
+  const nutrientMap = new Map<number, number>();
+
+  for (const n of existing.foodNutrients) {
+    nutrientMap.set(n.nutrient.id, n.amount ?? 0);
+  }
+
+  for (const n of incoming.foodNutrients) {
+    const current = nutrientMap.get(n.nutrient.id) ?? 0;
+    const incomingAmount = n.amount ?? 0;
+    if (incomingAmount > 0 && current === 0) {
+      nutrientMap.set(n.nutrient.id, incomingAmount);
+    }
+  }
+
+  return {
+    ...existing,
+    foodNutrients: Array.from(nutrientMap.entries()).map(([id, amount]) => ({
+      nutrient: { id },
+      amount,
+    })),
+  };
 }
 
 function getCategory(food: USDAFood): string {
