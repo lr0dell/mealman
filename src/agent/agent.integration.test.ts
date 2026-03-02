@@ -1,6 +1,6 @@
 // src/agent/agent.integration.test.ts
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, rmSync, existsSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { AgentPlanner } from '../services/agent-planner.js';
 import type { Profile, Pantry } from '../schemas/index.js';
@@ -61,15 +61,15 @@ describe.skipIf(!ANTHROPIC_API_KEY)('AgentPlanner Integration', () => {
       {
         ingredientId: 1,
         name: 'rice',
-        quantity: 2,
-        unit: 'kg',
+        quantity: 2000,
+        unit: 'g',
         addedDate: '2026-01-30',
       },
       {
         ingredientId: 2,
         name: 'olive oil',
-        quantity: 1,
-        unit: 'liter',
+        quantity: 1000,
+        unit: 'g',
         addedDate: '2026-01-30',
       },
     ],
@@ -80,51 +80,6 @@ describe.skipIf(!ANTHROPIC_API_KEY)('AgentPlanner Integration', () => {
       rmSync(testDir, { recursive: true });
     }
     mkdirSync(testDir, { recursive: true });
-    mkdirSync(join(testDir, 'knowledge'), { recursive: true });
-
-    // Seed some ingredients
-    const ingredients = {
-      'chicken breast': {
-        name: 'chicken breast',
-        pricePerUnit: 11,
-        unit: 'kg',
-        unitWeightGrams: 1000,
-        proteinPer100g: 31,
-        carbsPer100g: 0,
-        fatPer100g: 3.6,
-        fiberPer100g: 0,
-        confidence: 'manual',
-        lastUpdated: '2026-01-30',
-      },
-      rice: {
-        name: 'rice',
-        pricePerUnit: 2.5,
-        unit: 'kg',
-        unitWeightGrams: 1000,
-        proteinPer100g: 2.7,
-        carbsPer100g: 28,
-        fatPer100g: 0.3,
-        fiberPer100g: 0.4,
-        confidence: 'manual',
-        lastUpdated: '2026-01-30',
-      },
-      broccoli: {
-        name: 'broccoli',
-        pricePerUnit: 3,
-        unit: 'kg',
-        unitWeightGrams: 1000,
-        proteinPer100g: 2.8,
-        carbsPer100g: 7,
-        fatPer100g: 0.4,
-        fiberPer100g: 2.6,
-        confidence: 'manual',
-        lastUpdated: '2026-01-30',
-      },
-    };
-    writeFileSync(
-      join(testDir, 'knowledge', 'ingredients.json'),
-      JSON.stringify(ingredients, null, 2)
-    );
 
     planner = new AgentPlanner({
       anthropicApiKey: ANTHROPIC_API_KEY!,
