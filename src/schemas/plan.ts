@@ -43,7 +43,7 @@ export const PlanTotalsSchema = z.object({
 });
 
 export const WeeklyPlanSchema = z.object({
-  week: z.string().regex(/^\d{4}-W\d{2}$/),
+  week: z.string().regex(/^\d{4}-\d{2}-\d{2}--\d{4}-\d{2}-\d{2}$/),
   generatedAt: z.string(),
   days: z.array(DayPlanSchema),
   totals: PlanTotalsSchema,

@@ -24,7 +24,7 @@ describe('Plan Schemas', () => {
 
   it('validates a weekly plan', () => {
     const plan = {
-      week: '2026-W05',
+      week: '2026-01-27--2026-02-02',
       generatedAt: '2026-01-29T10:00:00Z',
       days: [
         {
