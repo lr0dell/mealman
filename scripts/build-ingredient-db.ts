@@ -136,9 +136,7 @@ async function main() {
       fatPer100g: getNutrient(food, NUTRIENT_IDS.FAT),
       fiberPer100g: getNutrient(food, NUTRIENT_IDS.FIBER),
       category,
-      pricePerUnit: CATEGORY_PRICES[category],
-      unit: 'kg',
-      unitWeightGrams: 1000,
+      pricePerGram: CATEGORY_PRICES[category] / 1000,
     };
   });
 

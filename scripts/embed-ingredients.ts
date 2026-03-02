@@ -12,9 +12,7 @@ interface USDAIngredient {
   fatPer100g: number;
   fiberPer100g: number;
   category: string;
-  pricePerUnit: number;
-  unit: string;
-  unitWeightGrams: number;
+  pricePerGram: number;
 }
 
 async function main() {
@@ -57,9 +55,7 @@ async function main() {
         carbsPer100g: ing.carbsPer100g,
         fatPer100g: ing.fatPer100g,
         fiberPer100g: ing.fiberPer100g,
-        pricePerUnit: ing.pricePerUnit,
-        unit: ing.unit,
-        unitWeightGrams: ing.unitWeightGrams,
+        pricePerGram: ing.pricePerGram,
         category: ing.category as IngredientCategory,
         usdaFdcId: ing.usdaFdcId,
       });
