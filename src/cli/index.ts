@@ -17,7 +17,7 @@ import {
 } from '../commands/index.js';
 import select from '@inquirer/select';
 import { IngredientDatabase } from '../services/ingredient-database.js';
-import { getCurrentWeekKey } from '../utils/week.js';
+import { getCurrentWeekKey, parseWeekKey } from '../utils/week.js';
 
 function getDataDir(): string {
   return process.env.MEAL_DATA_DIR || join(homedir(), '.meal-planner', 'data');
@@ -144,7 +144,8 @@ export function createProgram(): Command {
       }
 
       const week = getCurrentWeekKey();
-      console.log(`Generating meal plan for ${week}...`);
+      const { start, end } = parseWeekKey(week);
+      console.log(`Generating meal plan for ${start} to ${end}...`);
 
       try {
         await generateWeekPlan(getDataDir());
@@ -231,7 +232,10 @@ export function createProgram(): Command {
       const plan = await store.getWeeklyPlan(week);
 
       if (!plan) {
-        console.log(`No plan found for ${week}. Run 'meal plan week' first.`);
+        const { start, end } = parseWeekKey(week);
+        console.log(
+          `No plan found for ${start} to ${end}. Run 'meal plan week' first.`
+        );
         return;
       }
 
