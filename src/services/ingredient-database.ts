@@ -18,9 +18,7 @@ interface IngredientRow {
   carbs_per_100g: number;
   fat_per_100g: number;
   fiber_per_100g: number;
-  price_per_unit: number;
-  unit: string;
-  unit_weight_grams: number;
+  price_per_gram: number;
   category: string;
   source: string;
   usda_fdc_id: number | null;
@@ -52,15 +50,12 @@ export class IngredientDatabase {
         carbs_per_100g REAL NOT NULL,
         fat_per_100g REAL NOT NULL,
         fiber_per_100g REAL NOT NULL,
-        price_per_unit REAL NOT NULL,
-        unit TEXT NOT NULL,
-        unit_weight_grams REAL NOT NULL,
+        price_per_gram REAL NOT NULL,
         category TEXT NOT NULL,
         source TEXT NOT NULL,
         usda_fdc_id INTEGER,
         created_at TEXT NOT NULL
       );
-
       CREATE INDEX IF NOT EXISTS idx_category ON ingredients(category);
       CREATE INDEX IF NOT EXISTS idx_source ON ingredients(source);
       CREATE INDEX IF NOT EXISTS idx_search_name ON ingredients(search_name);
@@ -83,9 +78,9 @@ export class IngredientDatabase {
       .prepare(
         `INSERT INTO ingredients (
           name, search_name, protein_per_100g, carbs_per_100g, fat_per_100g,
-          fiber_per_100g, price_per_unit, unit, unit_weight_grams, category,
+          fiber_per_100g, price_per_gram, category,
           source, usda_fdc_id, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         input.name,
@@ -94,9 +89,7 @@ export class IngredientDatabase {
         input.carbsPer100g,
         input.fatPer100g,
         input.fiberPer100g,
-        input.pricePerUnit,
-        input.unit,
-        input.unitWeightGrams,
+        input.pricePerGram,
         input.category,
         source,
         input.usdaFdcId ?? null,
@@ -107,7 +100,6 @@ export class IngredientDatabase {
 
     // Generate and store embedding
     const embedding = await this.embedder.embed(input.name);
-    // sqlite-vec requires bigint for INTEGER PRIMARY KEY columns
     const idBigInt = typeof id === 'bigint' ? id : BigInt(id);
     this.db
       .prepare(
@@ -136,9 +128,7 @@ export class IngredientDatabase {
       carbsPer100g: row.carbs_per_100g,
       fatPer100g: row.fat_per_100g,
       fiberPer100g: row.fiber_per_100g,
-      pricePerUnit: row.price_per_unit,
-      unit: row.unit,
-      unitWeightGrams: row.unit_weight_grams,
+      pricePerGram: row.price_per_gram,
       category: row.category as IngredientCategory,
       source: row.source as 'usda' | 'custom',
       usdaFdcId: row.usda_fdc_id,
@@ -198,9 +188,7 @@ export class IngredientDatabase {
       carbsPer100g: 'carbs_per_100g',
       fatPer100g: 'fat_per_100g',
       fiberPer100g: 'fiber_per_100g',
-      pricePerUnit: 'price_per_unit',
-      unit: 'unit',
-      unitWeightGrams: 'unit_weight_grams',
+      pricePerGram: 'price_per_gram',
       category: 'category',
       source: 'source',
       usdaFdcId: 'usda_fdc_id',

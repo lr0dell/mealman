@@ -33,9 +33,7 @@ describe('IngredientDatabase', () => {
       carbsPer100g: 0,
       fatPer100g: 3.6,
       fiberPer100g: 0,
-      pricePerUnit: 12,
-      unit: 'kg',
-      unitWeightGrams: 1000,
+      pricePerGram: 0.012,
       category: 'meat',
     });
 
@@ -55,9 +53,7 @@ describe('IngredientDatabase', () => {
       carbsPer100g: 0,
       fatPer100g: 1.5,
       fiberPer100g: 0,
-      pricePerUnit: 15,
-      unit: 'kg',
-      unitWeightGrams: 1000,
+      pricePerGram: 0.015,
       category: 'seafood',
     });
 
@@ -67,9 +63,7 @@ describe('IngredientDatabase', () => {
       carbsPer100g: 20,
       fatPer100g: 10,
       fiberPer100g: 1,
-      pricePerUnit: 8,
-      unit: 'kg',
-      unitWeightGrams: 1000,
+      pricePerGram: 0.008,
       category: 'seafood',
     });
 
@@ -86,9 +80,7 @@ describe('IngredientDatabase', () => {
       carbsPer100g: 0,
       fatPer100g: 3.6,
       fiberPer100g: 0,
-      pricePerUnit: 12,
-      unit: 'kg',
-      unitWeightGrams: 1000,
+      pricePerGram: 0.012,
       category: 'meat',
     });
 
@@ -98,9 +90,7 @@ describe('IngredientDatabase', () => {
       carbsPer100g: 0,
       fatPer100g: 6,
       fiberPer100g: 0,
-      pricePerUnit: 10,
-      unit: 'kg',
-      unitWeightGrams: 1000,
+      pricePerGram: 0.01,
       category: 'meat',
     });
 
@@ -115,9 +105,7 @@ describe('IngredientDatabase', () => {
       carbsPer100g: 28,
       fatPer100g: 0.3,
       fiberPer100g: 0.4,
-      pricePerUnit: 3,
-      unit: 'kg',
-      unitWeightGrams: 1000,
+      pricePerGram: 0.003,
       category: 'grains',
     });
 
@@ -132,13 +120,11 @@ describe('IngredientDatabase', () => {
       carbsPer100g: 0,
       fatPer100g: 13,
       fiberPer100g: 0,
-      pricePerUnit: 15,
-      unit: 'kg',
-      unitWeightGrams: 1000,
+      pricePerGram: 0.015,
       category: 'seafood',
     });
 
-    const updated = db.updateIngredient(ingredient.id, { pricePerUnit: 18 });
-    expect(updated.pricePerUnit).toBe(18);
+    const updated = db.updateIngredient(ingredient.id, { pricePerGram: 0.018 });
+    expect(updated.pricePerGram).toBe(0.018);
   });
 });
