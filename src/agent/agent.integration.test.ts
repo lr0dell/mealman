@@ -140,11 +140,11 @@ describe.skipIf(!ANTHROPIC_API_KEY)('AgentPlanner Integration', () => {
     const plan = await planner.generateWeeklyPlan(
       mockProfile,
       mockPantry,
-      '2026-W05',
+      '2026-01-26--2026-02-01',
       testDir
     );
 
-    expect(plan.week).toBe('2026-W05');
+    expect(plan.week).toBe('2026-01-26--2026-02-01');
     expect(plan.days.length).toBeGreaterThan(0);
     expect(plan.totals.calories).toBeGreaterThan(0);
   }, 120000); // 2 minute timeout for API calls

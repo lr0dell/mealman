@@ -15,9 +15,13 @@ describe('Planning Prompts', () => {
   it('builds weekly plan prompt with context', () => {
     const profile = createDefaultProfile();
     const pantry = createDefaultPantry();
-    const prompt = buildWeeklyPlanPrompt(profile, pantry, '2026-W05');
+    const prompt = buildWeeklyPlanPrompt(
+      profile,
+      pantry,
+      '2026-01-26--2026-02-01'
+    );
 
-    expect(prompt).toContain('2026-W05');
+    expect(prompt).toContain('2026-01-26--2026-02-01');
     expect(prompt).toContain('1800'); // daily calories
     expect(prompt).toContain('protein');
   });
@@ -34,7 +38,11 @@ describe('Planning Prompts', () => {
       expirationDate: '2026-02-01',
     });
 
-    const prompt = buildWeeklyPlanPrompt(profile, pantry, '2026-W05');
+    const prompt = buildWeeklyPlanPrompt(
+      profile,
+      pantry,
+      '2026-01-26--2026-02-01'
+    );
     expect(prompt).toContain('chicken breast');
     expect(prompt).toContain('expir');
   });

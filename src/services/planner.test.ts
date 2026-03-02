@@ -26,7 +26,7 @@ describe('MealPlanner', () => {
 
   it('generates a valid weekly plan', async () => {
     const mockPlan = {
-      week: '2026-W05',
+      week: '2026-01-26--2026-02-01',
       generatedAt: '2026-01-29T10:00:00Z',
       days: [
         {
@@ -59,10 +59,14 @@ describe('MealPlanner', () => {
 
     const profile = createDefaultProfile();
     const pantry = createDefaultPantry();
-    const plan = await planner.generateWeeklyPlan(profile, pantry, '2026-W05');
+    const plan = await planner.generateWeeklyPlan(
+      profile,
+      pantry,
+      '2026-01-26--2026-02-01'
+    );
 
     expect(WeeklyPlanSchema.safeParse(plan).success).toBe(true);
-    expect(plan.week).toBe('2026-W05');
+    expect(plan.week).toBe('2026-01-26--2026-02-01');
   });
 
   it('validates AI response against schema', async () => {
@@ -72,7 +76,7 @@ describe('MealPlanner', () => {
     const pantry = createDefaultPantry();
 
     await expect(
-      planner.generateWeeklyPlan(profile, pantry, '2026-W05')
+      planner.generateWeeklyPlan(profile, pantry, '2026-01-26--2026-02-01')
     ).rejects.toThrow();
   });
 });
