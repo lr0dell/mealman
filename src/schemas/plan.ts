@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
 export const MealIngredientSchema = z.object({
+  ingredientId: z.number(),
   name: z.string(),
   amount: z.number().positive(),
-  unit: z.string(),
+  unit: z.literal('g'),
 });
 
 export const MacrosSchema = z.object({
