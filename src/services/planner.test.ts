@@ -35,7 +35,9 @@ describe('MealPlanner', () => {
             breakfast: {
               name: 'Oatmeal',
               recipe: 'Cook oats',
-              ingredients: [{ name: 'oats', amount: 0.5, unit: 'cup' }],
+              ingredients: [
+                { ingredientId: 1, name: 'oats', amount: 40, unit: 'g' },
+              ],
               prepTime: 10,
               calories: 300,
               macros: { protein: 10, carbs: 50, fat: 5, fiber: 8 },

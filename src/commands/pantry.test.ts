@@ -39,8 +39,8 @@ describe('Pantry Commands', () => {
       pantry.items.push({
         ingredientId: 1,
         name: 'eggs',
-        quantity: 12,
-        unit: 'count',
+        quantity: 600,
+        unit: 'g',
         addedDate: '2026-01-29',
       });
       await store.savePantry(pantry);
@@ -59,27 +59,34 @@ describe('Pantry Commands', () => {
     });
 
     it('formats items with quantities', () => {
-      const items = [
+      const items: {
+        ingredientId: number;
+        name: string;
+        quantity: number;
+        unit: 'g';
+        addedDate: string;
+        expirationDate?: string | undefined;
+      }[] = [
         {
           ingredientId: 1,
           name: 'eggs',
           quantity: 12,
-          unit: 'count',
+          unit: 'g',
           addedDate: '2026-01-29',
         },
         {
           ingredientId: 2,
           name: 'milk',
-          quantity: 1,
-          unit: 'gallon',
+          quantity: 1000,
+          unit: 'g',
           addedDate: '2026-01-28',
         },
       ];
       const output = formatPantryList(items);
       expect(output).toContain('eggs');
-      expect(output).toContain('12 count');
+      expect(output).toContain('12 g');
       expect(output).toContain('milk');
-      expect(output).toContain('1 gallon');
+      expect(output).toContain('1000 g');
     });
   });
 

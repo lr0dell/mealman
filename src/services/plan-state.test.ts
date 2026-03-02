@@ -69,8 +69,8 @@ describe('PlanState', () => {
       name: 'Grilled Chicken Salad',
       recipe: 'Grill chicken, toss with greens',
       ingredients: [
-        { name: 'chicken breast', amount: 200, unit: 'g' },
-        { name: 'mixed greens', amount: 100, unit: 'g' },
+        { ingredientId: 1, name: 'chicken breast', amount: 200, unit: 'g' },
+        { ingredientId: 2, name: 'mixed greens', amount: 100, unit: 'g' },
       ],
       prepTime: 20,
       calories: 350,
@@ -239,8 +239,8 @@ describe('PlanState', () => {
         name: 'Eggs',
         recipe: 'Scrambled',
         ingredients: [
-          { name: 'whole egg', amount: 100, unit: 'g' },
-          { name: 'butter', amount: 10, unit: 'g' },
+          { ingredientId: 1, name: 'whole egg', amount: 100, unit: 'g' },
+          { ingredientId: 2, name: 'butter', amount: 10, unit: 'g' },
         ],
         prepTime: 10,
         calories: 200,
@@ -254,8 +254,8 @@ describe('PlanState', () => {
         name: 'Chicken',
         recipe: 'Grilled',
         ingredients: [
-          { name: 'chicken breast', amount: 200, unit: 'g' },
-          { name: 'butter', amount: 10, unit: 'g' }, // duplicate
+          { ingredientId: 3, name: 'chicken breast', amount: 200, unit: 'g' },
+          { ingredientId: 2, name: 'butter', amount: 10, unit: 'g' }, // duplicate
         ],
         prepTime: 20,
         calories: 300,
@@ -284,6 +284,7 @@ describe('PlanState', () => {
         name: 'Complex meal',
         recipe: 'Cook it',
         ingredients: Array.from({ length: 18 }, (_, i) => ({
+          ingredientId: i,
           name: `ingredient-${i}`,
           amount: 100,
           unit: 'g',
@@ -313,7 +314,7 @@ describe('PlanState', () => {
             ingredientId: 1,
             name: 'eggs',
             quantity: 12,
-            unit: 'count',
+            unit: 'g',
             addedDate: '2026-02-03',
           },
           {
@@ -336,8 +337,8 @@ describe('PlanState', () => {
         name: 'Eggs',
         recipe: 'Scrambled',
         ingredients: [
-          { name: 'eggs', amount: 100, unit: 'g' },
-          { name: 'butter', amount: 20, unit: 'g' },
+          { ingredientId: 1, name: 'eggs', amount: 100, unit: 'g' },
+          { ingredientId: 2, name: 'butter', amount: 20, unit: 'g' },
         ],
         prepTime: 10,
         calories: 200,
@@ -364,14 +365,14 @@ describe('PlanState', () => {
             ingredientId: 1,
             name: 'eggs',
             quantity: 12,
-            unit: 'count',
+            unit: 'g',
             addedDate: '2026-02-03',
           },
           {
             ingredientId: 2,
             name: 'milk',
             quantity: 1000,
-            unit: 'ml',
+            unit: 'g',
             addedDate: '2026-02-03',
           },
         ],
@@ -387,7 +388,9 @@ describe('PlanState', () => {
       state.addMeal('2026-01-27', 'breakfast', {
         name: 'Eggs',
         recipe: 'Boiled',
-        ingredients: [{ name: 'eggs', amount: 100, unit: 'g' }],
+        ingredients: [
+          { ingredientId: 1, name: 'eggs', amount: 100, unit: 'g' },
+        ],
         prepTime: 10,
         calories: 150,
         macros: { protein: 12, carbs: 1, fat: 10, fiber: 0 },

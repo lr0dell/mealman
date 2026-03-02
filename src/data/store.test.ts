@@ -60,7 +60,7 @@ describe('DataStore', () => {
       ingredientId: 1,
       name: 'eggs',
       quantity: 12,
-      unit: 'count',
+      unit: 'g',
       addedDate: '2026-01-29',
     });
     await store.savePantry(pantry);
@@ -96,8 +96,8 @@ describe('getPantry validation', () => {
         {
           ingredientId: 1,
           name: 'eggs',
-          quantity: 12,
-          unit: 'count',
+          quantity: 600,
+          unit: 'g',
           addedDate: '2026-01-29',
         },
         {

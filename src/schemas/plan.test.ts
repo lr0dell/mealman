@@ -7,8 +7,8 @@ describe('Plan Schemas', () => {
       name: 'Greek yogurt with berries',
       recipe: 'Mix yogurt with fresh berries',
       ingredients: [
-        { name: 'greek yogurt', amount: 1, unit: 'cup' },
-        { name: 'mixed berries', amount: 0.5, unit: 'cup' },
+        { ingredientId: 1, name: 'greek yogurt', amount: 200, unit: 'g' },
+        { ingredientId: 2, name: 'mixed berries', amount: 75, unit: 'g' },
       ],
       prepTime: 5,
       calories: 350,
@@ -33,7 +33,9 @@ describe('Plan Schemas', () => {
             breakfast: {
               name: 'Oatmeal',
               recipe: 'Cook oats with water',
-              ingredients: [{ name: 'oats', amount: 0.5, unit: 'cup' }],
+              ingredients: [
+                { ingredientId: 3, name: 'oats', amount: 40, unit: 'g' },
+              ],
               prepTime: 10,
               calories: 300,
               macros: { protein: 10, carbs: 50, fat: 5, fiber: 8 },

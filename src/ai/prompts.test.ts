@@ -33,7 +33,7 @@ describe('Planning Prompts', () => {
       ingredientId: 1,
       name: 'chicken breast',
       quantity: 2,
-      unit: 'lbs',
+      unit: 'g',
       addedDate: '2026-01-27',
       expirationDate: '2026-02-01',
     });

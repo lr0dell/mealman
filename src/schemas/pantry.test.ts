@@ -6,8 +6,8 @@ describe('PantrySchema', () => {
     const item = {
       ingredientId: 42,
       name: 'chicken breast',
-      quantity: 2,
-      unit: 'lbs',
+      quantity: 500,
+      unit: 'g',
       addedDate: '2026-01-27',
       expirationDate: '2026-02-01',
     };
@@ -19,8 +19,8 @@ describe('PantrySchema', () => {
   it('rejects pantry item without ingredientId', () => {
     const item = {
       name: 'chicken breast',
-      quantity: 2,
-      unit: 'lbs',
+      quantity: 500,
+      unit: 'g',
       addedDate: '2026-01-27',
     };
 
@@ -34,16 +34,16 @@ describe('PantrySchema', () => {
         {
           ingredientId: 1,
           name: 'chicken breast',
-          quantity: 2,
-          unit: 'lbs',
+          quantity: 500,
+          unit: 'g',
           addedDate: '2026-01-27',
           expirationDate: '2026-02-01',
         },
         {
           ingredientId: 2,
           name: 'eggs',
-          quantity: 12,
-          unit: 'count',
+          quantity: 600,
+          unit: 'g',
           addedDate: '2026-01-25',
         },
       ],
@@ -57,8 +57,8 @@ describe('PantrySchema', () => {
     const item = {
       ingredientId: 10,
       name: 'rice',
-      quantity: 5,
-      unit: 'lbs',
+      quantity: 2000,
+      unit: 'g',
       addedDate: '2026-01-01',
     };
 
