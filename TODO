@@ -3,7 +3,6 @@
 - why is only unit in meal plans 'g'? we should store a unit-conversion table per ingredient
 - add agent for making educated guesses for meal nutrition (burger and fries at a diner, cookies from work, etc)
 - implement "meal plan adjust" and "meal plan today" commands
-- fix weird stuff w/ dates (20XX-WXX format is inconsistent)
 - implement commands for adjusting profile and pantry
 - add creating custom recipes, saving generated recipes for reuse
 - add feature to crawl web for recipes
