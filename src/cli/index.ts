@@ -10,7 +10,6 @@ import {
   getExpiringItems,
   formatExpiringList,
   generateWeekPlan,
-  getCurrentWeek,
   formatProfile,
   generateShoppingList,
   formatShoppingList,
@@ -18,6 +17,7 @@ import {
 } from '../commands/index.js';
 import select from '@inquirer/select';
 import { IngredientDatabase } from '../services/ingredient-database.js';
+import { getCurrentWeekKey } from '../utils/week.js';
 
 function getDataDir(): string {
   return process.env.MEAL_DATA_DIR || join(homedir(), '.meal-planner', 'data');
@@ -143,7 +143,7 @@ export function createProgram(): Command {
         process.exit(1);
       }
 
-      const week = getCurrentWeek();
+      const week = getCurrentWeekKey();
       console.log(`Generating meal plan for ${week}...`);
 
       try {
@@ -227,7 +227,7 @@ export function createProgram(): Command {
       const store = new DataStore(getDataDir());
       await store.init();
 
-      const week = getCurrentWeek();
+      const week = getCurrentWeekKey();
       const plan = await store.getWeeklyPlan(week);
 
       if (!plan) {
