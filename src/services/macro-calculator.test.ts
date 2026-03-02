@@ -1,4 +1,3 @@
-// src/services/macro-calculator.test.ts
 import { describe, it, expect } from 'vitest';
 import {
   calculateCaloriesFromMacros,
@@ -31,9 +30,7 @@ describe('MacroCalculator', () => {
           carbsPer100g: 0,
           fatPer100g: 3.6,
           fiberPer100g: 0,
-          pricePerUnit: 10,
-          unit: 'kg',
-          unitWeightGrams: 1000,
+          pricePerGram: 0.01,
         },
         {
           name: 'rice',
@@ -42,9 +39,7 @@ describe('MacroCalculator', () => {
           carbsPer100g: 28,
           fatPer100g: 0.3,
           fiberPer100g: 0.4,
-          pricePerUnit: 2,
-          unit: 'kg',
-          unitWeightGrams: 1000,
+          pricePerGram: 0.002,
         },
       ];
 
@@ -58,7 +53,7 @@ describe('MacroCalculator', () => {
       expect(result.macros.carbs).toBeCloseTo(42, 1);
       expect(result.macros.fat).toBeCloseTo(7.65, 1);
       expect(result.macros.fiber).toBeCloseTo(0.6, 1);
-      // Cost: chicken 200g/1000g * $10 = $2, rice 150g/1000g * $2 = $0.30
+      // Cost: chicken 200g * $0.01/g = $2, rice 150g * $0.002/g = $0.30
       expect(result.estimatedCost).toBeCloseTo(2.3, 2);
     });
 

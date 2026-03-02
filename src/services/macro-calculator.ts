@@ -7,9 +7,7 @@ export interface IngredientWithNutrition {
   carbsPer100g: number;
   fatPer100g: number;
   fiberPer100g: number;
-  pricePerUnit: number;
-  unit: string;
-  unitWeightGrams: number; // e.g., 1 "each" egg = 50g
+  pricePerGram: number;
 }
 
 export interface MealNutrition {
@@ -48,8 +46,7 @@ export function calculateMealNutrition(
     totalFat += ing.fatPer100g * multiplier;
     totalFiber += ing.fiberPer100g * multiplier;
 
-    // Cost calculation: amountGrams / unitWeightGrams * pricePerUnit
-    totalCost += (ing.amountGrams / ing.unitWeightGrams) * ing.pricePerUnit;
+    totalCost += ing.amountGrams * ing.pricePerGram;
   }
 
   const macros = {
