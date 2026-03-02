@@ -83,9 +83,7 @@ describe('ToolHandlers', () => {
       carbsPer100g: 0,
       fatPer100g: 3.6,
       fiberPer100g: 0,
-      pricePerUnit: 10,
-      unit: 'kg',
-      unitWeightGrams: 1000,
+      pricePerGram: 0.01,
       category: 'meat',
     });
 
@@ -95,9 +93,7 @@ describe('ToolHandlers', () => {
       carbsPer100g: 23,
       fatPer100g: 0.9,
       fiberPer100g: 1.8,
-      pricePerUnit: 3,
-      unit: 'kg',
-      unitWeightGrams: 1000,
+      pricePerGram: 0.003,
       category: 'grains',
     });
 
@@ -107,9 +103,7 @@ describe('ToolHandlers', () => {
       carbsPer100g: 7,
       fatPer100g: 0.4,
       fiberPer100g: 2.6,
-      pricePerUnit: 4,
-      unit: 'kg',
-      unitWeightGrams: 1000,
+      pricePerGram: 0.004,
       category: 'produce',
     });
 
@@ -145,8 +139,7 @@ describe('ToolHandlers', () => {
           carbsPer100g: 0,
           fatPer100g: 3.6,
           fiberPer100g: 0,
-          pricePerUnit: 10,
-          unit: 'kg',
+          pricePerGram: 0.01,
         },
       });
       expect(
@@ -231,8 +224,8 @@ describe('ToolHandlers', () => {
           {
             ingredientId: 1,
             name: 'eggs',
-            quantity: 12,
-            unit: 'count',
+            quantity: 600,
+            unit: 'g',
             addedDate: '2026-02-03',
           },
         ],

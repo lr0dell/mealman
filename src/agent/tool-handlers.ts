@@ -90,6 +90,7 @@ export function createToolHandlers(
       }
   > {
     // Look up all ingredients
+    const ingredientIds: number[] = [];
     const ingredientsWithNutrition: IngredientWithNutrition[] = [];
 
     for (const ing of input.ingredients) {
@@ -101,6 +102,7 @@ export function createToolHandlers(
         };
       }
       const entry = match.ingredient;
+      ingredientIds.push(entry.id);
       ingredientsWithNutrition.push({
         name: entry.name,
         amountGrams: ing.amountGrams,
@@ -108,9 +110,7 @@ export function createToolHandlers(
         carbsPer100g: entry.carbsPer100g,
         fatPer100g: entry.fatPer100g,
         fiberPer100g: entry.fiberPer100g,
-        pricePerUnit: entry.pricePerUnit,
-        unit: entry.unit,
-        unitWeightGrams: entry.unitWeightGrams,
+        pricePerGram: entry.pricePerGram,
       });
     }
 
@@ -120,10 +120,11 @@ export function createToolHandlers(
     const meal: Meal = {
       name: input.name,
       recipe: input.recipe,
-      ingredients: input.ingredients.map((i) => ({
-        name: i.name,
+      ingredients: input.ingredients.map((i, idx) => ({
+        ingredientId: ingredientIds[idx],
+        name: ingredientsWithNutrition[idx].name,
         amount: i.amountGrams,
-        unit: 'g',
+        unit: 'g' as const,
       })),
       prepTime: input.prepTime,
       calories: nutrition.calories,
@@ -200,6 +201,7 @@ export function createToolHandlers(
     | {
         found: true;
         ingredient: {
+          id: number;
           name: string;
           matchedName: string;
           similarity: number;
@@ -207,8 +209,7 @@ export function createToolHandlers(
           carbsPer100g: number;
           fatPer100g: number;
           fiberPer100g: number;
-          pricePerUnit: number;
-          unit: string;
+          pricePerGram: number;
         };
       }
     | {
@@ -233,6 +234,7 @@ export function createToolHandlers(
       return {
         found: true,
         ingredient: {
+          id: topMatch.ingredient.id,
           name: input.name,
           matchedName: topMatch.ingredient.name,
           similarity: topMatch.similarity,
@@ -240,8 +242,7 @@ export function createToolHandlers(
           carbsPer100g: topMatch.ingredient.carbsPer100g,
           fatPer100g: topMatch.ingredient.fatPer100g,
           fiberPer100g: topMatch.ingredient.fiberPer100g,
-          pricePerUnit: topMatch.ingredient.pricePerUnit,
-          unit: topMatch.ingredient.unit,
+          pricePerGram: topMatch.ingredient.pricePerGram,
         },
       };
     }
