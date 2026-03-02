@@ -103,4 +103,36 @@ describe('mergeNutrients', () => {
     expect(merged.description).toBe('Oats, whole grain');
     expect(merged.foodCategory?.description).toBe('Cereal Grains and Pasta');
   });
+
+  it('keeps nutrients that only exist in existing', () => {
+    const existing = {
+      fdcId: 1,
+      description: 'Oats',
+      foodNutrients: [{ nutrient: { id: 1003 }, amount: 13 }],
+    };
+    const incoming = {
+      fdcId: 1,
+      description: 'Oats',
+      foodNutrients: [],
+    };
+    const merged = mergeNutrients(existing, incoming);
+    const protein = merged.foodNutrients.find((n) => n.nutrient.id === 1003);
+    expect(protein?.amount).toBe(13);
+  });
+
+  it('keeps existing non-zero value when both are non-zero (existing wins)', () => {
+    const existing = {
+      fdcId: 1,
+      description: 'Oats',
+      foodNutrients: [{ nutrient: { id: 1003 }, amount: 13 }],
+    };
+    const incoming = {
+      fdcId: 1,
+      description: 'Oats',
+      foodNutrients: [{ nutrient: { id: 1003 }, amount: 12.5 }],
+    };
+    const merged = mergeNutrients(existing, incoming);
+    const protein = merged.foodNutrients.find((n) => n.nutrient.id === 1003);
+    expect(protein?.amount).toBe(13);
+  });
 });
