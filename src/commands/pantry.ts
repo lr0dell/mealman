@@ -56,15 +56,13 @@ export async function addPantryItem(
   ingredientId: number,
   name: string,
   quantity: number,
-  unit: string,
   expirationDate?: string
 ): Promise<void> {
   const pantry = await store.getPantry();
   const today = new Date().toISOString().split('T')[0];
 
-  // Check if item already exists (same ingredientId and unit)
   const existing = pantry.items.find(
-    (item) => item.ingredientId === ingredientId && item.unit === unit
+    (item) => item.ingredientId === ingredientId
   );
 
   if (existing) {
@@ -81,7 +79,7 @@ export async function addPantryItem(
       ingredientId,
       name: name.toLowerCase(),
       quantity,
-      unit,
+      unit: 'g',
       addedDate: today,
     };
     if (expirationDate) {

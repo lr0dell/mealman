@@ -92,7 +92,6 @@ export function createProgram(): Command {
             selected.id,
             selected.name,
             parseFloat(quantity),
-            unit,
             options.expires
           );
           console.log(`Added ${quantity} ${unit} of ${selected.name}`);

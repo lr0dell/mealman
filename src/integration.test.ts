@@ -25,8 +25,8 @@ describe('Integration: Full Workflow', () => {
 
   it('manages pantry items through full lifecycle', async () => {
     // Add items
-    await addPantryItem(store, 1, 'eggs', 12, 'count');
-    await addPantryItem(store, 2, 'milk', 1, 'gallon', '2026-02-05');
+    await addPantryItem(store, 1, 'eggs', 600);
+    await addPantryItem(store, 2, 'milk', 1000, '2026-02-05');
 
     // List and verify
     const items = await listPantry(store);

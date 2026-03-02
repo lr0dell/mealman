@@ -85,35 +85,35 @@ describe('Pantry Commands', () => {
 
   describe('addPantryItem', () => {
     it('adds a simple item with ingredientId', async () => {
-      await addPantryItem(store, 1, 'eggs', 12, 'count');
+      await addPantryItem(store, 1, 'eggs', 600);
 
       const items = await listPantry(store);
       expect(items).toHaveLength(1);
       expect(items[0].name).toBe('eggs');
       expect(items[0].ingredientId).toBe(1);
-      expect(items[0].quantity).toBe(12);
+      expect(items[0].quantity).toBe(600);
     });
 
     it('adds item with expiration', async () => {
-      await addPantryItem(store, 1, 'chicken breast', 2, 'lbs', '2026-02-01');
+      await addPantryItem(store, 1, 'chicken breast', 900, '2026-02-01');
 
       const items = await listPantry(store);
       expect(items[0].expirationDate).toBe('2026-02-01');
     });
 
     it('updates quantity of existing item (same ingredientId and unit)', async () => {
-      await addPantryItem(store, 1, 'eggs', 12, 'count');
-      await addPantryItem(store, 1, 'eggs', 6, 'count');
+      await addPantryItem(store, 1, 'eggs', 600);
+      await addPantryItem(store, 1, 'eggs', 300);
 
       const items = await listPantry(store);
       expect(items).toHaveLength(1);
-      expect(items[0].quantity).toBe(18);
+      expect(items[0].quantity).toBe(900);
     });
   });
 
   describe('removePantryItem', () => {
     it('removes an existing item', async () => {
-      await addPantryItem(store, 1, 'eggs', 12, 'count');
+      await addPantryItem(store, 1, 'eggs', 600);
       const removed = await removePantryItem(store, 'eggs');
 
       expect(removed).toBe(true);
@@ -127,7 +127,7 @@ describe('Pantry Commands', () => {
     });
 
     it('removes item case-insensitively', async () => {
-      await addPantryItem(store, 1, 'eggs', 12, 'count');
+      await addPantryItem(store, 1, 'eggs', 600);
       const removed = await removePantryItem(store, 'Eggs');
 
       expect(removed).toBe(true);

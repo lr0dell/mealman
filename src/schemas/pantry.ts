@@ -4,7 +4,7 @@ export const PantryItemSchema = z.object({
   ingredientId: z.number(),
   name: z.string(),
   quantity: z.number().positive(),
-  unit: z.string(),
+  unit: z.literal('g'),
   addedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   expirationDate: z
     .string()
