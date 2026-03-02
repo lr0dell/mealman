@@ -1,8 +1,14 @@
 import type { WeeklyPlan, Meal, DayPlan } from '../schemas/index.js';
 import { AgentPlanner } from '../services/agent-planner.js';
 import { DataStore } from '../data/store.js';
+import {
+  getWeekRange,
+  toWeekKey,
+  parseWeekKey,
+  getCurrentWeekKey,
+} from '../utils/week.js';
 
-const WEEK_REGEX = /^\d{4}-W\d{2}$/;
+const WEEK_REGEX = /^\d{4}-\d{2}-\d{2}--\d{4}-\d{2}-\d{2}$/;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 export type ViewTarget = {
@@ -23,16 +29,10 @@ export async function generateWeekPlan(dataDir: string): Promise<void> {
   const profile = await store.getProfile();
   const pantry = await store.getPantry();
 
-  // Calculate current week
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const days = Math.floor(
-    (now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)
-  );
-  const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  const week = `${now.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
+  const week = getCurrentWeekKey();
+  const { start, end } = parseWeekKey(week);
 
-  console.log(`Generating meal plan for ${week}...`);
+  console.log(`Generating meal plan for ${start} to ${end}...`);
   console.log('This may take a minute as the AI plans each meal.');
 
   const planner = new AgentPlanner({
@@ -44,15 +44,16 @@ export async function generateWeekPlan(dataDir: string): Promise<void> {
 
   await store.saveWeeklyPlan(plan);
 
-  console.log(`\nPlan generated for ${week}:`);
+  console.log(`\nPlan generated for ${start} to ${end}:`);
   console.log(`- ${plan.days.length} days planned`);
   console.log(`- Total calories: ${plan.totals.calories}`);
   console.log(`- Estimated cost: $${plan.totals.estimatedCost.toFixed(2)}`);
 }
 
 export function formatWeeklyPlan(plan: WeeklyPlan): string {
+  const { start, end } = parseWeekKey(plan.week);
   const lines: string[] = [
-    `Meal Plan for ${plan.week}`,
+    `Meal Plan for ${start} to ${end}`,
     `Generated: ${plan.generatedAt}`,
     '',
   ];
@@ -106,28 +107,22 @@ export function formatMeal(type: string, meal: Meal): string {
   return lines.join('\n');
 }
 
-function getWeekIdentifier(date: Date): string {
-  const start = new Date(date.getFullYear(), 0, 1);
-  const diff = date.getTime() - start.getTime();
-  const oneWeek = 604800000;
-  const weekNum = Math.floor((diff + start.getDay() * 86400000) / oneWeek);
-  return `${date.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
-}
-
-export function getCurrentWeek(): string {
-  const now = new Date();
-  return getWeekIdentifier(now);
+function formatDateString(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 export function parseViewTarget(target?: string): ViewTarget {
   if (!target) {
-    return { type: 'week', week: getCurrentWeek() };
+    return { type: 'week', week: getCurrentWeekKey() };
   }
 
   if (target === 'today') {
     const now = new Date();
-    const date = now.toISOString().split('T')[0];
-    return { type: 'day', week: getCurrentWeek(), date };
+    const date = formatDateString(now);
+    return { type: 'day', week: getCurrentWeekKey(), date };
   }
 
   if (WEEK_REGEX.test(target)) {
@@ -135,12 +130,13 @@ export function parseViewTarget(target?: string): ViewTarget {
   }
 
   if (DATE_REGEX.test(target)) {
-    const date = new Date(target + 'T00:00:00');
-    return { type: 'day', week: getWeekIdentifier(date), date: target };
+    const date = new Date(target + 'T12:00:00');
+    const weekKey = toWeekKey(getWeekRange(date));
+    return { type: 'day', week: weekKey, date: target };
   }
 
   throw new Error(
-    `Invalid target '${target}'. Use format YYYY-Www (e.g., 2026-W05) or YYYY-MM-DD.`
+    `Invalid target '${target}'. Use format YYYY-MM-DD--YYYY-MM-DD (e.g., 2026-01-27--2026-02-02) or YYYY-MM-DD.`
   );
 }
 
@@ -159,7 +155,8 @@ function getDayName(dateStr: string): string {
 }
 
 export function formatWeeklyPlanSummary(plan: WeeklyPlan): string {
-  const lines: string[] = [`Meal Plan for ${plan.week}`, ''];
+  const { start, end } = parseWeekKey(plan.week);
+  const lines: string[] = [`Meal Plan for ${start} to ${end}`, ''];
 
   for (const day of plan.days) {
     const dayName = getDayName(day.date);
