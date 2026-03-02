@@ -118,6 +118,19 @@ export function mergeNutrients(
   };
 }
 
+export function deduplicateWithMerge(allFoods: USDAFood[]): USDAFood[] {
+  const foodMap = new Map<number, USDAFood>();
+  for (const food of allFoods) {
+    const existing = foodMap.get(food.fdcId);
+    if (existing) {
+      foodMap.set(food.fdcId, mergeNutrients(existing, food));
+    } else {
+      foodMap.set(food.fdcId, food);
+    }
+  }
+  return Array.from(foodMap.values());
+}
+
 function getCategory(food: USDAFood): string {
   const categoryName = food.foodCategory?.description ?? '';
   return CATEGORY_MAP[categoryName] ?? 'other';
@@ -141,15 +154,12 @@ async function main() {
 
   const allFoods = [...foundationFoods, ...srLegacyFoods];
 
-  // Deduplicate by fdcId
-  const foodMap = new Map<number, USDAFood>();
-  for (const food of allFoods) {
-    if (!foodMap.has(food.fdcId)) {
-      foodMap.set(food.fdcId, food);
-    }
+  // Deduplicate by fdcId, merging nutrients across datasets
+  const foods = deduplicateWithMerge(allFoods);
+  const mergedCount = allFoods.length - foods.length;
+  if (mergedCount > 0) {
+    console.log(`Merged nutrients for ${mergedCount} duplicate foods`);
   }
-
-  const foods = Array.from(foodMap.values());
   console.log(`Total unique foods: ${foods.length}`);
 
   // Transform to our format

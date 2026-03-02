@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { mergeNutrients, getNutrient } from './build-ingredient-db.js';
+import {
+  mergeNutrients,
+  getNutrient,
+  deduplicateWithMerge,
+} from './build-ingredient-db.js';
 
 describe('getNutrient', () => {
   it('returns the amount for a known nutrient', () => {
@@ -134,5 +138,52 @@ describe('mergeNutrients', () => {
     const merged = mergeNutrients(existing, incoming);
     const protein = merged.foodNutrients.find((n) => n.nutrient.id === 1003);
     expect(protein?.amount).toBe(13);
+  });
+});
+
+describe('deduplicateWithMerge', () => {
+  it('merges nutrients for duplicate fdcIds', () => {
+    const foods = [
+      {
+        fdcId: 100,
+        description: 'Oats',
+        foodCategory: { description: 'Cereal Grains and Pasta' },
+        foodNutrients: [
+          { nutrient: { id: 1003 }, amount: 13 },
+          { nutrient: { id: 1079 }, amount: 0 },
+        ],
+      },
+      {
+        fdcId: 100,
+        description: 'Oats',
+        foodCategory: { description: 'Cereal Grains and Pasta' },
+        foodNutrients: [
+          { nutrient: { id: 1003 }, amount: 12.5 },
+          { nutrient: { id: 1079 }, amount: 10.6 },
+        ],
+      },
+    ];
+    const result = deduplicateWithMerge(foods);
+    expect(result).toHaveLength(1);
+    expect(getNutrient(result[0], 1079)).toBe(10.6);
+    // Keeps first entry's non-zero protein (existing wins)
+    expect(getNutrient(result[0], 1003)).toBe(13);
+  });
+
+  it('keeps unique foods as-is', () => {
+    const foods = [
+      {
+        fdcId: 1,
+        description: 'Chicken',
+        foodNutrients: [{ nutrient: { id: 1003 }, amount: 31 }],
+      },
+      {
+        fdcId: 2,
+        description: 'Rice',
+        foodNutrients: [{ nutrient: { id: 1079 }, amount: 1.8 }],
+      },
+    ];
+    const result = deduplicateWithMerge(foods);
+    expect(result).toHaveLength(2);
   });
 });
