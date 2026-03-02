@@ -55,7 +55,7 @@ describe('PlanState', () => {
   let state: PlanState;
 
   beforeEach(() => {
-    state = new PlanState('2026-W05', mockProfile, mockPantry);
+    state = new PlanState('2026-01-26--2026-02-01', mockProfile, mockPantry);
   });
 
   it('initializes with empty days', () => {
@@ -229,7 +229,11 @@ describe('PlanState', () => {
 
   describe('ingredient tracking', () => {
     it('tracks unique ingredients across all meals', () => {
-      const state = new PlanState('2026-W05', mockProfile, mockPantry);
+      const state = new PlanState(
+        '2026-01-26--2026-02-01',
+        mockProfile,
+        mockPantry
+      );
 
       state.addMeal('2026-01-27', 'breakfast', {
         name: 'Eggs',
@@ -269,7 +273,11 @@ describe('PlanState', () => {
     });
 
     it('returns shopping list status with count and warning', () => {
-      const state = new PlanState('2026-W05', mockProfile, mockPantry);
+      const state = new PlanState(
+        '2026-01-26--2026-02-01',
+        mockProfile,
+        mockPantry
+      );
 
       // Add meal with many ingredients
       state.addMeal('2026-01-27', 'breakfast', {
@@ -318,7 +326,11 @@ describe('PlanState', () => {
         ],
       };
 
-      const state = new PlanState('2026-W05', mockProfile, pantryWithItems);
+      const state = new PlanState(
+        '2026-01-26--2026-02-01',
+        mockProfile,
+        pantryWithItems
+      );
 
       state.addMeal('2026-01-27', 'breakfast', {
         name: 'Eggs',
@@ -365,7 +377,11 @@ describe('PlanState', () => {
         ],
       };
 
-      const state = new PlanState('2026-W05', mockProfile, pantryWithItems);
+      const state = new PlanState(
+        '2026-01-26--2026-02-01',
+        mockProfile,
+        pantryWithItems
+      );
 
       // Only use eggs
       state.addMeal('2026-01-27', 'breakfast', {
