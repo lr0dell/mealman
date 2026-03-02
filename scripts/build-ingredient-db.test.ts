@@ -3,6 +3,7 @@ import {
   mergeNutrients,
   getNutrient,
   deduplicateWithMerge,
+  findFiberGaps,
 } from './build-ingredient-db.js';
 
 describe('getNutrient', () => {
@@ -185,5 +186,29 @@ describe('deduplicateWithMerge', () => {
     ];
     const result = deduplicateWithMerge(foods);
     expect(result).toHaveLength(2);
+  });
+});
+
+describe('findFiberGaps', () => {
+  it('returns ingredients with 0 fiber in fiber-expected categories', () => {
+    const ingredients = [
+      { name: 'Oats', fiberPer100g: 0, category: 'grains' },
+      { name: 'Chicken', fiberPer100g: 0, category: 'meat' },
+      { name: 'Lentils', fiberPer100g: 0, category: 'legumes' },
+      { name: 'Broccoli', fiberPer100g: 2.6, category: 'produce' },
+      { name: 'Apple', fiberPer100g: 0, category: 'produce' },
+    ];
+    const gaps = findFiberGaps(ingredients);
+    expect(gaps).toHaveLength(3);
+    expect(gaps.map((g) => g.name)).toEqual(['Oats', 'Lentils', 'Apple']);
+  });
+
+  it('returns empty array when no gaps', () => {
+    const ingredients = [
+      { name: 'Rice', fiberPer100g: 1.8, category: 'grains' },
+      { name: 'Butter', fiberPer100g: 0, category: 'dairy' },
+    ];
+    const gaps = findFiberGaps(ingredients);
+    expect(gaps).toHaveLength(0);
   });
 });

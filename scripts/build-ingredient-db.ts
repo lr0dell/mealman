@@ -131,6 +131,18 @@ export function deduplicateWithMerge(allFoods: USDAFood[]): USDAFood[] {
   return Array.from(foodMap.values());
 }
 
+const FIBER_EXPECTED_CATEGORIES = new Set(['produce', 'grains', 'legumes']);
+
+export function findFiberGaps(
+  ingredients: Array<{ name: string; fiberPer100g: number; category: string }>
+): Array<{ name: string; category: string }> {
+  return ingredients
+    .filter(
+      (i) => i.fiberPer100g === 0 && FIBER_EXPECTED_CATEGORIES.has(i.category)
+    )
+    .map((i) => ({ name: i.name, category: i.category }));
+}
+
 function getCategory(food: USDAFood): string {
   const categoryName = food.foodCategory?.description ?? '';
   return CATEGORY_MAP[categoryName] ?? 'other';
@@ -176,6 +188,20 @@ async function main() {
       pricePerGram: CATEGORY_PRICES[category] / 1000,
     };
   });
+
+  // Warn about remaining fiber data gaps
+  const fiberGaps = findFiberGaps(ingredients);
+  if (fiberGaps.length > 0) {
+    console.warn(
+      `\nWARNING: ${fiberGaps.length} ingredients in fiber-expected categories have 0 fiber:`
+    );
+    for (const gap of fiberGaps.slice(0, 20)) {
+      console.warn(`  - "${gap.name}" (${gap.category})`);
+    }
+    if (fiberGaps.length > 20) {
+      console.warn(`  ... and ${fiberGaps.length - 20} more`);
+    }
+  }
 
   // Save intermediate JSON for the next step
   const outputPath = join(dataDir, 'usda-foods.json');
