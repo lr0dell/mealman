@@ -1,4 +1,5 @@
 import type { Profile, Pantry } from '../schemas/index.js';
+import { parseWeekKey } from '../utils/week.js';
 
 export function buildPlanningSystemPrompt(): string {
   return `You are an expert meal planner AI assistant. Your role is to create personalized weekly meal plans that:
@@ -25,10 +26,11 @@ export function buildWeeklyPlanPrompt(
   pantry: Pantry,
   week: string
 ): string {
+  const { start, end } = parseWeekKey(week);
   const pantrySection = formatPantryForPrompt(pantry);
   const profileSection = formatProfileForPrompt(profile);
 
-  return `Generate a complete 7-day meal plan for week ${week}.
+  return `Generate a complete 7-day meal plan for ${start} to ${end}.
 
 ## User Profile
 ${profileSection}
