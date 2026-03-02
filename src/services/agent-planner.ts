@@ -8,6 +8,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { Profile, Pantry } from '../schemas/index.js';
 import type { WeeklyPlan } from '../schemas/plan.js';
+import { parseWeekKey } from '../utils/week.js';
 
 export interface AgentPlannerOptions {
   anthropicApiKey: string;
@@ -96,46 +97,19 @@ If lookup_ingredient returns found: false, use one of the suggested names.
   }
 
   buildInitialMessage(profile: Profile, pantry: Pantry, week: string): string {
-    const dates = this.getWeekDates(week);
+    const { start, end } = parseWeekKey(week);
     const pantryItems = pantry.items.length
       ? pantry.items
           .map((i) => `- ${i.name}: ${i.quantity} ${i.unit}`)
           .join('\n')
       : 'Empty';
 
-    return `Create a meal plan for week ${week} (${dates[0]} to ${dates[6]}).
+    return `Create a meal plan for ${start} to ${end}.
 
-Pantry:
-${pantryItems}
+  Pantry:
+  ${pantryItems}
 
-Start by checking get_plan_state, then add meals day by day. Use lookup_ingredient for any ingredient before using it.`;
-  }
-
-  private getWeekDates(week: string): string[] {
-    // Parse week string like "2026-W05"
-    const [year, weekNum] = week.split('-W').map(Number);
-
-    // Get first day of year
-    const jan1 = new Date(year, 0, 1);
-
-    // Find first Monday
-    const dayOfWeek = jan1.getDay();
-    const daysToMonday =
-      dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 0 : 8 - dayOfWeek;
-
-    // Calculate start of requested week
-    const weekStart = new Date(jan1);
-    weekStart.setDate(jan1.getDate() + daysToMonday + (weekNum - 1) * 7);
-
-    // Generate 7 dates
-    const dates: string[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(weekStart);
-      date.setDate(weekStart.getDate() + i);
-      dates.push(date.toISOString().split('T')[0]);
-    }
-
-    return dates;
+  Start by checking get_plan_state, then add meals day by day. Use lookup_ingredient for any ingredient before using it.`;
   }
 
   async generateWeeklyPlan(
