@@ -59,7 +59,7 @@ Return a JSON object with this exact structure:
     "estimatedCost": <number>
   },
   "shoppingList": [
-    { "name": "<ingredient>", "amount": <number>, "unit": "<unit>", "estimatedCost": <number> }
+    { "name": "<ingredient>", "amount": <grams>, "unit": "g", "estimatedCost": <number> }
   ]
 }
 
@@ -67,7 +67,7 @@ Each meal object:
 {
   "name": "<meal name>",
   "recipe": "<brief instructions>",
-  "ingredients": [{ "name": "<name>", "amount": <number>, "unit": "<unit>" }],
+  "ingredients": [{ "ingredientId": <id>, "name": "<name>", "amount": <grams>, "unit": "g" }],
   "prepTime": <minutes>,
   "calories": <number>,
   "macros": { "protein": <g>, "carbs": <g>, "fat": <g>, "fiber": <g> },
