@@ -141,6 +141,33 @@ describe('AgentPlanner', () => {
     expect(prompt).not.toContain('required to use');
   });
 
+  it('system prompt tells agent to call finalize_plan immediately when all statuses are in_range', () => {
+    const planner = new AgentPlanner({
+      anthropicApiKey: 'test-key',
+      dataDir: testDir,
+    });
+
+    const prompt = planner.buildSystemPrompt(mockProfile);
+
+    expect(prompt.toLowerCase()).toMatch(
+      /immediately.*finalize_plan|finalize_plan.*immediately/i
+    );
+  });
+
+  it('system prompt prohibits unnecessary tool calls after all statuses are in_range', () => {
+    const planner = new AgentPlanner({
+      anthropicApiKey: 'test-key',
+      dataDir: testDir,
+    });
+
+    const prompt = planner.buildSystemPrompt(mockProfile);
+
+    // Must not call check_daily_totals or get_plan_state after completion
+    expect(prompt.toLowerCase()).toMatch(
+      /do not call|no (further|additional|more) tool|never call/i
+    );
+  });
+
   it('mentions shopping list limit', () => {
     const planner = new AgentPlanner({
       anthropicApiKey: 'test-key',

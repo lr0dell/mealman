@@ -14,6 +14,8 @@ export interface AgentLoopOptions {
   maxIterations?: number;
   model?: string;
   onProgress?: (event: AgentProgressEvent) => void;
+  /** Maximum number of assistant+tool-result pairs to keep in context. Older pairs are dropped. Default: unlimited. */
+  contextWindow?: number;
 }
 
 export interface AgentResult {
@@ -98,6 +100,7 @@ export class AIClient {
       maxIterations = 100,
       model = 'claude-haiku-4-5-20251001',
       onProgress,
+      contextWindow,
     } = options;
 
     const safeProgress = (event: AgentProgressEvent) => {
@@ -128,12 +131,19 @@ export class AIClient {
       safeProgress({ type: 'iteration_start', iteration: iterations + 1 });
       iterations++;
 
+      // Prune history to contextWindow pairs (initial message always kept).
+      // Always create a new array so mock-recorded references aren't affected by later pushes.
+      const contextMessages =
+        contextWindow !== undefined && messages.length > 1 + contextWindow * 2
+          ? [messages[0], ...messages.slice(-(contextWindow * 2))]
+          : [...messages];
+
       const response = await this.client.messages.create({
         model,
         max_tokens: 4096,
         system: systemPrompt,
         tools: tools as Anthropic.Tool[],
-        messages: messages as Anthropic.MessageParam[],
+        messages: contextMessages as Anthropic.MessageParam[],
       });
 
       // Collect assistant response

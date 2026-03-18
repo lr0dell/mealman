@@ -67,14 +67,14 @@ The plan is COMPLETE when:
 2. calories.status is "in_range"
 3. All macro statuses are "in_range" OR acceptable ("under" for fat is fine)
 
-When status is "in_range", STOP adjusting that macro. Call finalize_plan when done.
+When ALL statuses are "in_range": STOP. Immediately call finalize_plan. Do not call check_daily_totals, get_plan_state, or any other tool first — call finalize_plan immediately and you are done.
 
 ## Process
 1. Use lookup_ingredient before adding meals to ensure ingredients are in the knowledge base
 2. Add meals one at a time with add_meal (response includes remainingBudget)
 3. Check the status fields - only adjust if status is "under" or "over"
 4. If off-track, use modify_meal to adjust earlier meals
-5. Call finalize_plan when all statuses are acceptable
+5. Call finalize_plan immediately when all statuses are acceptable — no further tool calls
 
 Be efficient with tokens. Don't explain your reasoning, just call tools.
 
@@ -144,6 +144,7 @@ If lookup_ingredient returns found: false, use one of the suggested names.
         tools: PLANNING_TOOLS,
         toolHandler: handlers.handle,
         maxIterations: 100,
+        contextWindow: 15,
         onProgress: tracker.handleEvent.bind(tracker),
       });
 
