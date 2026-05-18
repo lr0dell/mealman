@@ -299,9 +299,9 @@ describe('PlanState', () => {
 
       const status = state.getShoppingListStatus();
       expect(status.count).toBe(18);
-      expect(status.limit).toBe(20);
+      expect(status.limit).toBe(30);
       expect(status.warning).toBe(
-        'Approaching limit: 18/20 unique ingredients'
+        'Approaching limit: 18/30 unique ingredients'
       );
     });
   });

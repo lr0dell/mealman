@@ -91,7 +91,7 @@ If lookup_ingredient returns found: false, use one of the suggested names.
 ## Pantry & Shopping Efficiency
 - You are encouraged to incorporate pantry items when they fit naturally
 - Check pantryStatus.unusedItems in get_plan_state to see available pantry items
-- Keep the shopping list small (under 20 unique ingredients) by reusing ingredients across meals
+- Keep the shopping list small (under 30 unique ingredients) by reusing ingredients across meals
 - When shoppingList.warning appears, prioritize ingredients already in the plan
 - A compact shopping list is more economical and practical for the user.`;
   }

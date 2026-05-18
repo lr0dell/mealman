@@ -50,7 +50,7 @@ export class PlanState {
   private profile: Profile;
   private pantry: Pantry;
   private days: Map<string, DayMeals> = new Map();
-  private readonly SHOPPING_LIST_LIMIT = 20;
+  private readonly SHOPPING_LIST_LIMIT = 30;
 
   constructor(week: string, profile: Profile, pantry: Pantry) {
     this.week = week;
