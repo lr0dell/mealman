@@ -194,6 +194,71 @@ describe('ToolHandlers', () => {
     });
   });
 
+  describe('add_meal duplicate slot protection', () => {
+    it('rejects add_meal when slot is already filled', async () => {
+      const mealInput = {
+        date: '2026-01-27',
+        slot: 'breakfast',
+        name: 'First Meal',
+        recipe: 'Cook it',
+        ingredients: [{ name: 'chicken breast', amountGrams: 200 }],
+        prepTime: 20,
+        servings: 1,
+      };
+
+      await handlers.handle('add_meal', mealInput);
+
+      const result = await handlers.handle('add_meal', {
+        ...mealInput,
+        name: 'Second Meal',
+      });
+
+      expect(result).toMatchObject({
+        success: false,
+        error: expect.stringContaining('already'),
+      });
+    });
+
+    it('keeps the original meal when a duplicate add_meal is rejected', async () => {
+      const mealInput = {
+        date: '2026-01-27',
+        slot: 'breakfast',
+        name: 'First Meal',
+        recipe: 'Cook it',
+        ingredients: [{ name: 'chicken breast', amountGrams: 200 }],
+        prepTime: 20,
+        servings: 1,
+      };
+
+      await handlers.handle('add_meal', mealInput);
+      await handlers.handle('add_meal', { ...mealInput, name: 'Second Meal' });
+
+      const state = await handlers.handle('get_plan_state', {});
+      expect((state as { mealsPlanned: number }).mealsPlanned).toBe(1);
+    });
+
+    it('allows modify_meal to overwrite an existing slot', async () => {
+      const mealInput = {
+        date: '2026-01-27',
+        slot: 'breakfast',
+        name: 'First Meal',
+        recipe: 'Cook it',
+        ingredients: [{ name: 'chicken breast', amountGrams: 200 }],
+        prepTime: 20,
+        servings: 1,
+      };
+
+      await handlers.handle('add_meal', mealInput);
+
+      const result = await handlers.handle('modify_meal', {
+        ...mealInput,
+        name: 'Updated Meal',
+      });
+
+      expect(result).toMatchObject({ success: true });
+    });
+  });
+
   describe('add_meal shopping list tracking', () => {
     it('includes shopping list status in add_meal response', async () => {
       const result = await handlers.handle('add_meal', {

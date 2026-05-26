@@ -54,7 +54,7 @@ export function createToolHandlers(
     };
   }
 
-  async function handleAddMeal(input: AddMealInput): Promise<
+  async function storeMeal(input: AddMealInput): Promise<
     | { success: false; error: string }
     | {
         success: true;
@@ -153,6 +153,18 @@ export function createToolHandlers(
     };
   }
 
+  async function handleAddMeal(
+    input: AddMealInput
+  ): ReturnType<typeof storeMeal> {
+    if (planState.getMeal(input.date, input.slot)) {
+      return {
+        success: false,
+        error: `Slot ${input.slot} on ${input.date} is already filled. Use modify_meal to replace it.`,
+      };
+    }
+    return storeMeal(input);
+  }
+
   async function handleModifyMeal(input: ModifyMealInput): Promise<
     | { success: false; error: string }
     | {
@@ -183,7 +195,7 @@ export function createToolHandlers(
         remainingBudget: ReturnType<typeof planState.getRemainingBudget>;
       }
   > {
-    return handleAddMeal(input);
+    return storeMeal(input);
   }
 
   function handleRemoveMeal(input: RemoveMealInput): {
