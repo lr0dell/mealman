@@ -35,10 +35,10 @@ To use the `mealman` global binary instead of `mise start`, run `npm install -g 
 ## Usage
 
 ```
-meal pantry add <name> <quantity> <unit>   # searches against our database
-meal pantry list
-meal plan week                              # generate next week's plan
-meal plan view [target] --detailed         # view a plan, optionally with recipes + nutrition
-meal shop list                             # shopping list for the current plan
-meal profile show
+mealman pantry add <name> <quantity> <unit>   # searches against our database
+mealman pantry list
+mealman plan week                              # generate next week's plan
+mealman plan view [target] --detailed         # view a plan, optionally with recipes + nutrition
+mealman shop list                             # shopping list for the current plan
+mealman profile show
 ```

@@ -202,7 +202,7 @@ export async function viewPlan(
   const plan = await store.getWeeklyPlan(parsed.week);
 
   if (!plan) {
-    return `No meal plan found for ${parsed.week}. Run 'meal plan week' to generate one.`;
+    return `No meal plan found for ${parsed.week}. Run 'mealman plan week' to generate one.`;
   }
 
   if (parsed.type === 'week') {

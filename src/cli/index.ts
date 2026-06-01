@@ -233,7 +233,7 @@ export function createProgram(): Command {
       if (!plan) {
         const { start, end } = parseWeekKey(week);
         console.log(
-          `No plan found for ${start} to ${end}. Run 'meal plan week' first.`
+          `No plan found for ${start} to ${end}. Run 'mealman plan week' first.`
         );
         return;
       }

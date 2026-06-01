@@ -8,7 +8,7 @@ export async function listPantry(store: DataStore): Promise<PantryItem[]> {
 
 export function formatPantryList(items: PantryItem[]): string {
   if (items.length === 0) {
-    return 'Your pantry is empty. Add items with: meal pantry add "<items>"';
+    return 'Your pantry is empty. Add items with: mealman pantry add "<items>"';
   }
 
   const lines = ['Pantry Items:', ''];

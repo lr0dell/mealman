@@ -252,7 +252,7 @@ describe('viewPlan', () => {
     const result = await viewPlan(store);
 
     expect(result).toBe(
-      "No meal plan found for 2026-02-09--2026-02-15. Run 'meal plan week' to generate one."
+      "No meal plan found for 2026-02-09--2026-02-15. Run 'mealman plan week' to generate one."
     );
   });
 
@@ -260,7 +260,7 @@ describe('viewPlan', () => {
     const result = await viewPlan(store, '2026-01-05--2026-01-11');
 
     expect(result).toBe(
-      "No meal plan found for 2026-01-05--2026-01-11. Run 'meal plan week' to generate one."
+      "No meal plan found for 2026-01-05--2026-01-11. Run 'mealman plan week' to generate one."
     );
   });
 
