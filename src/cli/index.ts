@@ -14,6 +14,10 @@ import {
   generateShoppingList,
   formatShoppingList,
   viewPlan,
+  aggregateIngredients,
+  consumeFromPantry,
+  formatConsumeResult,
+  parseViewTarget,
 } from '../commands/index.js';
 import select from '@inquirer/select';
 import { IngredientDatabase } from '../services/ingredient-database.js';
@@ -264,6 +268,68 @@ export function createProgram(): Command {
         }
       }
     );
+
+  plan
+    .command('consume <target>')
+    .description(
+      'Deduct a plan\'s ingredients from your pantry (week, date, or "today")'
+    )
+    .action(async (target: string) => {
+      const store = new DataStore(getDataDir());
+      await store.init();
+
+      let parsed;
+      try {
+        parsed = parseViewTarget(target);
+      } catch (error) {
+        console.error(
+          error instanceof Error ? error.message : 'Invalid target'
+        );
+        process.exit(1);
+      }
+
+      const plan = await store.getWeeklyPlan(parsed.week);
+      if (!plan) {
+        console.log(
+          `No meal plan found for ${parsed.week}. Run 'mealman plan week' to generate one.`
+        );
+        return;
+      }
+
+      let label: string;
+      if (parsed.type === 'day') {
+        const day = plan.days.find((d) => d.date === parsed.date);
+        if (!day) {
+          console.log(
+            `No meals found for ${parsed.date} in plan ${parsed.week}.`
+          );
+          return;
+        }
+        label = parsed.date!;
+      } else {
+        const { start, end } = parseWeekKey(parsed.week);
+        label = `${start} to ${end}`;
+      }
+
+      const confirmed = await select({
+        message: `Consume ingredients for ${label}?`,
+        choices: [
+          { name: 'Yes', value: true },
+          { name: 'Cancel', value: false },
+        ],
+      });
+
+      if (!confirmed) {
+        console.log('Cancelled.');
+        return;
+      }
+
+      const requirements = aggregateIngredients(plan, parsed.date);
+      const pantry = await store.getPantry();
+      const result = consumeFromPantry(pantry, requirements);
+      await store.savePantry(result.updatedPantry);
+      console.log(formatConsumeResult(result, label));
+    });
 
   // Profile management (placeholders)
   const profile = program

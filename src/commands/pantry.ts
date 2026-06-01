@@ -106,9 +106,7 @@ export async function removePantryItem(
   }
 
   if (amount === undefined || amount >= item.quantity) {
-    pantry.items = pantry.items.filter(
-      (i) => i.ingredientId !== ingredientId
-    );
+    pantry.items = pantry.items.filter((i) => i.ingredientId !== ingredientId);
     await store.savePantry(pantry);
     return 'removed';
   }

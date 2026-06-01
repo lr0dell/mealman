@@ -127,29 +127,29 @@ describe('IngredientDatabase', () => {
     const updated = db.updateIngredient(ingredient.id, { pricePerGram: 0.018 });
     expect(updated.pricePerGram).toBe(0.018);
   });
-it('scopes semantic search to the given ingredient ids', async () => {
-  const chicken = await db.addIngredient({
-    name: 'Chicken breast, raw',
-    proteinPer100g: 31,
-    carbsPer100g: 0,
-    fatPer100g: 3.6,
-    fiberPer100g: 0,
-    pricePerGram: 0.012,
-    category: 'meat',
-  });
+  it('scopes semantic search to the given ingredient ids', async () => {
+    const chicken = await db.addIngredient({
+      name: 'Chicken breast, raw',
+      proteinPer100g: 31,
+      carbsPer100g: 0,
+      fatPer100g: 3.6,
+      fiberPer100g: 0,
+      pricePerGram: 0.012,
+      category: 'meat',
+    });
 
-  const beef = await db.addIngredient({
-    name: 'Beef, ground, raw',
-    proteinPer100g: 26,
-    carbsPer100g: 0,
-    fatPer100g: 15,
-    fiberPer100g: 0,
-    pricePerGram: 0.011,
-    category: 'meat',
-  });
+    const beef = await db.addIngredient({
+      name: 'Beef, ground, raw',
+      proteinPer100g: 26,
+      carbsPer100g: 0,
+      fatPer100g: 15,
+      fiberPer100g: 0,
+      pricePerGram: 0.011,
+      category: 'meat',
+    });
 
-  // Search for "chicken" but only allow the beef id as a candidate.
-  const matches = await db.searchIngredientsInPantry('chicken', [beef.id], 5);
+    // Search for "chicken" but only allow the beef id as a candidate.
+    const matches = await db.searchIngredientsInPantry('chicken', [beef.id], 5);
     expect(matches).toHaveLength(1);
     expect(matches[0].ingredient.id).toBe(beef.id);
 

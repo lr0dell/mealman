@@ -1,4 +1,4 @@
-import type { WeeklyPlan, Meal, DayPlan } from '../schemas/index.js';
+import type { WeeklyPlan, Meal, DayPlan, Pantry } from '../schemas/index.js';
 import { AgentPlanner } from '../services/agent-planner.js';
 import { DataStore } from '../data/store.js';
 import {
@@ -15,6 +15,29 @@ export type ViewTarget = {
   type: 'week' | 'day';
   week: string;
   date?: string;
+};
+
+export type IngredientRequirement = {
+  ingredientId: number;
+  name: string;
+  amount: number;
+};
+
+export type ConsumeResult = {
+  updatedPantry: Pantry;
+  consumed: {
+    ingredientId: number;
+    name: string;
+    amount: number;
+    remaining: number;
+  }[];
+  shortfalls: {
+    ingredientId: number;
+    name: string;
+    needed: number;
+    had: number;
+  }[];
+  missing: { ingredientId: number; name: string; amount: number }[];
 };
 
 export async function generateWeekPlan(dataDir: string): Promise<void> {
@@ -229,4 +252,122 @@ export async function viewPlan(
   }
 
   return formatDayPlanSummary(day);
+}
+
+export function aggregateIngredients(
+  plan: WeeklyPlan,
+  date?: string
+): IngredientRequirement[] {
+  const days = date ? plan.days.filter((d) => d.date === date) : plan.days;
+  const byId = new Map<number, IngredientRequirement>();
+
+  for (const day of days) {
+    for (const meal of Object.values(day.meals)) {
+      if (!meal) continue;
+      for (const ing of meal.ingredients) {
+        const existing = byId.get(ing.ingredientId);
+        if (existing) {
+          existing.amount += ing.amount;
+        } else {
+          byId.set(ing.ingredientId, {
+            ingredientId: ing.ingredientId,
+            name: ing.name,
+            amount: ing.amount,
+          });
+        }
+      }
+    }
+  }
+
+  return Array.from(byId.values());
+}
+
+export function consumeFromPantry(
+  pantry: Pantry,
+  requirements: IngredientRequirement[]
+): ConsumeResult {
+  const items = pantry.items.map((item) => ({ ...item }));
+  const result: ConsumeResult = {
+    updatedPantry: { items },
+    consumed: [],
+    shortfalls: [],
+    missing: [],
+  };
+
+  for (const req of requirements) {
+    const item = items.find((i) => i.ingredientId === req.ingredientId);
+
+    if (!item) {
+      result.missing.push({
+        ingredientId: req.ingredientId,
+        name: req.name,
+        amount: req.amount,
+      });
+      continue;
+    }
+
+    if (item.quantity < req.amount) {
+      result.shortfalls.push({
+        ingredientId: req.ingredientId,
+        name: req.name,
+        needed: req.amount,
+        had: item.quantity,
+      });
+      result.updatedPantry.items = result.updatedPantry.items.filter(
+        (i) => i.ingredientId !== req.ingredientId
+      );
+      continue;
+    }
+
+    const remaining = item.quantity - req.amount;
+    result.consumed.push({
+      ingredientId: req.ingredientId,
+      name: req.name,
+      amount: req.amount,
+      remaining,
+    });
+
+    if (remaining === 0) {
+      result.updatedPantry.items = result.updatedPantry.items.filter(
+        (i) => i.ingredientId !== req.ingredientId
+      );
+    } else {
+      item.quantity = remaining;
+    }
+  }
+
+  return result;
+}
+
+export function formatConsumeResult(
+  result: ConsumeResult,
+  label: string
+): string {
+  const lines: string[] = [`Consumed ingredients for ${label}.`, ''];
+
+  if (result.consumed.length > 0) {
+    lines.push('Deducted from pantry:');
+    for (const c of result.consumed) {
+      lines.push(`  - ${c.name}: -${c.amount} g (${c.remaining} g remaining)`);
+    }
+    lines.push('');
+  }
+
+  if (result.shortfalls.length > 0) {
+    lines.push('Ran short (removed what was available):');
+    for (const s of result.shortfalls) {
+      lines.push(`  - ${s.name}: needed ${s.needed} g, had ${s.had} g`);
+    }
+    lines.push('');
+  }
+
+  if (result.missing.length > 0) {
+    lines.push('In the plan but not in your pantry:');
+    for (const m of result.missing) {
+      lines.push(`  - ${m.name}: ${m.amount} g`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n').trim();
 }
