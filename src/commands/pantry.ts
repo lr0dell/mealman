@@ -93,19 +93,27 @@ export async function addPantryItem(
 
 export async function removePantryItem(
   store: DataStore,
-  name: string
-): Promise<boolean> {
+  ingredientId: number,
+  amount?: number
+): Promise<'removed' | 'decremented'> {
   const pantry = await store.getPantry();
-  const initialLength = pantry.items.length;
+  const item = pantry.items.find((i) => i.ingredientId === ingredientId);
 
-  pantry.items = pantry.items.filter(
-    (item) => item.name.toLowerCase() !== name.toLowerCase()
-  );
-
-  if (pantry.items.length === initialLength) {
-    return false; // Item not found
+  if (!item) {
+    throw new Error(
+      `No pantry item with ingredientId ${ingredientId}; this should not happen.`
+    );
   }
 
+  if (amount === undefined || amount >= item.quantity) {
+    pantry.items = pantry.items.filter(
+      (i) => i.ingredientId !== ingredientId
+    );
+    await store.savePantry(pantry);
+    return 'removed';
+  }
+
+  item.quantity -= amount;
   await store.savePantry(pantry);
-  return true;
+  return 'decremented';
 }

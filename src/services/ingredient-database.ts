@@ -167,6 +167,39 @@ export class IngredientDatabase {
     }));
   }
 
+  async searchIngredientsInPantry(
+    query: string,
+    ingredientIds: number[],
+    limit: number = 10
+  ): Promise<IngredientMatch[]> {
+    if (ingredientIds.length === 0) return [];
+
+    const queryEmbedding = await this.embedder.embed(query);
+    const placeholders = ingredientIds.map(() => '?').join(', ');
+
+    const rows = this.db
+      .prepare(
+        `SELECT
+          i.*,
+          vec_distance_cosine(e.embedding, ?) as distance
+        FROM ingredient_embeddings e
+        JOIN ingredients i ON i.id = e.ingredient_id
+        WHERE e.ingredient_id IN (${placeholders})
+        ORDER BY distance ASC
+        LIMIT ?`
+      )
+      .all(
+        Buffer.from(queryEmbedding.buffer),
+        ...ingredientIds,
+        limit
+      ) as Array<IngredientRow & { distance: number }>;
+
+    return rows.map((row) => ({
+      ingredient: this.rowToIngredient(row),
+      similarity: 1 - row.distance,
+    }));
+  }
+
   getAllIngredientNames(): string[] {
     const rows = this.db
       .prepare('SELECT name FROM ingredients ORDER BY name')

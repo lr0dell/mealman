@@ -5,7 +5,7 @@ import type { Command } from 'commander';
 describe('CLI Program', () => {
   it('creates a program with name and version', () => {
     const program = createProgram();
-    expect(program.name()).toBe('meal');
+    expect(program.name()).toBe('mealman');
     expect(program.version()).toBeDefined();
   });
 

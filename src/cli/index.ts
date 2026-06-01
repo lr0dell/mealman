@@ -102,18 +102,87 @@ export function createProgram(): Command {
     );
 
   pantry
-    .command('remove <item>')
-    .description('Remove an item from pantry')
-    .action(async (item: string) => {
-      const store = new DataStore(getDataDir());
-      await store.init();
-      const removed = await removePantryItem(store, item);
-      if (removed) {
-        console.log(`Removed ${item} from pantry`);
-      } else {
-        console.log(`Item "${item}" not found in pantry`);
+    .command('remove <name> [amount] [unit]')
+    .description('Remove an item (or amount) from pantry')
+    .option('-A, --all', 'Remove the entire item')
+    .action(
+      async (
+        name: string,
+        amount: string | undefined,
+        unit: string | undefined,
+        options: { all?: boolean }
+      ) => {
+        if (!options.all && (amount === undefined || unit !== 'g')) {
+          console.log(
+            'Usage: mealman pantry remove <name> <amount> g | mealman pantry remove <name> --all'
+          );
+          return;
+        }
+
+        const store = new DataStore(getDataDir());
+        await store.init();
+
+        const pantry = await store.getPantry();
+        if (pantry.items.length === 0) {
+          console.log('Your pantry is empty.');
+          return;
+        }
+
+        const dbPath = join(getDataDir(), 'ingredients.db');
+        const ingredientDb = new IngredientDatabase(dbPath);
+        await ingredientDb.init();
+
+        try {
+          const ids = pantry.items.map((item) => item.ingredientId);
+          const matches = await ingredientDb.searchIngredientsInPantry(
+            name,
+            ids,
+            5
+          );
+
+          if (matches.length === 0) {
+            console.log(`No pantry items found matching "${name}".`);
+            return;
+          }
+
+          const choices = matches.map((m) => ({
+            name: `${m.ingredient.name} (${Math.round(m.similarity * 100)}% match)`,
+            value: { id: m.ingredient.id, name: m.ingredient.name },
+          }));
+
+          const selected = await select({
+            message: 'Select the item to remove:',
+            choices: [...choices, { name: 'Cancel', value: null }],
+          });
+
+          if (!selected) {
+            console.log('Cancelled.');
+            return;
+          }
+
+          const removeAmount = options.all ? undefined : parseFloat(amount!);
+          const result = await removePantryItem(
+            store,
+            selected.id,
+            removeAmount
+          );
+
+          if (result === 'removed') {
+            console.log(`Removed all ${selected.name} from pantry`);
+          } else {
+            const updated = await store.getPantry();
+            const remaining = updated.items.find(
+              (item) => item.ingredientId === selected.id
+            );
+            console.log(
+              `Removed ${removeAmount} g of ${selected.name} (${remaining?.quantity} g remaining)`
+            );
+          }
+        } finally {
+          ingredientDb.close();
+        }
       }
-    });
+    );
 
   pantry
     .command('expiring')

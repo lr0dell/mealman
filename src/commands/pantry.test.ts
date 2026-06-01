@@ -119,25 +119,36 @@ describe('Pantry Commands', () => {
   });
 
   describe('removePantryItem', () => {
-    it('removes an existing item', async () => {
+    it('removes the whole item when amount is undefined', async () => {
       await addPantryItem(store, 1, 'eggs', 600);
-      const removed = await removePantryItem(store, 'eggs');
+      const result = await removePantryItem(store, 1);
 
-      expect(removed).toBe(true);
+      expect(result).toBe('removed');
       const items = await listPantry(store);
       expect(items).toHaveLength(0);
     });
 
-    it('returns false for non-existent item', async () => {
-      const removed = await removePantryItem(store, 'phantom item');
-      expect(removed).toBe(false);
+    it('decrements quantity when amount is less than what is stored', async () => {
+      await addPantryItem(store, 1, 'eggs', 600);
+      const result = await removePantryItem(store, 1, 200);
+
+      expect(result).toBe('decremented');
+      const items = await listPantry(store);
+      expect(items).toHaveLength(1);
+      expect(items[0].quantity).toBe(400);
     });
 
-    it('removes item case-insensitively', async () => {
+    it('removes the item entirely when amount equals or exceeds quantity', async () => {
       await addPantryItem(store, 1, 'eggs', 600);
-      const removed = await removePantryItem(store, 'Eggs');
+      const result = await removePantryItem(store, 1, 600);
 
-      expect(removed).toBe(true);
+      expect(result).toBe('removed');
+      const items = await listPantry(store);
+      expect(items).toHaveLength(0);
+    });
+
+    it('throws when the ingredient id is not in the pantry', async () => {
+      await expect(removePantryItem(store, 999)).rejects.toThrow();
     });
   });
 });

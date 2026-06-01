@@ -127,4 +127,53 @@ describe('IngredientDatabase', () => {
     const updated = db.updateIngredient(ingredient.id, { pricePerGram: 0.018 });
     expect(updated.pricePerGram).toBe(0.018);
   });
+it('scopes semantic search to the given ingredient ids', async () => {
+  const chicken = await db.addIngredient({
+    name: 'Chicken breast, raw',
+    proteinPer100g: 31,
+    carbsPer100g: 0,
+    fatPer100g: 3.6,
+    fiberPer100g: 0,
+    pricePerGram: 0.012,
+    category: 'meat',
+  });
+
+  const beef = await db.addIngredient({
+    name: 'Beef, ground, raw',
+    proteinPer100g: 26,
+    carbsPer100g: 0,
+    fatPer100g: 15,
+    fiberPer100g: 0,
+    pricePerGram: 0.011,
+    category: 'meat',
+  });
+
+  // Search for "chicken" but only allow the beef id as a candidate.
+  const matches = await db.searchIngredientsInPantry('chicken', [beef.id], 5);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].ingredient.id).toBe(beef.id);
+
+    // Both ids in scope -> chicken ranks first for a "chicken" query.
+    const both = await db.searchIngredientsInPantry(
+      'chicken',
+      [chicken.id, beef.id],
+      5
+    );
+    expect(both[0].ingredient.id).toBe(chicken.id);
+  });
+
+  it('returns no matches for an empty id list', async () => {
+    await db.addIngredient({
+      name: 'Rice, white, raw',
+      proteinPer100g: 7,
+      carbsPer100g: 80,
+      fatPer100g: 0.7,
+      fiberPer100g: 1.3,
+      pricePerGram: 0.003,
+      category: 'grains',
+    });
+
+    const matches = await db.searchIngredientsInPantry('rice', [], 5);
+    expect(matches).toEqual([]);
+  });
 });
