@@ -1,0 +1,32 @@
+amends "package://github.com/jdx/hk/releases/download/v1.37.0/hk@1.37.0#/Config.pkl"
+
+local linters = new Mapping<String, Step> {
+  ["eslint"] {
+    batch = true
+    glob = "src/**/*.ts"
+    check = "npx eslint --max-warnings=0 {{files}}"
+    fix = "npx eslint --fix {{files}}"
+  }
+  ["prettier"] {
+    depends = "eslint"
+    batch = true
+    glob = "src/**/*.ts"
+    check = "npx prettier --check {{files}}"
+    fix = "npx prettier --write {{files}}"
+  }
+}
+
+stage = false
+hooks {
+  ["pre-commit"] {
+    fix = true
+    steps = linters
+  }
+  ["fix"] {
+    fix = true
+    steps = linters
+  }
+  ["check"] {
+    steps = linters
+  }
+}
