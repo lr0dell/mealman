@@ -27,7 +27,7 @@ export function createProgram(): Command {
   const program = new Command();
 
   program
-    .name('meal')
+    .name('mealman')
     .description('AI-powered meal planning CLI')
     .version('0.1.0');
 

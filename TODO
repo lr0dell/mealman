@@ -1,10 +1,9 @@
-- prioritize daily reqs instead of weekly ones to an extent
+- prioritize daily reqs instead of weekly ones (good for context pruning)
 - allow AI to plan leftovers when doing 'add_meal' either forwards or backwards
-- why is only unit in meal plans 'g'? we should store a unit-conversion table per ingredient
+- why is only unit in meal plans 'g'? we should store a unit-conversion table per ingredient  (this is a very hard problem to solve)
 - add agent for making educated guesses for meal nutrition (burger and fries at a diner, cookies from work, etc)
 - implement "meal plan adjust" and "meal plan today" commands
-- implement commands for adjusting profile and pantry
+- implement commands for adjusting profile
 - add creating custom recipes, saving generated recipes for reuse
 - add feature to crawl web for recipes
-- fiber is missing from some nutrition info, causing inaccurate results
-- mandate that all ingredients in pantry should match ingredients in database (and allow adding of custom ingredients) (we can improve pantry food usage via this)
+- allow adding of custom ingredients

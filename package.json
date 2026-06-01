@@ -1,10 +1,10 @@
 {
-  "name": "ai-meal-planner",
+  "name": "mealman",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
   "bin": {
-    "meal": "./dist/index.js"
+    "mealman": "./dist/index.js"
   },
   "directories": {
     "doc": "docs"
