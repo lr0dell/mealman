@@ -7,8 +7,6 @@ import {
   formatPantryList,
   addPantryItem,
   removePantryItem,
-  getExpiringItems,
-  formatExpiringList,
   generateWeekPlan,
   formatProfile,
   generateShoppingList,
@@ -53,57 +51,48 @@ export function createProgram(): Command {
   pantry
     .command('add <name> <quantity> <unit>')
     .description('Add item to pantry')
-    .option('-e, --expires <date>', 'Expiration date (YYYY-MM-DD)')
-    .action(
-      async (
-        name: string,
-        quantity: string,
-        unit: string,
-        options: { expires?: string }
-      ) => {
-        const store = new DataStore(getDataDir());
-        await store.init();
+    .action(async (name: string, quantity: string, unit: string) => {
+      const store = new DataStore(getDataDir());
+      await store.init();
 
-        const dbPath = join(getDataDir(), 'ingredients.db');
-        const ingredientDb = new IngredientDatabase(dbPath);
-        await ingredientDb.init();
+      const dbPath = join(getDataDir(), 'ingredients.db');
+      const ingredientDb = new IngredientDatabase(dbPath);
+      await ingredientDb.init();
 
-        try {
-          const matches = await ingredientDb.searchIngredients(name, 5);
+      try {
+        const matches = await ingredientDb.searchIngredients(name, 5);
 
-          if (matches.length === 0) {
-            console.log(`No ingredients found matching "${name}".`);
-            return;
-          }
-
-          const choices = matches.map((m) => ({
-            name: `${m.ingredient.name} (${Math.round(m.similarity * 100)}% match)`,
-            value: { id: m.ingredient.id, name: m.ingredient.name },
-          }));
-
-          const selected = await select({
-            message: 'Select the ingredient to add:',
-            choices: [...choices, { name: 'Cancel', value: null }],
-          });
-
-          if (!selected) {
-            console.log('Cancelled.');
-            return;
-          }
-
-          await addPantryItem(
-            store,
-            selected.id,
-            selected.name,
-            parseFloat(quantity),
-            options.expires
-          );
-          console.log(`Added ${quantity} ${unit} of ${selected.name}`);
-        } finally {
-          ingredientDb.close();
+        if (matches.length === 0) {
+          console.log(`No ingredients found matching "${name}".`);
+          return;
         }
+
+        const choices = matches.map((m) => ({
+          name: `${m.ingredient.name} (${Math.round(m.similarity * 100)}% match)`,
+          value: { id: m.ingredient.id, name: m.ingredient.name },
+        }));
+
+        const selected = await select({
+          message: 'Select the ingredient to add:',
+          choices: [...choices, { name: 'Cancel', value: null }],
+        });
+
+        if (!selected) {
+          console.log('Cancelled.');
+          return;
+        }
+
+        await addPantryItem(
+          store,
+          selected.id,
+          selected.name,
+          parseFloat(quantity)
+        );
+        console.log(`Added ${quantity} ${unit} of ${selected.name}`);
+      } finally {
+        ingredientDb.close();
       }
-    );
+    });
 
   pantry
     .command('remove <name> [amount] [unit]')
@@ -187,16 +176,6 @@ export function createProgram(): Command {
         }
       }
     );
-
-  pantry
-    .command('expiring')
-    .description('Show items expiring within 3 days')
-    .action(async () => {
-      const store = new DataStore(getDataDir());
-      await store.init();
-      const items = await getExpiringItems(store);
-      console.log(formatExpiringList(items));
-    });
 
   // Meal planning (placeholders)
   const plan = program

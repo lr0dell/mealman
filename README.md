@@ -4,7 +4,7 @@ An AI-powered meal planning CLI that generates a week of meals to hit your macro
 
 ## What it does
 
-`mealman` plans a week of breakfasts, lunches, and dinners that fit your nutrition goals (calories, protein, carbs, fat, fiber) and a weekly food budget. It knows what's already in your pantry, prioritizes ingredients that are about to expire, and produces a consolidated shopping list for whatever you're missing.
+`mealman` plans a week of breakfasts, lunches, and dinners that fit your nutrition goals (calories, protein, carbs, fat, fiber) and a weekly food budget. It knows what's already in your pantry and produces a consolidated shopping list for whatever you're missing.
 
 ## How it works
 

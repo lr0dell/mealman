@@ -6,7 +6,7 @@ export function buildPlanningSystemPrompt(): string {
 
 1. Meet the user's macro and calorie targets (within 10% tolerance)
 2. Stay within the weekly budget
-3. Use pantry items, prioritizing those expiring soon
+3. Use pantry items where possible
 4. Plan leftovers intentionally for efficiency
 5. Respect time constraints (quick meals on weekdays)
 6. Vary cuisines and avoid recent repeats
@@ -82,13 +82,9 @@ function formatPantryForPrompt(pantry: Pantry): string {
     return 'Pantry is empty - all ingredients need to be purchased.';
   }
 
-  const lines = pantry.items.map((item) => {
-    let line = `- ${item.name}: ${item.quantity} ${item.unit}`;
-    if (item.expirationDate) {
-      line += ` (expires: ${item.expirationDate} - USE SOON)`;
-    }
-    return line;
-  });
+  const lines = pantry.items.map(
+    (item) => `- ${item.name}: ${item.quantity} ${item.unit}`
+  );
 
   return lines.join('\n');
 }

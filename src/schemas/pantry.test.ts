@@ -9,7 +9,6 @@ describe('PantrySchema', () => {
       quantity: 500,
       unit: 'g',
       addedDate: '2026-01-27',
-      expirationDate: '2026-02-01',
     };
 
     const result = PantryItemSchema.safeParse(item);
@@ -37,7 +36,6 @@ describe('PantrySchema', () => {
           quantity: 500,
           unit: 'g',
           addedDate: '2026-01-27',
-          expirationDate: '2026-02-01',
         },
         {
           ingredientId: 2,
@@ -50,19 +48,6 @@ describe('PantrySchema', () => {
     };
 
     const result = PantrySchema.safeParse(pantry);
-    expect(result.success).toBe(true);
-  });
-
-  it('validates pantry item without expiration date', () => {
-    const item = {
-      ingredientId: 10,
-      name: 'rice',
-      quantity: 2000,
-      unit: 'g',
-      addedDate: '2026-01-01',
-    };
-
-    const result = PantryItemSchema.safeParse(item);
     expect(result.success).toBe(true);
   });
 });

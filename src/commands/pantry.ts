@@ -13,40 +13,7 @@ export function formatPantryList(items: PantryItem[]): string {
 
   const lines = ['Pantry Items:', ''];
   for (const item of items) {
-    let line = `  - ${item.name}: ${item.quantity} ${item.unit}`;
-    if (item.expirationDate) {
-      line += ` (expires: ${item.expirationDate})`;
-    }
-    lines.push(line);
-  }
-  return lines.join('\n');
-}
-
-export async function getExpiringItems(
-  store: DataStore,
-  daysAhead: number = 3
-): Promise<PantryItem[]> {
-  const pantry = await store.getPantry();
-  const today = new Date();
-  const cutoff = new Date(today.getTime() + daysAhead * 24 * 60 * 60 * 1000);
-
-  return pantry.items.filter((item) => {
-    if (!item.expirationDate) return false;
-    const expDate = new Date(item.expirationDate);
-    return expDate <= cutoff;
-  });
-}
-
-export function formatExpiringList(items: PantryItem[]): string {
-  if (items.length === 0) {
-    return 'No items expiring soon.';
-  }
-
-  const lines = ['Items Expiring Soon:', ''];
-  for (const item of items) {
-    lines.push(
-      `  - ${item.name}: ${item.quantity} ${item.unit} (expires: ${item.expirationDate})`
-    );
+    lines.push(`  - ${item.name}: ${item.quantity} ${item.unit}`);
   }
   return lines.join('\n');
 }
@@ -55,8 +22,7 @@ export async function addPantryItem(
   store: DataStore,
   ingredientId: number,
   name: string,
-  quantity: number,
-  expirationDate?: string
+  quantity: number
 ): Promise<void> {
   const pantry = await store.getPantry();
   const today = new Date().toISOString().split('T')[0];
@@ -67,13 +33,6 @@ export async function addPantryItem(
 
   if (existing) {
     existing.quantity += quantity;
-    // Update expiration if new one is sooner
-    if (
-      expirationDate &&
-      (!existing.expirationDate || expirationDate < existing.expirationDate)
-    ) {
-      existing.expirationDate = expirationDate;
-    }
   } else {
     const newItem: PantryItem = {
       ingredientId,
@@ -82,9 +41,6 @@ export async function addPantryItem(
       unit: 'g',
       addedDate: today,
     };
-    if (expirationDate) {
-      newItem.expirationDate = expirationDate;
-    }
     pantry.items.push(newItem);
   }
 

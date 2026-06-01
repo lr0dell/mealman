@@ -35,7 +35,6 @@ describe('Planning Prompts', () => {
       quantity: 2,
       unit: 'g',
       addedDate: '2026-01-27',
-      expirationDate: '2026-02-01',
     });
 
     const prompt = buildWeeklyPlanPrompt(
@@ -44,6 +43,5 @@ describe('Planning Prompts', () => {
       '2026-01-26--2026-02-01'
     );
     expect(prompt).toContain('chicken breast');
-    expect(prompt).toContain('expir');
   });
 });

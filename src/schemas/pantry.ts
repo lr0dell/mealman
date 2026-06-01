@@ -6,10 +6,6 @@ export const PantryItemSchema = z.object({
   quantity: z.number().positive(),
   unit: z.literal('g'),
   addedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  expirationDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional(),
 });
 
 export const PantrySchema = z.object({

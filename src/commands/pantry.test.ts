@@ -65,7 +65,6 @@ describe('Pantry Commands', () => {
         quantity: number;
         unit: 'g';
         addedDate: string;
-        expirationDate?: string | undefined;
       }[] = [
         {
           ingredientId: 1,
@@ -99,13 +98,6 @@ describe('Pantry Commands', () => {
       expect(items[0].name).toBe('eggs');
       expect(items[0].ingredientId).toBe(1);
       expect(items[0].quantity).toBe(600);
-    });
-
-    it('adds item with expiration', async () => {
-      await addPantryItem(store, 1, 'chicken breast', 900, '2026-02-01');
-
-      const items = await listPantry(store);
-      expect(items[0].expirationDate).toBe('2026-02-01');
     });
 
     it('updates quantity of existing item (same ingredientId and unit)', async () => {
