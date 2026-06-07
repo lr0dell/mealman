@@ -183,9 +183,9 @@ export function createProgram(): Command {
     .description('Generate and manage meal plans');
 
   plan
-    .command('week')
-    .description('Generate next week plan')
-    .action(async () => {
+    .command('week [date]')
+    .description('Generate a meal plan for a week (default: current)')
+    .action(async (date: string | undefined) => {
       const apiKey = process.env.ANTHROPIC_API_KEY;
       if (!apiKey) {
         console.error(
@@ -194,12 +194,37 @@ export function createProgram(): Command {
         process.exit(1);
       }
 
-      const week = getCurrentWeekKey();
-      const { start, end } = parseWeekKey(week);
-      console.log(`Generating meal plan for ${start} to ${end}...`);
+      let week: string;
+      try {
+        week = parseViewTarget(date).week;
+      } catch (error) {
+        console.error(
+          error instanceof Error ? error.message : 'Invalid target'
+        );
+        process.exit(1);
+      }
+
+      const store = new DataStore(getDataDir());
+      await store.init();
+
+      const existing = await store.getWeeklyPlan(week);
+      if (existing) {
+        const { start, end } = parseWeekKey(week);
+        const confirmed = await select({
+          message: `A plan already exists for ${start} to ${end}. Regenerate?`,
+          choices: [
+            { name: 'Yes', value: true },
+            { name: 'Cancel', value: false },
+          ],
+        });
+        if (!confirmed) {
+          console.log('Cancelled.');
+          return;
+        }
+      }
 
       try {
-        await generateWeekPlan(getDataDir());
+        await generateWeekPlan(getDataDir(), week);
       } catch (error) {
         console.error('Failed to generate plan:', error);
         process.exit(1);

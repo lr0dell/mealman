@@ -17,7 +17,29 @@ import {
   aggregateIngredients,
   consumeFromPantry,
   formatConsumeResult,
+  generateWeekPlan,
 } from './plan.js';
+
+vi.mock('../services/agent-planner.js', () => ({
+  AgentPlanner: class {
+    generateWeeklyPlan(
+      _profile: unknown,
+      _pantry: unknown,
+      week: string
+    ): Promise<WeeklyPlan> {
+      return Promise.resolve({
+        week,
+        generatedAt: '2026-02-09T00:00:00.000Z',
+        days: [],
+        totals: {
+          calories: 0,
+          macros: { protein: 0, carbs: 0, fat: 0, fiber: 0 },
+          estimatedCost: 0,
+        },
+      });
+    }
+  },
+}));
 
 describe('parseViewTarget', () => {
   beforeEach(() => {
@@ -560,5 +582,41 @@ describe('formatConsumeResult', () => {
     expect(output).toContain('egg');
     expect(output.toLowerCase()).not.toContain('not in your pantry');
     expect(output.toLowerCase()).not.toContain('short');
+  });
+});
+
+describe('generateWeekPlan', () => {
+  const testDir = join(process.cwd(), 'test-data-generate-week');
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-02-10T12:00:00'));
+    vi.stubEnv('ANTHROPIC_API_KEY', 'test-key');
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true });
+    }
+    mkdirSync(testDir, { recursive: true });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true });
+    }
+  });
+
+  it('saves the plan under the passed week, not the current week', async () => {
+    await generateWeekPlan(testDir, '2026-03-02--2026-03-08');
+
+    const store = new DataStore(testDir);
+    await store.init();
+
+    const requested = await store.getWeeklyPlan('2026-03-02--2026-03-08');
+    expect(requested).not.toBeNull();
+    expect(requested?.week).toBe('2026-03-02--2026-03-08');
+
+    const current = await store.getWeeklyPlan('2026-02-09--2026-02-15');
+    expect(current).toBeNull();
   });
 });

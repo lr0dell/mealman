@@ -40,7 +40,10 @@ export type ConsumeResult = {
   missing: { ingredientId: number; name: string; amount: number }[];
 };
 
-export async function generateWeekPlan(dataDir: string): Promise<void> {
+export async function generateWeekPlan(
+  dataDir: string,
+  week: string
+): Promise<void> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error('ANTHROPIC_API_KEY environment variable is required');
@@ -52,7 +55,6 @@ export async function generateWeekPlan(dataDir: string): Promise<void> {
   const profile = await store.getProfile();
   const pantry = await store.getPantry();
 
-  const week = getCurrentWeekKey();
   const { start, end } = parseWeekKey(week);
 
   console.log(`Generating meal plan for ${start} to ${end}...`);
