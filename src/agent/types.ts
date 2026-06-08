@@ -56,14 +56,3 @@ export interface CheckDailyTotalsInput {
 export interface FinalizePlanInput {
   notes?: string;
 }
-
-export type ToolInput =
-  | { tool: 'get_plan_state' }
-  | { tool: 'add_meal'; input: AddMealInput }
-  | { tool: 'modify_meal'; input: ModifyMealInput }
-  | { tool: 'remove_meal'; input: RemoveMealInput }
-  | { tool: 'lookup_ingredient'; input: LookupIngredientInput }
-  | { tool: 'search_knowledge_base'; input: SearchKnowledgeBaseInput }
-  | { tool: 'check_daily_totals'; input: CheckDailyTotalsInput }
-  | { tool: 'check_weekly_totals' }
-  | { tool: 'finalize_plan'; input: FinalizePlanInput };

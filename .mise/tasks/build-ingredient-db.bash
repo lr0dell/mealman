@@ -12,4 +12,3 @@ fi
 
 npx tsx scripts/build-ingredient-db.ts
 npx tsx scripts/embed-ingredients.ts
-```
