@@ -314,6 +314,40 @@ describe('PlanState', () => {
     });
   });
 
+  const sampleMeal = (calories: number, cost: number): Meal => ({
+    name: 'Big Breakfast',
+    recipe: 'cook',
+    ingredients: [{ ingredientId: 1, name: 'eggs', amount: 100, unit: 'g' }],
+    prepTime: 10,
+    calories,
+    macros: { protein: 50, carbs: 50, fat: 50, fiber: 10 },
+    estimatedCost: cost,
+    servings: 1,
+    leftoverOf: null,
+  });
+
+  describe('getPaceContext', () => {
+    it('first day paces toward the weekly calorie target evenly', () => {
+      const pace = state.getPaceContext('2026-01-26');
+      expect(pace.weeklyCalTarget).toBe(14000);
+      expect(pace.daysRemaining).toBe(7);
+      expect(pace.caloriesSoFar).toBe(0);
+      expect(pace.paceCalories).toBe(2000); // 14000 / 7
+      expect(pace.calorieBand).toEqual({ min: 13500, max: 14500 });
+      expect(pace.weeklyBudget).toBe(150);
+    });
+
+    it('corrects for prior-day drift', () => {
+      state.addMeal('2026-01-26', 'breakfast', sampleMeal(2500, 30));
+      const pace = state.getPaceContext('2026-01-27');
+      expect(pace.caloriesSoFar).toBe(2500);
+      expect(pace.costSoFar).toBe(30);
+      expect(pace.daysRemaining).toBe(6);
+      expect(pace.paceCalories).toBe(1917); // round((14000 - 2500) / 6)
+      expect(pace.paceCost).toBeCloseTo(20, 5); // (150 - 30) / 6
+    });
+  });
+
   describe('pantry tracking', () => {
     it('tracks when pantry items are used in meals', () => {
       const pantryWithItems: Pantry = {

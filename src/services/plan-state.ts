@@ -1,5 +1,6 @@
 import type { Profile, Pantry } from '../schemas/index.js';
 import type { Meal, DayPlan, WeeklyPlan } from '../schemas/plan.js';
+import { getWeekDates } from '../utils/week.js';
 
 export const WEEKLY_CALORIE_TOLERANCE = 500;
 
@@ -45,6 +46,17 @@ interface RemainingBudget {
     fiber: MacroBudget;
   };
   cost: number;
+}
+
+export interface PaceContext {
+  caloriesSoFar: number;
+  costSoFar: number;
+  daysRemaining: number;
+  weeklyCalTarget: number;
+  paceCalories: number;
+  paceCost: number;
+  calorieBand: { min: number; max: number };
+  weeklyBudget: number;
 }
 
 export class PlanState {
@@ -219,6 +231,43 @@ export class PlanState {
         },
       },
       cost: goals.weeklyBudget - summary.weeklyTotals.estimatedCost,
+    };
+  }
+
+  getPaceContext(date: string): PaceContext {
+    const dates = getWeekDates(this.week);
+    const index = dates.indexOf(date);
+    const priorDates = index >= 0 ? dates.slice(0, index) : [];
+    const summary = this.getSummary();
+
+    let caloriesSoFar = 0;
+    let costSoFar = 0;
+    for (const d of priorDates) {
+      const totals = summary.dayTotals.get(d);
+      if (totals) {
+        caloriesSoFar += totals.calories;
+        costSoFar += totals.estimatedCost;
+      }
+    }
+
+    const daysRemaining = index >= 0 ? dates.length - index : dates.length;
+    const weeklyCalTarget = this.profile.goals.dailyCalories * 7;
+    const weeklyBudget = this.profile.goals.weeklyBudget;
+
+    return {
+      caloriesSoFar,
+      costSoFar,
+      daysRemaining,
+      weeklyCalTarget,
+      paceCalories: Math.round(
+        (weeklyCalTarget - caloriesSoFar) / daysRemaining
+      ),
+      paceCost: (weeklyBudget - costSoFar) / daysRemaining,
+      calorieBand: {
+        min: weeklyCalTarget - WEEKLY_CALORIE_TOLERANCE,
+        max: weeklyCalTarget + WEEKLY_CALORIE_TOLERANCE,
+      },
+      weeklyBudget,
     };
   }
 
