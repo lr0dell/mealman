@@ -168,3 +168,10 @@ export const PLANNING_TOOLS: ToolDefinition[] = [
     },
   },
 ];
+
+// Tools handed to the per-day planning agent. Excludes weekly-scoped tools
+// (e.g. get_plan_state) to keep the per-day context focused. The excluded
+// tools remain defined in PLANNING_TOOLS and wired in tool-handlers.
+export const DAY_PLANNING_TOOLS: ToolDefinition[] = PLANNING_TOOLS.filter(
+  (t) => t.name !== 'get_plan_state'
+);

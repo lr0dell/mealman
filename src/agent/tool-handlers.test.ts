@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createToolHandlers } from './tool-handlers.js';
-import { PLANNING_TOOLS } from './tools.js';
+import { PLANNING_TOOLS, DAY_PLANNING_TOOLS } from './tools.js';
 import { PlanState } from '../services/plan-state.js';
 import { IngredientDatabase } from '../services/ingredient-database.js';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
@@ -388,6 +388,21 @@ describe('PLANNING_TOOLS', () => {
     expect(toolNames).toContain('get_plan_state');
     expect(toolNames).toContain('add_meal');
     expect(toolNames).toContain('modify_meal');
+    expect(toolNames).toContain('finalize_plan');
+  });
+});
+
+describe('DAY_PLANNING_TOOLS', () => {
+  it('excludes get_plan_state (weekly-scoped, withheld from per-day agent)', () => {
+    const toolNames = DAY_PLANNING_TOOLS.map((t) => t.name);
+    expect(toolNames).not.toContain('get_plan_state');
+  });
+
+  it('keeps the per-day essentials', () => {
+    const toolNames = DAY_PLANNING_TOOLS.map((t) => t.name);
+    expect(toolNames).toContain('add_meal');
+    expect(toolNames).toContain('lookup_ingredient');
+    expect(toolNames).toContain('check_daily_totals');
     expect(toolNames).toContain('finalize_plan');
   });
 });

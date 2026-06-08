@@ -2,7 +2,7 @@ import { AIClient } from '../ai/client.js';
 import { IngredientDatabase } from './ingredient-database.js';
 import { PlanState } from './plan-state.js';
 import { createToolHandlers } from '../agent/tool-handlers.js';
-import { PLANNING_TOOLS } from '../agent/tools.js';
+import { DAY_PLANNING_TOOLS } from '../agent/tools.js';
 import { PlanningProgressTracker } from './planning-progress-tracker.js';
 import { join } from 'node:path';
 import type { Profile, Pantry } from '../schemas/index.js';
@@ -156,7 +156,7 @@ Add today's breakfast, lunch, and dinner with add_meal (date ${date}). Use looku
         const result = await this.aiClient.runAgentLoop({
           systemPrompt,
           initialMessage,
-          tools: PLANNING_TOOLS,
+          tools: DAY_PLANNING_TOOLS,
           toolHandler: handlers.handle,
           maxIterations: 100,
           contextWindow: 15,
