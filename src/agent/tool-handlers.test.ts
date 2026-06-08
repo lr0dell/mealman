@@ -338,6 +338,17 @@ describe('ToolHandlers', () => {
         slot: 'breakfast',
       })) as { success: boolean; error?: string };
       expect(removeOff.success).toBe(false);
+
+      const onDate = (await locked.handle('add_meal', {
+        date: '2026-01-26',
+        slot: 'breakfast',
+        name: 'Chicken plate',
+        recipe: 'cook',
+        ingredients: [{ name: 'chicken breast', amountGrams: 150 }],
+        prepTime: 10,
+        servings: 1,
+      })) as { success: boolean };
+      expect(onDate.success).toBe(true);
     });
   });
 
