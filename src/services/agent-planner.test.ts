@@ -87,7 +87,6 @@ describe('AgentPlanner', () => {
     expect(prompt).toContain('recipe-accurate ingredient names');
     expect(prompt).toContain('chicken breast');
     expect(prompt).toContain('black beans');
-    expect(prompt).toContain('encouraged');
     expect(prompt).not.toContain('MUST use pantry');
   });
 

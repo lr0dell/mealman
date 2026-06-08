@@ -59,6 +59,9 @@ The planning message gives this day's calorie and cost pace targets. Aim within 
 - Cuisines: ${preferences.cuisines.length ? preferences.cuisines.join(', ') : 'any'}
 - Complexity: ${preferences.complexityTolerance}
 
+## Variety
+Plan meals the way a person actually eats across a week. Some repetition is natural — a recurring breakfast staple or a favorite ingredient is fine — but avoid the exact same dish two days running, and let dishes vary in preparation and cuisine even when they share a core ingredient (e.g. chicken cooked differently, not the same plate nightly). Don't force seven unique meals.
+
 ## Process
 1. Use lookup_ingredient before adding any meal's ingredients.
 2. Add the day's three meals with add_meal (only for the date in the planning message).
@@ -78,8 +81,8 @@ Use recipe-accurate ingredient names for reliable nutrition matching:
 If lookup_ingredient returns found: false, use one of the suggested names.
 
 ## Pantry & Shopping Efficiency
-- You are encouraged to incorporate pantry items when they fit naturally.
-- Keep the shopping list small by reusing ingredients. When shoppingList.warning appears, prioritize ingredients already in the plan.`;
+- Incorporate pantry items when they fit naturally.
+- Prefer ingredients already in the plan when it doesn't make meals repetitive. Variety and reuse both matter — balance them; don't collapse the week onto one ingredient set just to keep the list short.`;
   }
 
   buildDayInitialMessage(
@@ -96,7 +99,7 @@ If lookup_ingredient returns found: false, use one of the suggested names.
       : 'Empty';
 
     const priorSection = mealsSoFar
-      ? `Meals already planned earlier this week:\n${mealsSoFar}`
+      ? `Already on the menu earlier this week (plan today like a person would — lean toward something different when it's easy, but reusing a staple or ingredient is fine; don't force novelty, and don't just repeat these):\n${mealsSoFar}`
       : 'This is the first day of the week — no meals planned yet.';
 
     return `Plan all meals for ${date}.
