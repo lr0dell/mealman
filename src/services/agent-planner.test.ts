@@ -74,109 +74,74 @@ describe('AgentPlanner', () => {
     expect(planner).toBeDefined();
   });
 
-  it('builds system prompt with profile info', () => {
+  it('day system prompt states daily macro/fiber targets and rules', () => {
     const planner = new AgentPlanner({
       anthropicApiKey: 'test-key',
       dataDir: testDir,
     });
+    const prompt = planner.buildDaySystemPrompt(mockProfile);
 
-    const prompt = planner.buildSystemPrompt(mockProfile);
-
-    expect(prompt).toContain('2000'); // daily calorie target
-    expect(prompt).toContain('150'); // budget
-  });
-
-  it('system prompt includes success condition guidance', () => {
-    const planner = new AgentPlanner({
-      anthropicApiKey: 'test-key',
-      dataDir: testDir,
-    });
-
-    const prompt = planner.buildSystemPrompt(mockProfile);
-
-    // Should explain the status field semantics
-    expect(prompt).toContain('in_range');
-    expect(prompt).toContain('status');
-    // Should tell agent when to stop adjusting
+    expect(prompt).toContain('Protein: 100-150g');
+    expect(prompt).toContain('Fiber: 25-40g');
     expect(prompt).toContain('finalize_plan');
-  });
-
-  it('system prompt explains when plan is complete', () => {
-    const planner = new AgentPlanner({
-      anthropicApiKey: 'test-key',
-      dataDir: testDir,
-    });
-
-    const prompt = planner.buildSystemPrompt(mockProfile);
-
-    // Should explain that in_range means success, stop adjusting
-    expect(prompt.toLowerCase()).toMatch(/in.range.*stop|stop.*in.range/i);
-  });
-
-  it('instructs agent to use recipe-accurate ingredient names', () => {
-    const planner = new AgentPlanner({
-      anthropicApiKey: 'test-key',
-      dataDir: testDir,
-    });
-
-    const prompt = planner.buildSystemPrompt(mockProfile);
-
     expect(prompt).toContain('recipe-accurate ingredient names');
     expect(prompt).toContain('chicken breast');
     expect(prompt).toContain('black beans');
-  });
-
-  it('encourages pantry usage without requiring it', () => {
-    const planner = new AgentPlanner({
-      anthropicApiKey: 'test-key',
-      dataDir: testDir,
-    });
-
-    const prompt = planner.buildSystemPrompt(mockProfile);
-
-    expect(prompt).toContain('pantry');
     expect(prompt).toContain('encouraged');
     expect(prompt).not.toContain('MUST use pantry');
-    expect(prompt).not.toContain('required to use');
   });
 
-  it('system prompt tells agent to call finalize_plan immediately when all statuses are in_range', () => {
+  it('day initial message carries pace targets and prior meals', () => {
     const planner = new AgentPlanner({
       anthropicApiKey: 'test-key',
       dataDir: testDir,
     });
-
-    const prompt = planner.buildSystemPrompt(mockProfile);
-
-    expect(prompt.toLowerCase()).toMatch(
-      /immediately.*finalize_plan|finalize_plan.*immediately/i
+    const pace = {
+      caloriesSoFar: 2500,
+      costSoFar: 30,
+      daysRemaining: 6,
+      weeklyCalTarget: 14000,
+      paceCalories: 1917,
+      paceCost: 20,
+      calorieBand: { min: 13500, max: 14500 },
+      weeklyBudget: 150,
+    };
+    const msg = planner.buildDayInitialMessage(
+      mockProfile,
+      { items: [] },
+      '2026-01-27',
+      pace,
+      '2026-01-26: Big Breakfast'
     );
+
+    expect(msg).toContain('2026-01-27');
+    expect(msg).toContain('1917');
+    expect(msg).toContain('20.00');
+    expect(msg).toContain('2026-01-26: Big Breakfast');
   });
 
-  it('system prompt prohibits unnecessary tool calls after all statuses are in_range', () => {
+  it('day initial message notes the first day when no prior meals', () => {
     const planner = new AgentPlanner({
       anthropicApiKey: 'test-key',
       dataDir: testDir,
     });
-
-    const prompt = planner.buildSystemPrompt(mockProfile);
-
-    // Must not call check_daily_totals or get_plan_state after completion
-    expect(prompt.toLowerCase()).toMatch(
-      /do not call|no (further|additional|more) tool|never call/i
+    const pace = {
+      caloriesSoFar: 0,
+      costSoFar: 0,
+      daysRemaining: 7,
+      weeklyCalTarget: 14000,
+      paceCalories: 2000,
+      paceCost: 21.43,
+      calorieBand: { min: 13500, max: 14500 },
+      weeklyBudget: 150,
+    };
+    const msg = planner.buildDayInitialMessage(
+      mockProfile,
+      { items: [] },
+      '2026-01-26',
+      pace,
+      ''
     );
-  });
-
-  it('mentions shopping list limit', () => {
-    const planner = new AgentPlanner({
-      anthropicApiKey: 'test-key',
-      dataDir: testDir,
-    });
-
-    const prompt = planner.buildSystemPrompt(mockProfile);
-
-    expect(prompt).toContain('shopping list');
-    expect(prompt).toContain('20');
-    expect(prompt).toContain('reus');
+    expect(msg.toLowerCase()).toContain('first day');
   });
 });

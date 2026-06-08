@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import type { Profile, Pantry } from '../schemas/index.js';
 import type { WeeklyPlan } from '../schemas/plan.js';
 import { parseWeekKey } from '../utils/week.js';
+import type { PaceContext } from './plan-state.js';
 
 export interface AgentPlannerOptions {
   anthropicApiKey: string;
@@ -110,6 +111,83 @@ If lookup_ingredient returns found: false, use one of the suggested names.
   ${pantryItems}
 
   Start by checking get_plan_state, then add meals day by day. Use lookup_ingredient for any ingredient before using it.`;
+  }
+
+  buildDaySystemPrompt(profile: Profile): string {
+    const { goals, dietary, preferences, household } = profile;
+
+    return `You are a meal planning agent. Plan ONE day of meals (breakfast, lunch, dinner) by adding meals one at a time using the available tools.
+
+## Daily Targets (must be met for this day)
+- Household size: ${household.size} people
+- Protein: ${goals.macros.protein.min}-${goals.macros.protein.max}g
+- Carbs: ${goals.macros.carbs.min}-${goals.macros.carbs.max}g
+- Fat: ${goals.macros.fat.min}-${goals.macros.fat.max}g
+- Fiber: ${goals.macros.fiber.min}-${goals.macros.fiber.max}g
+
+## Calories & Cost (weekly goals — stay on pace)
+The planning message gives this day's calorie and cost pace targets. Aim within ~150 kcal of the calorie pace target. Keep the day's cost at or under the cost pace target.
+
+## Dietary
+- Restrictions: ${dietary.restrictions.length ? dietary.restrictions.join(', ') : 'none'}
+- Dislikes: ${dietary.dislikes.length ? dietary.dislikes.join(', ') : 'none'}
+
+## Preferences
+- Cuisines: ${preferences.cuisines.length ? preferences.cuisines.join(', ') : 'any'}
+- Complexity: ${preferences.complexityTolerance}
+
+## Process
+1. Use lookup_ingredient before adding any meal's ingredients.
+2. Add the day's three meals with add_meal (only for the date in the planning message).
+3. Use check_daily_totals to confirm protein/carbs/fat/fiber are in range and calories are near the pace target.
+4. When all three slots are filled, macros and fiber are in range, and calories are near pace: call finalize_plan immediately.
+
+Be efficient with tokens. Don't explain your reasoning, just call tools.
+
+## Ingredient Naming
+Use recipe-accurate ingredient names for reliable nutrition matching:
+- "chicken breast" or "chicken thigh" not "chicken"
+- "black beans" or "kidney beans" not "beans"
+- "salmon" or "cod" not "fish"
+- "brown rice" or "jasmine rice" not "rice"
+- "olive oil" not "oil"
+
+If lookup_ingredient returns found: false, use one of the suggested names.
+
+## Pantry & Shopping Efficiency
+- You are encouraged to incorporate pantry items when they fit naturally.
+- Keep the shopping list small by reusing ingredients. When shoppingList.warning appears, prioritize ingredients already in the plan.`;
+  }
+
+  buildDayInitialMessage(
+    profile: Profile,
+    pantry: Pantry,
+    date: string,
+    pace: PaceContext,
+    mealsSoFar: string
+  ): string {
+    const pantryItems = pantry.items.length
+      ? pantry.items
+          .map((i) => `- ${i.name}: ${i.quantity} ${i.unit}`)
+          .join('\n')
+      : 'Empty';
+
+    const priorSection = mealsSoFar
+      ? `Meals already planned earlier this week:\n${mealsSoFar}`
+      : 'This is the first day of the week — no meals planned yet.';
+
+    return `Plan all meals for ${date}.
+
+Today's pace targets (to stay on track for the weekly goals):
+- Calories: ~${pace.paceCalories} kcal
+- Cost: ~$${pace.paceCost.toFixed(2)}
+
+${priorSection}
+
+Pantry:
+${pantryItems}
+
+Add today's breakfast, lunch, and dinner with add_meal (date ${date}). Use lookup_ingredient for any ingredient before using it. Call finalize_plan when the day is complete.`;
   }
 
   async generateWeeklyPlan(
