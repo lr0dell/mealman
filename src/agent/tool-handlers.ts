@@ -313,13 +313,6 @@ export function createToolHandlers(
     };
   }
 
-  function handleGetKnownIngredients(): {
-    ingredients: string[];
-  } {
-    const ingredients = ingredientDb.getAllIngredientNames();
-    return { ingredients };
-  }
-
   function handleCheckDailyTotals(input: CheckDailyTotalsInput): {
     date: string;
     totals: {
@@ -402,8 +395,6 @@ export function createToolHandlers(
           return handleLookupIngredient(input as LookupIngredientInput);
         case 'search_knowledge_base':
           return handleSearchKnowledgeBase(input as SearchKnowledgeBaseInput);
-        case 'get_known_ingredients':
-          return handleGetKnownIngredients();
         case 'check_daily_totals':
           return handleCheckDailyTotals(input as CheckDailyTotalsInput);
         case 'finalize_plan':

@@ -134,14 +134,6 @@ export const PLANNING_TOOLS: ToolDefinition[] = [
     },
   },
   {
-    name: 'get_known_ingredients',
-    description: 'List all ingredients currently in the knowledge base.',
-    input_schema: {
-      type: 'object',
-      properties: {},
-    },
-  },
-  {
     name: 'check_daily_totals',
     description:
       'Get nutrition totals for a specific day and compare against daily targets.',

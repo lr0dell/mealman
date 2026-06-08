@@ -383,6 +383,11 @@ describe('PLANNING_TOOLS', () => {
     expect(toolNames).not.toContain('check_weekly_totals');
   });
 
+  it('does not include get_known_ingredients (removed)', () => {
+    const toolNames = PLANNING_TOOLS.map((t) => t.name);
+    expect(toolNames).not.toContain('get_known_ingredients');
+  });
+
   it('includes essential tools', () => {
     const toolNames = PLANNING_TOOLS.map((t) => t.name);
     expect(toolNames).toContain('get_plan_state');
