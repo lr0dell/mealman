@@ -16,8 +16,13 @@ import {
   consumeFromPantry,
   formatConsumeResult,
   parseViewTarget,
+  parseList,
+  formatList,
+  validateNumber,
+  validateRange,
 } from '../commands/index.js';
 import select from '@inquirer/select';
+import input from '@inquirer/input';
 import { IngredientDatabase } from '../services/ingredient-database.js';
 import { getCurrentWeekKey, parseWeekKey } from '../utils/week.js';
 
@@ -33,7 +38,6 @@ export function createProgram(): Command {
     .description('AI-powered meal planning CLI')
     .version('0.1.0');
 
-  // Pantry management
   const pantry = program
     .command('pantry')
     .description('Manage your pantry inventory');
@@ -177,7 +181,6 @@ export function createProgram(): Command {
       }
     );
 
-  // Meal planning (placeholders)
   const plan = program
     .command('plan')
     .description('Generate and manage meal plans');
@@ -335,7 +338,6 @@ export function createProgram(): Command {
       console.log(formatConsumeResult(result, label));
     });
 
-  // Profile management (placeholders)
   const profile = program
     .command('profile')
     .description('Manage your profile and preferences');
@@ -353,8 +355,168 @@ export function createProgram(): Command {
   profile
     .command('update')
     .description('Interactive profile update')
-    .action(() => {
-      console.log('Profile update - coming in Phase 7');
+    .action(async () => {
+      const store = new DataStore(getDataDir());
+      await store.init();
+      const profileData = await store.getProfile();
+
+      const promptNumber = async (
+        message: string,
+        current: number,
+        positive: boolean
+      ): Promise<number> => {
+        const answer = await input({
+          message,
+          default: String(current),
+          validate: (v) => validateNumber(v, { positive }),
+        });
+        return Number(answer);
+      };
+
+      const promptRange = async (
+        label: string,
+        range: { min: number; max: number },
+        positive: boolean
+      ): Promise<{ min: number; max: number }> => {
+        let min = range.min;
+        let max = range.max;
+        let ok = false;
+        do {
+          min = await promptNumber(`${label} (min)`, range.min, positive);
+          max = await promptNumber(`${label} (max)`, range.max, positive);
+          const check = validateRange(min, max);
+          ok = check === true;
+          if (!ok) {
+            console.log(check);
+          }
+        } while (!ok);
+        return { min, max };
+      };
+
+      const promptListField = async (
+        message: string,
+        current: string[]
+      ): Promise<string[]> => {
+        const answer = await input({
+          message,
+          default: formatList(current),
+        });
+        return parseList(answer);
+      };
+
+      let done = false;
+      while (!done) {
+        const section = await select({
+          message: 'What would you like to edit?',
+          choices: [
+            { name: 'Goals', value: 'goals' },
+            { name: 'Dietary', value: 'dietary' },
+            { name: 'Preferences & Constraints', value: 'preferences' },
+            { name: 'Save & exit', value: 'save' },
+            { name: 'Cancel (discard changes)', value: 'cancel' },
+          ],
+        });
+
+        if (section === 'goals') {
+          profileData.goals.dailyCalories = await promptRange(
+            'Daily calories',
+            profileData.goals.dailyCalories,
+            false
+          );
+          profileData.goals.macros.protein = await promptRange(
+            'Protein (g)',
+            profileData.goals.macros.protein,
+            false
+          );
+          profileData.goals.macros.carbs = await promptRange(
+            'Carbs (g)',
+            profileData.goals.macros.carbs,
+            false
+          );
+          profileData.goals.macros.fat = await promptRange(
+            'Fat (g)',
+            profileData.goals.macros.fat,
+            false
+          );
+          profileData.goals.macros.fiber = await promptRange(
+            'Fiber (g)',
+            profileData.goals.macros.fiber,
+            false
+          );
+          profileData.goals.weeklyBudget = await promptNumber(
+            'Weekly budget ($)',
+            profileData.goals.weeklyBudget,
+            true
+          );
+        } else if (section === 'dietary') {
+          profileData.dietary.restrictions = await promptListField(
+            'Dietary restrictions (comma-separated)',
+            profileData.dietary.restrictions
+          );
+          profileData.dietary.dislikes = await promptListField(
+            'Dislikes (comma-separated)',
+            profileData.dietary.dislikes
+          );
+        } else if (section === 'preferences') {
+          profileData.preferences.cuisines = await promptListField(
+            'Preferred cuisines (comma-separated)',
+            profileData.preferences.cuisines
+          );
+          const days = [
+            'monday',
+            'tuesday',
+            'wednesday',
+            'thursday',
+            'friday',
+            'saturday',
+            'sunday',
+          ] as const;
+          for (const day of days) {
+            profileData.preferences.maxPrepTime[day] = await promptNumber(
+              `Max prep time on ${day} (min)`,
+              profileData.preferences.maxPrepTime[day],
+              true
+            );
+          }
+          profileData.preferences.complexityTolerance = await select({
+            message: 'Complexity tolerance',
+            default: profileData.preferences.complexityTolerance,
+            choices: [
+              { name: 'low', value: 'low' as const },
+              { name: 'medium', value: 'medium' as const },
+              { name: 'high', value: 'high' as const },
+            ],
+          });
+          profileData.constraints.kitchenware = await promptListField(
+            'Kitchenware (comma-separated)',
+            profileData.constraints.kitchenware
+          );
+          profileData.constraints.skillLevel = await select({
+            message: 'Skill level',
+            default: profileData.constraints.skillLevel,
+            choices: [
+              { name: 'beginner', value: 'beginner' as const },
+              { name: 'intermediate', value: 'intermediate' as const },
+              { name: 'advanced', value: 'advanced' as const },
+            ],
+          });
+        } else if (section === 'save') {
+          try {
+            await store.saveProfile(profileData);
+            console.log('Profile saved.');
+          } catch (error) {
+            console.error(
+              error instanceof Error
+                ? `Could not save profile: ${error.message}`
+                : 'Could not save profile.'
+            );
+          }
+          done = true;
+        } else {
+          console.log('No changes saved.');
+          done = true;
+        }
+      }
     });
 
   const shop = program.command('shop').description('Shopping list management');

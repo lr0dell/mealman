@@ -75,3 +75,32 @@ export function formatProfile(profile: Profile): string {
 
   return lines.join('\n');
 }
+
+export function parseList(input: string): string[] {
+  return input
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+export function formatList(list: string[]): string {
+  return list.join(', ');
+}
+
+export function validateNumber(
+  input: string,
+  opts: { positive: boolean }
+): true | string {
+  const value = Number(input);
+  if (input.trim() === '' || Number.isNaN(value)) {
+    return 'Please enter a number';
+  }
+  if (opts.positive) {
+    return value > 0 ? true : 'Must be greater than zero';
+  }
+  return value >= 0 ? true : 'Must be zero or greater';
+}
+
+export function validateRange(min: number, max: number): true | string {
+  return max >= min ? true : 'Max must be greater than or equal to min';
+}

@@ -32,6 +32,8 @@ Install [`mise`](https://mise.jdx.dev/getting-started.html) if necessary.
 
 To use the `mealman` global binary instead of `mise start`, run `npm install -g .`.
 
+Once installed, run `mealman profile update` to set up your nutrition goals and weekly budget.
+
 ## Usage
 
 ```
@@ -40,6 +42,7 @@ mealman pantry list
 mealman plan week                             # generate next week's plan
 mealman plan view [target] --detailed         # view a plan, optionally with recipes + nutrition
 mealman plan consume <target>`                # deduct a plan's ingredients from your pantry (week key, date, or `today`); reports ingredients in the plan that aren't in your pantry
+mealman profile update                        # interactively update user profile
 mealman shop list                             # shopping list for the current plan
 mealman profile show
 ```
