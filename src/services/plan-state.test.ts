@@ -291,7 +291,7 @@ describe('PlanState', () => {
       state.addMeal('2026-01-27', 'breakfast', {
         name: 'Complex meal',
         recipe: 'Cook it',
-        ingredients: Array.from({ length: 18 }, (_, i) => ({
+        ingredients: Array.from({ length: 26 }, (_, i) => ({
           ingredientId: i,
           name: `ingredient-${i}`,
           amount: 100,
@@ -306,10 +306,10 @@ describe('PlanState', () => {
       });
 
       const status = state.getShoppingListStatus();
-      expect(status.count).toBe(18);
+      expect(status.count).toBe(26);
       expect(status.limit).toBe(30);
       expect(status.warning).toBe(
-        'Approaching limit: 18/30 unique ingredients'
+        'Approaching limit: 26/30 unique ingredients'
       );
     });
   });
