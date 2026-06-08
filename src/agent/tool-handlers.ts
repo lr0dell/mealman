@@ -20,10 +20,12 @@ const MINIMUM_SIMILARITY = 0.8;
 
 export function createToolHandlers(
   planState: PlanState,
-  ingredientDb: IngredientDatabase
+  ingredientDb: IngredientDatabase,
+  options: { lockedDate?: string } = {}
 ): {
   handle: (toolName: string, input: unknown) => Promise<unknown>;
 } {
+  const { lockedDate } = options;
   function handleGetPlanState(): {
     week: string;
     mealsPlanned: number;
@@ -156,6 +158,12 @@ export function createToolHandlers(
   async function handleAddMeal(
     input: AddMealInput
   ): ReturnType<typeof storeMeal> {
+    if (lockedDate && input.date !== lockedDate) {
+      return {
+        success: false,
+        error: `This conversation can only plan ${lockedDate}.`,
+      };
+    }
     if (planState.getMeal(input.date, input.slot)) {
       return {
         success: false,
@@ -195,13 +203,27 @@ export function createToolHandlers(
         remainingBudget: ReturnType<typeof planState.getRemainingBudget>;
       }
   > {
+    if (lockedDate && input.date !== lockedDate) {
+      return {
+        success: false,
+        error: `This conversation can only plan ${lockedDate}.`,
+      };
+    }
     return storeMeal(input);
   }
 
-  function handleRemoveMeal(input: RemoveMealInput): {
-    success: true;
-    remainingBudget: ReturnType<typeof planState.getRemainingBudget>;
-  } {
+  function handleRemoveMeal(input: RemoveMealInput):
+    | { success: false; error: string }
+    | {
+        success: true;
+        remainingBudget: ReturnType<typeof planState.getRemainingBudget>;
+      } {
+    if (lockedDate && input.date !== lockedDate) {
+      return {
+        success: false,
+        error: `This conversation can only plan ${lockedDate}.`,
+      };
+    }
     planState.removeMeal(input.date, input.slot);
     return {
       success: true,

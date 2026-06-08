@@ -314,6 +314,33 @@ describe('ToolHandlers', () => {
     expect(result.targets.calories).toBe(2000);
   });
 
+  describe('lockedDate', () => {
+    it('rejects writes to a different date and allows the locked date', async () => {
+      const locked = createToolHandlers(planState, ingredientDb, {
+        lockedDate: '2026-01-26',
+      });
+
+      const offDate = (await locked.handle('add_meal', {
+        date: '2026-01-27',
+        slot: 'breakfast',
+        name: 'x',
+        recipe: 'x',
+        ingredients: [],
+        prepTime: 5,
+        servings: 1,
+      })) as { success: boolean; error?: string };
+
+      expect(offDate.success).toBe(false);
+      expect(offDate.error).toContain('2026-01-26');
+
+      const removeOff = (await locked.handle('remove_meal', {
+        date: '2026-01-27',
+        slot: 'breakfast',
+      })) as { success: boolean; error?: string };
+      expect(removeOff.success).toBe(false);
+    });
+  });
+
   describe('finalize_plan', () => {
     it('generates accurate notes from actual plan state', async () => {
       // Add a meal first
