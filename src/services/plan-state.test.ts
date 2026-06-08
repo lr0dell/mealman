@@ -348,6 +348,20 @@ describe('PlanState', () => {
     });
   });
 
+  describe('getMealsSummaryBefore', () => {
+    it('lists meal names for days before the given date', () => {
+      state.addMeal('2026-01-26', 'breakfast', sampleMeal(500, 5));
+      const summary = state.getMealsSummaryBefore('2026-01-27');
+      expect(summary).toContain('2026-01-26');
+      expect(summary).toContain('Big Breakfast');
+    });
+
+    it('is empty for the first day of the week', () => {
+      state.addMeal('2026-01-26', 'breakfast', sampleMeal(500, 5));
+      expect(state.getMealsSummaryBefore('2026-01-26')).toBe('');
+    });
+  });
+
   describe('pantry tracking', () => {
     it('tracks when pantry items are used in meals', () => {
       const pantryWithItems: Pantry = {

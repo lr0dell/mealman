@@ -271,6 +271,26 @@ export class PlanState {
     };
   }
 
+  getMealsSummaryBefore(date: string): string {
+    const dates = getWeekDates(this.week);
+    const index = dates.indexOf(date);
+    const priorDates = index >= 0 ? dates.slice(0, index) : [];
+    const lines: string[] = [];
+
+    for (const d of priorDates) {
+      const day = this.days.get(d);
+      if (!day) continue;
+      const names = [day.breakfast, day.lunch, day.dinner]
+        .filter((m): m is Meal => m !== null)
+        .map((m) => m.name);
+      if (names.length > 0) {
+        lines.push(`${d}: ${names.join(' / ')}`);
+      }
+    }
+
+    return lines.join('\n');
+  }
+
   getProfile(): Profile {
     return this.profile;
   }
