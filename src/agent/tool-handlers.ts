@@ -306,7 +306,7 @@ export function createToolHandlers(
       estimatedCost: number;
     };
     targets: {
-      calories: { min: number; max: number };
+      calories: number;
       macros: {
         protein: { min: number; max: number };
         carbs: { min: number; max: number };

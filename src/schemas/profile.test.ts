@@ -12,7 +12,7 @@ describe('ProfileSchema', () => {
         ],
       },
       goals: {
-        dailyCalories: { min: 1800, max: 2200 },
+        dailyCalories: 2000,
         macros: {
           protein: { min: 120, max: 160 },
           carbs: { min: 180, max: 240 },

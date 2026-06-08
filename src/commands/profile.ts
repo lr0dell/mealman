@@ -18,9 +18,7 @@ export function formatProfile(profile: Profile): string {
 
   lines.push('');
   lines.push('## Goals');
-  lines.push(
-    `Daily Calories: ${profile.goals.dailyCalories.min}-${profile.goals.dailyCalories.max}`
-  );
+  lines.push(`Daily Calories: ${profile.goals.dailyCalories}`);
   lines.push(
     `Macros: P ${profile.goals.macros.protein.min}-${profile.goals.macros.protein.max}g / C ${profile.goals.macros.carbs.min}-${profile.goals.macros.carbs.max}g / Ft ${profile.goals.macros.fat.min}-${profile.goals.macros.fat.max}g / Fb ${profile.goals.macros.fiber.min}-${profile.goals.macros.fiber.max}g`
   );

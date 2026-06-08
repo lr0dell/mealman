@@ -46,11 +46,11 @@ describe('DataStore', () => {
   it('saves and loads profile', async () => {
     await store.init();
     const profile = await store.getProfile();
-    profile.goals.dailyCalories = { min: 2000, max: 2400 };
+    profile.goals.dailyCalories = 2200;
     await store.saveProfile(profile);
 
     const loaded = await store.getProfile();
-    expect(loaded.goals.dailyCalories).toStrictEqual({ min: 2000, max: 2400 });
+    expect(loaded.goals.dailyCalories).toBe(2200);
   });
 
   it('saves and loads pantry', async () => {

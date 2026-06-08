@@ -22,7 +22,7 @@ describe('Planning Prompts', () => {
     );
 
     expect(prompt).toContain('2026-01-26--2026-02-01');
-    expect(prompt).toContain('1800'); // daily calories
+    expect(prompt).toContain('2000'); // daily calories
     expect(prompt).toContain('protein');
   });
 

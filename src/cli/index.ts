@@ -418,10 +418,10 @@ export function createProgram(): Command {
         });
 
         if (section === 'goals') {
-          profileData.goals.dailyCalories = await promptRange(
+          profileData.goals.dailyCalories = await promptNumber(
             'Daily calories',
             profileData.goals.dailyCalories,
-            false
+            true
           );
           profileData.goals.macros.protein = await promptRange(
             'Protein (g)',

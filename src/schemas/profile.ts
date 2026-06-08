@@ -27,7 +27,7 @@ export const MacroGoalsSchema = z.object({
 });
 
 export const GoalsSchema = z.object({
-  dailyCalories: RangeSchema,
+  dailyCalories: z.number().positive(),
   macros: MacroGoalsSchema,
   weeklyBudget: z.number().positive(),
 });

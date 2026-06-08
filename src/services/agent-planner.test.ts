@@ -22,7 +22,7 @@ describe('AgentPlanner', () => {
 
   const mockProfile: Profile = {
     goals: {
-      dailyCalories: { min: 1800, max: 2200 },
+      dailyCalories: 2000,
       macros: {
         protein: { min: 100, max: 150 },
         carbs: { min: 200, max: 300 },
@@ -82,8 +82,7 @@ describe('AgentPlanner', () => {
 
     const prompt = planner.buildSystemPrompt(mockProfile);
 
-    expect(prompt).toContain('1800');
-    expect(prompt).toContain('2200');
+    expect(prompt).toContain('2000'); // daily calorie target
     expect(prompt).toContain('150'); // budget
   });
 

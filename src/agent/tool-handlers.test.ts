@@ -10,7 +10,7 @@ import type { Profile, Pantry } from '../schemas/index.js';
 describe('ToolHandlers', () => {
   const mockProfile: Profile = {
     goals: {
-      dailyCalories: { min: 1800, max: 2200 },
+      dailyCalories: 2000,
       macros: {
         protein: { min: 100, max: 150 },
         carbs: { min: 200, max: 300 },
@@ -305,6 +305,13 @@ describe('ToolHandlers', () => {
           .unusedItems
       ).toContain('eggs');
     });
+  });
+
+  it('check_daily_totals returns the single daily calorie target', async () => {
+    const result = (await handlers.handle('check_daily_totals', {
+      date: '2026-01-26',
+    })) as { targets: { calories: number } };
+    expect(result.targets.calories).toBe(2000);
   });
 
   describe('finalize_plan', () => {

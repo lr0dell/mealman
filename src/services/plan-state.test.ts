@@ -6,7 +6,7 @@ import type { Meal } from '../schemas/plan.js';
 describe('PlanState', () => {
   const mockProfile: Profile = {
     goals: {
-      dailyCalories: { min: 1800, max: 2200 },
+      dailyCalories: 2000,
       macros: {
         protein: { min: 100, max: 150 },
         carbs: { min: 200, max: 300 },
@@ -62,6 +62,14 @@ describe('PlanState', () => {
     const summary = state.getSummary();
     expect(summary.mealsPlanned).toBe(0);
     expect(summary.weeklyTotals.calories).toBe(0);
+  });
+
+  it('weekly calorie budget uses dailyCalories*7 with a ±500 band', () => {
+    const remaining = state.getRemainingBudget();
+    // 2000*7 = 14000, band ±500 => [13500, 14500], nothing planned yet
+    expect(remaining.calories.min).toBe(13500);
+    expect(remaining.calories.max).toBe(14500);
+    expect(remaining.calories.status).toBe('under');
   });
 
   it('adds a meal to a day/slot', () => {
@@ -137,9 +145,9 @@ describe('PlanState', () => {
     state.addMeal('2026-02-02', 'breakfast', meal);
     const remaining = state.getRemainingBudget();
 
-    // Weekly targets: 1800-2200 cal/day * 7 = 12600-15400 cal
-    // After 500 cal: 12100-14900 remaining
-    expect(remaining.calories.min).toBe(12600 - 500);
+    // Weekly targets: 2000*7 ± 500 = 13500-14500 cal
+    // After 500 cal: 13000-14000 remaining
+    expect(remaining.calories.min).toBe(13500 - 500);
     expect(remaining.cost).toBe(150 - 10);
   });
 
@@ -161,7 +169,7 @@ describe('PlanState', () => {
           recipe: 'High protein',
           ingredients: [],
           prepTime: 10,
-          calories: 1800, // Daily min
+          calories: 2000, // Daily target (2000*7=14000, within band 13500-14500)
           macros: { protein: 110, carbs: 220, fat: 55, fiber: 28 }, // All in range
           estimatedCost: 15,
           servings: 1,

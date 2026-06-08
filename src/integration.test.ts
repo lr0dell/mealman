@@ -43,7 +43,7 @@ describe('Integration: Full Workflow', () => {
     const profile = await store.getProfile();
 
     expect(profile.household.size).toBeGreaterThan(0);
-    expect(profile.goals.dailyCalories.min).toBeGreaterThan(0);
+    expect(profile.goals.dailyCalories).toBeGreaterThan(0);
     expect(profile.goals.weeklyBudget).toBeGreaterThan(0);
   });
 });

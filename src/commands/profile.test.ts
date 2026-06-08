@@ -33,7 +33,7 @@ describe('Profile Commands', () => {
   describe('formatProfile', () => {
     it('formats profile for display', () => {
       const profile = createDefaultProfile();
-      profile.goals.dailyCalories.max = 2500;
+      profile.goals.dailyCalories = 2500;
       profile.dietary.restrictions = ['gluten-free'];
 
       const output = formatProfile(profile);

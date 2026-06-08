@@ -40,7 +40,7 @@ export class AgentPlanner {
 
 ## Targets
 - Household size: ${household.size} people
-- Daily calories: ${goals.dailyCalories.min}-${goals.dailyCalories.max} per person
+- Daily calories: ${goals.dailyCalories} per person
 - Weekly budget: $${goals.weeklyBudget}
 - Protein: ${goals.macros.protein.min}-${goals.macros.protein.max}g/day
 - Carbs: ${goals.macros.carbs.min}-${goals.macros.carbs.max}g/day

@@ -15,7 +15,7 @@ describe.skipIf(!ANTHROPIC_API_KEY)('AgentPlanner Integration', () => {
 
   const mockProfile: Profile = {
     goals: {
-      dailyCalories: { min: 1800, max: 2200 },
+      dailyCalories: 2000,
       macros: {
         protein: { min: 100, max: 150 },
         carbs: { min: 200, max: 300 },

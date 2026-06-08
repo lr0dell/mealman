@@ -1,6 +1,8 @@
 import type { Profile, Pantry } from '../schemas/index.js';
 import type { Meal, DayPlan, WeeklyPlan } from '../schemas/plan.js';
 
+export const WEEKLY_CALORIE_TOLERANCE = 500;
+
 type MealSlot = 'breakfast' | 'lunch' | 'dinner';
 
 interface DayMeals {
@@ -164,8 +166,8 @@ export class PlanState {
     const { goals } = this.profile;
 
     // Weekly targets = daily targets * 7
-    const weeklyCalMin = goals.dailyCalories.min * 7;
-    const weeklyCalMax = goals.dailyCalories.max * 7;
+    const weeklyCalMin = goals.dailyCalories * 7 - WEEKLY_CALORIE_TOLERANCE;
+    const weeklyCalMax = goals.dailyCalories * 7 + WEEKLY_CALORIE_TOLERANCE;
 
     const calMin = weeklyCalMin - summary.weeklyTotals.calories;
     const calMax = weeklyCalMax - summary.weeklyTotals.calories;

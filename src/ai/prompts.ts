@@ -93,7 +93,7 @@ function formatProfileForPrompt(profile: Profile): string {
   const { goals, dietary, preferences, constraints, household } = profile;
 
   return `Household: ${household.size} people
-Daily calories target: ${goals.dailyCalories.min}-${goals.dailyCalories.max}
+Daily calories target: ${goals.dailyCalories}
 Macro targets (daily): protein ${goals.macros.protein.min}-${goals.macros.protein.max}g, carbs ${goals.macros.carbs.min}-${goals.macros.carbs.max}g, fat ${goals.macros.fat.min}-${goals.macros.fat.max}g, fiber ${goals.macros.fiber.min}-${goals.macros.fiber.max}g
 Weekly budget: $${goals.weeklyBudget}
 
