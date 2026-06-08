@@ -47,6 +47,9 @@ export class PlanningProgressTracker {
         mkdirSync(debugDir, { recursive: true });
       }
       this.logStream = createWriteStream(this.logFilePath, { flags: 'w' });
+      this.logStream.on('error', () => {
+        this.logWriteError = true;
+      });
       this.writeHeader();
     } catch {
       this.logWriteError = true;
@@ -217,6 +220,7 @@ Status: Completed
 
   close(): void {
     if (this.logStream) {
+      this.logStream.on('error', () => {});
       this.logStream.end();
     }
   }

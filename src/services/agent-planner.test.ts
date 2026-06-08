@@ -144,4 +144,53 @@ describe('AgentPlanner', () => {
     );
     expect(msg.toLowerCase()).toContain('first day');
   });
+
+  it('runs one conversation per day with a date-locked handler', async () => {
+    type LoopOpts = {
+      systemPrompt: string;
+      initialMessage: string;
+      toolHandler: (name: string, input: unknown) => Promise<unknown>;
+    };
+    const calls: LoopOpts[] = [];
+    const fakeClient = {
+      runAgentLoop: (opts: LoopOpts) => {
+        calls.push(opts);
+        return Promise.resolve({ finalText: '', toolCalls: 0, iterations: 1 });
+      },
+    } as unknown as import('../ai/client.js').AIClient;
+    const fakeDb = {
+      init: async () => {},
+    } as unknown as import('./ingredient-database.js').IngredientDatabase;
+
+    const planner = new AgentPlanner({
+      anthropicApiKey: 'test-key',
+      dataDir: testDir,
+      aiClient: fakeClient,
+      ingredientDb: fakeDb,
+    });
+
+    const plan = await planner.generateWeeklyPlan(
+      mockProfile,
+      { items: [] },
+      '2026-01-26--2026-02-01',
+      testDir
+    );
+
+    expect(calls).toHaveLength(7);
+    expect(calls[0].initialMessage).toContain('2026-01-26');
+    expect(calls[6].initialMessage).toContain('2026-02-01');
+
+    const offDate = (await calls[0].toolHandler('add_meal', {
+      date: '2026-01-27',
+      slot: 'breakfast',
+      name: 'x',
+      recipe: 'x',
+      ingredients: [],
+      prepTime: 5,
+      servings: 1,
+    })) as { success: boolean };
+    expect(offDate.success).toBe(false);
+
+    expect(plan.week).toBe('2026-01-26--2026-02-01');
+  });
 });
