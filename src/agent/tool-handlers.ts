@@ -35,11 +35,6 @@ export function createToolHandlers(
       estimatedCost: number;
     };
     remainingBudget: ReturnType<typeof planState.getRemainingBudget>;
-    shoppingList: ReturnType<typeof planState.getShoppingListStatus>;
-    pantryStatus: {
-      items: ReturnType<typeof planState.getPantryStatus>;
-      unusedItems: string[];
-    };
   } {
     const summary = planState.getSummary();
     const remaining = planState.getRemainingBudget();
@@ -48,11 +43,6 @@ export function createToolHandlers(
       mealsPlanned: summary.mealsPlanned,
       weeklyTotals: summary.weeklyTotals,
       remainingBudget: remaining,
-      shoppingList: planState.getShoppingListStatus(),
-      pantryStatus: {
-        items: planState.getPantryStatus(),
-        unusedItems: planState.getUnusedPantryItems(),
-      },
     };
   }
 
@@ -84,11 +74,6 @@ export function createToolHandlers(
             }
           | undefined;
         remainingBudget: ReturnType<typeof planState.getRemainingBudget>;
-        shoppingList: {
-          count: number;
-          limit: number;
-          warning: string | null;
-        };
       }
   > {
     // Look up all ingredients
@@ -151,7 +136,6 @@ export function createToolHandlers(
       },
       dayTotals,
       remainingBudget: planState.getRemainingBudget(),
-      shoppingList: planState.getShoppingListStatus(),
     };
   }
 
@@ -356,8 +340,7 @@ export function createToolHandlers(
   } {
     const plan = planState.toWeeklyPlan();
     const summary = planState.getSummary();
-    const shoppingList = planState.getShoppingListStatus();
-    const unusedPantry = planState.getUnusedPantryItems();
+    const shoppingList = planState.getShoppingList();
     const { start, end } = parseWeekKey(plan.week);
 
     const autoNotes = [
@@ -366,10 +349,7 @@ export function createToolHandlers(
       `Calories: ${Math.round(plan.totals.calories)}.`,
       `Protein: ${Math.round(plan.totals.macros.protein)}g.`,
       `Cost: $${plan.totals.estimatedCost.toFixed(2)}.`,
-      `Shopping list: ${shoppingList.count} items.`,
-      unusedPantry.length > 0
-        ? `Unused pantry: ${unusedPantry.join(', ')}.`
-        : 'All pantry items incorporated.',
+      `Shopping list: ${shoppingList.length} items.`,
     ].join(' ');
 
     return {

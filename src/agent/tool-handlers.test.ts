@@ -259,54 +259,6 @@ describe('ToolHandlers', () => {
     });
   });
 
-  describe('add_meal shopping list tracking', () => {
-    it('includes shopping list status in add_meal response', async () => {
-      const result = await handlers.handle('add_meal', {
-        date: '2026-01-27',
-        slot: 'breakfast',
-        name: 'Test meal',
-        recipe: 'Cook it',
-        ingredients: [
-          { name: 'chicken breast', amountGrams: 200 },
-          { name: 'brown rice', amountGrams: 150 },
-        ],
-        prepTime: 20,
-        servings: 2,
-      });
-
-      expect(result).toHaveProperty('shoppingList');
-      expect(
-        (result as { shoppingList: { count: number } }).shoppingList.count
-      ).toBe(2);
-    });
-  });
-
-  describe('get_plan_state with pantry', () => {
-    it('includes unused pantry items in response', async () => {
-      // Create handlers with pantry items
-      const pantryState = new PlanState('2026-01-26--2026-02-01', mockProfile, {
-        items: [
-          {
-            ingredientId: 1,
-            name: 'eggs',
-            quantity: 600,
-            unit: 'g',
-            addedDate: '2026-02-03',
-          },
-        ],
-      });
-      const handlersWithPantry = createToolHandlers(pantryState, ingredientDb);
-
-      const result = await handlersWithPantry.handle('get_plan_state', {});
-
-      expect(result).toHaveProperty('pantryStatus');
-      expect(
-        (result as { pantryStatus: { unusedItems: string[] } }).pantryStatus
-          .unusedItems
-      ).toContain('eggs');
-    });
-  });
-
   it('check_daily_totals returns the single daily calorie target', async () => {
     const result = (await handlers.handle('check_daily_totals', {
       date: '2026-01-26',
