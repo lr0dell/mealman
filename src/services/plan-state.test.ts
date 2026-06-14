@@ -460,4 +460,131 @@ describe('PlanState', () => {
       expect(unused[0]).toBe('milk');
     });
   });
+
+  describe('available pantry and shopping list', () => {
+    const mealWith = (
+      name: string,
+      ingredients: { ingredientId: number; name: string; amount: number }[]
+    ): Meal => ({
+      name,
+      recipe: 'cook',
+      ingredients: ingredients.map((i) => ({ ...i, unit: 'g' as const })),
+      prepTime: 10,
+      calories: 100,
+      macros: { protein: 1, carbs: 1, fat: 1, fiber: 1 },
+      estimatedCost: 1,
+      servings: 1,
+      leftoverOf: null,
+    });
+
+    const pantry: Pantry = {
+      items: [
+        {
+          ingredientId: 1,
+          name: 'chicken breast',
+          quantity: 500,
+          unit: 'g',
+          addedDate: '2026-01-20',
+        },
+        {
+          ingredientId: 2,
+          name: 'rice',
+          quantity: 300,
+          unit: 'g',
+          addedDate: '2026-01-20',
+        },
+      ],
+    };
+
+    it('getAvailablePantry deducts planned meals by ingredientId', () => {
+      const s = new PlanState('2026-01-26--2026-02-01', mockProfile, pantry);
+      s.addMeal(
+        '2026-01-26',
+        'dinner',
+        mealWith('Chicken & Rice', [
+          { ingredientId: 1, name: 'chicken breast', amount: 200 },
+          { ingredientId: 2, name: 'rice', amount: 300 },
+        ])
+      );
+
+      const available = s.getAvailablePantry();
+      // rice fully consumed (300/300) -> dropped; chicken 500-200=300 remains
+      expect(available).toHaveLength(1);
+      expect(available[0]).toMatchObject({
+        ingredientId: 1,
+        name: 'chicken breast',
+        quantity: 300,
+      });
+    });
+
+    it('getAvailablePantry matches by id even when names differ', () => {
+      const s = new PlanState('2026-01-26--2026-02-01', mockProfile, pantry);
+      s.addMeal(
+        '2026-01-26',
+        'lunch',
+        mealWith('Grilled', [
+          { ingredientId: 1, name: 'chicken breasts', amount: 100 },
+        ])
+      );
+
+      const chicken = s.getAvailablePantry().find((i) => i.ingredientId === 1);
+      expect(chicken?.quantity).toBe(400);
+    });
+
+    it('getShoppingList reports ingredients the pantry cannot cover', () => {
+      const s = new PlanState('2026-01-26--2026-02-01', mockProfile, pantry);
+      s.addMeal(
+        '2026-01-26',
+        'dinner',
+        mealWith('Stir fry', [
+          { ingredientId: 1, name: 'chicken breast', amount: 600 }, // shortfall: 600-500=100
+          { ingredientId: 9, name: 'soy sauce', amount: 40 }, // missing entirely
+        ])
+      );
+
+      const shopping = s.getShoppingList();
+      expect(shopping).toContainEqual({
+        ingredientId: 1,
+        name: 'chicken breast',
+        amount: 100,
+      });
+      expect(shopping).toContainEqual({
+        ingredientId: 9,
+        name: 'soy sauce',
+        amount: 40,
+      });
+      expect(shopping).toHaveLength(2);
+    });
+
+    it('getShoppingList is empty when the pantry covers everything', () => {
+      const s = new PlanState('2026-01-26--2026-02-01', mockProfile, pantry);
+      s.addMeal(
+        '2026-01-26',
+        'lunch',
+        mealWith('Small', [
+          { ingredientId: 1, name: 'chicken breast', amount: 100 },
+        ])
+      );
+      expect(s.getShoppingList()).toEqual([]);
+    });
+
+    it('getShoppingListLimit scales as max(30, pantry size + 10)', () => {
+      const barren = new PlanState('2026-01-26--2026-02-01', mockProfile, {
+        items: [],
+      });
+      expect(barren.getShoppingListLimit()).toBe(30);
+
+      const big: Pantry = {
+        items: Array.from({ length: 45 }, (_, i) => ({
+          ingredientId: i + 1,
+          name: `item-${i}`,
+          quantity: 100,
+          unit: 'g' as const,
+          addedDate: '2026-01-20',
+        })),
+      };
+      const stocked = new PlanState('2026-01-26--2026-02-01', mockProfile, big);
+      expect(stocked.getShoppingListLimit()).toBe(55); // 45 + 10
+    });
+  });
 });
