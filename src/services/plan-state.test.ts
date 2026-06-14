@@ -390,7 +390,7 @@ describe('PlanState', () => {
       expect(s.getShoppingList()).toEqual([]);
     });
 
-    it('getShoppingListLimit scales as max(30, pantry size + 10)', () => {
+    it('getShoppingListLimit scales as max(30 - pantry size, 10)', () => {
       const barren = new PlanState('2026-01-26--2026-02-01', mockProfile, {
         items: [],
       });
@@ -406,7 +406,7 @@ describe('PlanState', () => {
         })),
       };
       const stocked = new PlanState('2026-01-26--2026-02-01', mockProfile, big);
-      expect(stocked.getShoppingListLimit()).toBe(55); // 45 + 10
+      expect(stocked.getShoppingListLimit()).toBe(10); // max(30 - 45, 10)
     });
   });
 });

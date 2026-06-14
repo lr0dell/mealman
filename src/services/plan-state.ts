@@ -363,6 +363,6 @@ export class PlanState {
   }
 
   getShoppingListLimit(): number {
-    return Math.max(30, this.pantry.items.length + 10);
+    return Math.max(30 - this.pantry.items.length, 10);
   }
 }
