@@ -106,8 +106,9 @@ describe('AgentPlanner', () => {
       weeklyBudget: 150,
     };
     const msg = planner.buildDayInitialMessage(
-      mockProfile,
-      { items: [] },
+      [],
+      [],
+      30,
       '2026-01-27',
       pace,
       '2026-01-26: Big Breakfast'
@@ -135,8 +136,9 @@ describe('AgentPlanner', () => {
       weeklyBudget: 150,
     };
     const msg = planner.buildDayInitialMessage(
-      mockProfile,
-      { items: [] },
+      [],
+      [],
+      30,
       '2026-01-26',
       pace,
       ''

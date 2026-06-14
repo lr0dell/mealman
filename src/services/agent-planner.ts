@@ -5,7 +5,7 @@ import { createToolHandlers } from '../agent/tool-handlers.js';
 import { DAY_PLANNING_TOOLS } from '../agent/tools.js';
 import { PlanningProgressTracker } from './planning-progress-tracker.js';
 import { join } from 'node:path';
-import type { Profile, Pantry } from '../schemas/index.js';
+import type { Profile, Pantry, PantryItem } from '../schemas/index.js';
 import type { WeeklyPlan } from '../schemas/plan.js';
 import { getWeekDates } from '../utils/week.js';
 import type { PaceContext } from './plan-state.js';
@@ -81,23 +81,39 @@ Use recipe-accurate ingredient names for reliable nutrition matching:
 If lookup_ingredient returns found: false, use one of the suggested names.
 
 ## Pantry & Shopping Efficiency
-- Incorporate pantry items when they fit naturally.
-- Prefer ingredients already in the plan when it doesn't make meals repetitive. Variety and reuse both matter — balance them; don't collapse the week onto one ingredient set just to keep the list short.`;
+- The planning message lists the pantry still available this week and the shopping list built up so far. Prefer available pantry items when they fit a dish naturally.
+- Reusing an ingredient already on the shopping list avoids growing it. Variety and reuse both matter — balance them; don't collapse the week onto one ingredient set just to keep the list short, and don't avoid buying a needed staple just because the pantry is large.`;
+  }
+
+  private formatAvailablePantry(items: PantryItem[]): string {
+    if (items.length === 0) return 'Empty';
+    return items
+      .map((i) => `- ${i.name} (id ${i.ingredientId}): ${i.quantity} ${i.unit}`)
+      .join('\n');
+  }
+
+  private formatShoppingList(
+    items: Array<{ ingredientId: number; name: string; amount: number }>,
+    limit: number
+  ): string {
+    if (items.length === 0) {
+      return 'Nothing yet — the pantry covers everything planned so far.';
+    }
+    const lines = items.map(
+      (i) => `- ${i.name} (id ${i.ingredientId}): ${i.amount} g`
+    );
+    lines.push(`${items.length} items (aim to stay under ${limit}).`);
+    return lines.join('\n');
   }
 
   buildDayInitialMessage(
-    profile: Profile,
-    pantry: Pantry,
+    availablePantry: PantryItem[],
+    shoppingList: Array<{ ingredientId: number; name: string; amount: number }>,
+    shoppingLimit: number,
     date: string,
     pace: PaceContext,
     mealsSoFar: string
   ): string {
-    const pantryItems = pantry.items.length
-      ? pantry.items
-          .map((i) => `- ${i.name}: ${i.quantity} ${i.unit}`)
-          .join('\n')
-      : 'Empty';
-
     const priorSection = mealsSoFar
       ? `Already on the menu earlier this week (plan today like a person would — lean toward something different when it's easy, but reusing a staple or ingredient is fine; don't force novelty, and don't just repeat these):\n${mealsSoFar}`
       : 'This is the first day of the week — no meals planned yet.';
@@ -110,8 +126,11 @@ Today's pace targets (to stay on track for the weekly goals):
 
 ${priorSection}
 
-Pantry:
-${pantryItems}
+Available pantry (quantities remaining after meals already planned this week):
+${this.formatAvailablePantry(availablePantry)}
+
+Shopping list so far (ingredients planned this week the pantry does not cover):
+${this.formatShoppingList(shoppingList, shoppingLimit)}
 
 Add today's breakfast, lunch, and dinner with add_meal (date ${date}). Use lookup_ingredient for any ingredient before using it. Call finalize_plan when the day is complete.`;
   }
@@ -136,8 +155,9 @@ Add today's breakfast, lunch, and dinner with add_meal (date ${date}). Use looku
       });
       const systemPrompt = this.buildDaySystemPrompt(profile);
       const initialMessage = this.buildDayInitialMessage(
-        profile,
-        pantry,
+        planState.getAvailablePantry(),
+        planState.getShoppingList(),
+        planState.getShoppingListLimit(),
         date,
         pace,
         mealsSoFar
