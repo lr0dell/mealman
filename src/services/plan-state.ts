@@ -1,7 +1,11 @@
 import type { Profile, Pantry, PantryItem } from '../schemas/index.js';
 import type { Meal, DayPlan, WeeklyPlan } from '../schemas/plan.js';
 import { getWeekDates } from '../utils/week.js';
-import { aggregateIngredients, consumeFromPantry } from './pantry-math.js';
+import {
+  aggregateIngredients,
+  consumeFromPantry,
+  type IngredientRequirement,
+} from './pantry-math.js';
 
 export const WEEKLY_CALORIE_TOLERANCE = 500;
 
@@ -343,11 +347,7 @@ export class PlanState {
     return this.consumePlannedFromPantry().updatedPantry.items;
   }
 
-  getShoppingList(): Array<{
-    ingredientId: number;
-    name: string;
-    amount: number;
-  }> {
+  getShoppingList(): IngredientRequirement[] {
     const { missing, shortfalls } = this.consumePlannedFromPantry();
     return [
       ...missing.map((m) => ({

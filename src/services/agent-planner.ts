@@ -9,6 +9,7 @@ import type { Profile, Pantry, PantryItem } from '../schemas/index.js';
 import type { WeeklyPlan } from '../schemas/plan.js';
 import { getWeekDates } from '../utils/week.js';
 import type { PaceContext } from './plan-state.js';
+import type { IngredientRequirement } from './pantry-math.js';
 
 export interface AgentPlannerOptions {
   anthropicApiKey: string;
@@ -93,7 +94,7 @@ If lookup_ingredient returns found: false, use one of the suggested names.
   }
 
   private formatShoppingList(
-    items: Array<{ ingredientId: number; name: string; amount: number }>,
+    items: IngredientRequirement[],
     limit: number
   ): string {
     if (items.length === 0) {
@@ -108,7 +109,7 @@ If lookup_ingredient returns found: false, use one of the suggested names.
 
   buildDayInitialMessage(
     availablePantry: PantryItem[],
-    shoppingList: Array<{ ingredientId: number; name: string; amount: number }>,
+    shoppingList: IngredientRequirement[],
     shoppingLimit: number,
     date: string,
     pace: PaceContext,
