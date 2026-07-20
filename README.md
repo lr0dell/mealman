@@ -27,7 +27,7 @@ Ingredient lookup is backed by a local semantic search layer: USDA food data is 
 Install [`mise`](https://mise.jdx.dev/getting-started.html) if necessary.
 
 1. `mise setup`
-2. Add `ANTHROPIC_API_KEY` to your `.env` (see `.env.example`)
+2. Add `ANTHROPIC_API_KEY` to `~/.meal-planner/.env` (see `.env.example`)
 3. `mise dev -- --help` or `mise build && mise start -- --help`
 
 To use the `mealman` global binary instead of `mise start`, run `npm install -g .`.
