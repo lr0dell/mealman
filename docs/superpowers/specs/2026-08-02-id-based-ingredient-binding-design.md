@@ -153,43 +153,122 @@ at full price on each of a day's 6 to 13 iterations.
 
 Volatility by region, in render order `tools` then `system` then `messages`:
 
-| Region | Changes | Contents |
-| --- | --- | --- |
-| `tools` | never | 7 tool schemas, ~1,650 tokens |
-| `system` | never; `buildDaySystemPrompt` takes only `profile` | ~608 tokens |
-| `messages[0]` | every day | date, `paceCalories`, `paceCost`, prior meals, pantry, shopping list |
-| `messages[1..]` | every iteration | tool calls and results |
+Token counts below are Sonnet 5's, measured with `count_tokens` on the week of
+2026-07-27. See section 6 for the model change.
 
-Place one breakpoint on the last content block of `messages[0]`. It is written
-once per day and read by that day's remaining iterations. Because the pace
-targets sit inside the block the breakpoint terminates, each day writes its own
-entry and no day can read another day's calorie budget.
+| Region | Changes | Tokens | Contents |
+| --- | --- | --- | --- |
+| `tools` | never | ~2,041 | `DAY_PLANNING_TOOLS`, 7 schemas |
+| `system` | never; `buildDaySystemPrompt` takes only `profile` | ~608 | targets, process, naming rules |
+| `messages[0]` | **every day** | ~2,089 | date, `paceCalories`, `paceCost`, prior meals, pantry, shopping list |
+| `messages[1..]` | every iteration | grows | tool calls and results |
 
-The pace targets must not be hoisted into the system prompt to enlarge the
-stable prefix. That places a per-day number in the region that is byte-identical
-across days, which either invalidates the cache daily or serves a stale budget.
+Sonnet 5's minimum cacheable prefix is 1024 tokens, so use **two breakpoints**:
 
-Two constraints on the placement:
+1. **End of the `system` block.** Prefix is `tools` plus `system`, 2,649 tokens,
+   byte-identical for the whole week. Written once and read by all 69 iterations
+   of a 7-day run, which completes in about 3 minutes and so stays inside a
+   single 5-minute TTL.
+2. **Last content block of `messages[0]`.** Prefix is 4,738 tokens, rewritten
+   each day and read by that day's remaining iterations.
 
-- A breakpoint at the `tools` and `system` boundary would be stable for the
-  whole week, but that prefix is ~2,214 tokens against Haiku 4.5's 4096-token
-  minimum, so it would silently cache nothing. Measured on the current prompt:
-  system alone 608 tokens, system plus planning message 2,258, tools plus system
-  plus planning message 3,864. The inline macro lines from section 3 raise the
-  anchored prefix to roughly 4,450, clearing the floor. Record the model-floor
-  dependency as a code comment: on Sonnet 5 or Opus 5 (floors 1024 and 512) a
-  second cross-day breakpoint becomes worthwhile, since the full week runs
-  inside a single 5-minute TTL.
+The split is what makes the per-day calorie budget safe. `paceCalories` and
+`paceCost` live in `messages[0]`, behind breakpoint 2, so breakpoint 1 never
+contains a per-day number and each day writes its own entry at breakpoint 2. No
+day can read another day's budget.
+
+The pace targets must not be hoisted into the `system` block to enlarge the
+week-stable prefix. That would place a per-day number in the region that is
+byte-identical across days, which either invalidates breakpoint 1 daily or
+serves a stale budget. The prefix is already well clear of the floor, so there
+is no reason to.
+
+Two further constraints:
+
 - Top-level `cache_control` on `messages.create()` auto-places on the last
   cacheable block, which each iteration is the newest `tool_result`, paying a
-  write premium every turn. Use explicit placement on `messages[0]`. That is
-  also robust to the history pruning at `src/ai/client.ts:136`, which keeps
-  `messages[0]` and drops the middle, rewriting any prefix deeper in the
-  conversation.
+  write premium every turn. Use explicit placement on the two blocks above.
+  Explicit placement is also robust to the history pruning at
+  `src/ai/client.ts:136`, which keeps `messages[0]` and drops the middle,
+  rewriting any prefix deeper in the conversation.
+- `tools` renders before `system`, so removing `search_knowledge_base`
+  (section 1) changes breakpoint 1's prefix. That is a one-time invalidation at
+  deploy, not a per-request concern.
 
 Verification: `usage.cache_read_input_tokens` is greater than zero from
-iteration 2 onward. A zero reading means the prefix fell back under 4096 tokens
-or volatile content leaked in ahead of the breakpoint.
+iteration 2 onward, and greater than zero on day 2's first iteration (proving
+breakpoint 1 survived the day boundary). A zero reading on the latter means
+volatile content leaked into `tools` or `system`.
+
+For the record, this design depends on the model change and is not available on
+Haiku 4.5, whose floor is 4096 tokens against a measured `tools` plus `system`
+prefix of 2,143 and a full anchored prefix of 3,148 to 3,793 across the seven
+days. Both breakpoints would silently cache nothing there. If the model is ever
+rolled back, remove the breakpoints rather than leaving them as no-ops.
+
+### 6. Model upgrade to Sonnet 5
+
+The planning agent moves from `claude-haiku-4-5-20251001` to `claude-sonnet-5`.
+
+**Collapse the model id to one source of truth.** Three hardcoded strings exist
+today and two already disagree:
+
+| Location | Value | Role |
+| --- | --- | --- |
+| `src/ai/client.ts:101` | `claude-haiku-4-5-20251001` | the agent loop's actual default |
+| `src/services/agent-planner.ts:171` | `claude-haiku-4-5-20251001` | passed to the tracker for the debug log header only |
+| `src/ai/client.ts:42` | `claude-sonnet-4-20250514` | legacy `complete` path; deprecated model |
+
+The tracker's copy is a duplicate of the real value, so the debug log header
+silently lies whenever the two drift. Export one constant, use it for the
+request and for the tracker, and migrate the deprecated `claude-sonnet-4` in the
+legacy path as well.
+
+**Thinking is explicitly disabled.** On Haiku 4.5 omitting the `thinking`
+parameter means no thinking; on Sonnet 5 omitting it runs adaptive thinking. To
+preserve current behavior the request must pass `thinking: { type: 'disabled' }`
+rather than continue to omit it.
+
+Two consequences follow:
+
+- Sonnet 5 reaches for tools less readily with thinking off. This agent does all
+  of its work through tools, so add an explicit trigger instruction to the
+  system prompt's process section, in the style the API guidance recommends:
+  state when each tool must be called rather than only what it does. This
+  applies to `lookup_ingredient` and `check_daily_totals` in particular, since
+  those are the calls the agent can most plausibly skip.
+- No `thinking` blocks are returned, so `assistantContent` at
+  `src/ai/client.ts:150-165` needs no change. That code rebuilds the assistant
+  turn from scratch handling only `text` and `tool_use`, and would have silently
+  dropped `thinking` blocks before pushing the turn back into `messages`.
+  Dropping them can trigger ordering and signature errors on replay. Disabling
+  thinking avoids the problem rather than fixing it, so record this as a
+  precondition: **re-enabling thinking later requires updating that loop and the
+  `MessageContent` union first.**
+
+**Effort.** Sonnet 5 defaults to `high`. Set `output_config: { effort: 'medium' }`
+explicitly. This workload is structured and tool-driven rather than
+reasoning-heavy, and per the migration guidance Sonnet 5 at `medium` is
+comparable to Sonnet 4.6 at `high`. Sweep `low` and `medium` against a real week
+before settling.
+
+**`max_tokens` stays at 4096.** With thinking disabled it is not shared with a
+thinking budget. The call is non-streaming, which is fine below roughly 16,000.
+
+**Nothing else in the codebase breaks.** No sampling parameters
+(`temperature`, `top_p`, `top_k`) and no assistant-turn prefills are used, which
+are the two changes that would otherwise return a 400.
+
+**Cost.** Sonnet 5 tokenizes this prompt about 1.25x higher than Haiku 4.5
+(`tools` plus `system` 2,143 to 2,649; full prefix 3,793 to 4,738). Measured
+baseline for the week of 2026-07-27 was 594,394 input and 15,016 output tokens,
+costing $0.67 on Haiku 4.5. The same workload on Sonnet 5 is roughly $2.51 at
+standard rates and $1.67 at the introductory rate in effect through 2026-08-31.
+The reductions in sections 1 through 3 cut input by roughly 60% on their own,
+and the two cache breakpoints in section 5 cut it further, so the expected
+steady-state figure is well below those numbers. Disabling thinking keeps output
+tokens near the measured baseline instead of adding thinking tokens at $15 per
+million.
 
 ## Testing
 
@@ -202,11 +281,17 @@ or volatile content leaked in ahead of the breakpoint.
 - `formatAvailablePantry` and `formatShoppingList` include per-100g macros and
   price.
 - The `add_meal` path performs no embedding.
-- Caching: the planning message is byte-identical across a day's iterations, and
-  two different days produce different `messages[0]`.
+- Caching: `messages[0]` is byte-identical across a day's iterations and differs
+  between two days, while `tools` and `system` are byte-identical across days.
+  Assert on the rendered request rather than on live `usage` counters.
+- The request sets `thinking: { type: 'disabled' }` and
+  `output_config: { effort: 'medium' }`.
+- The model id resolves from one constant, and the value the tracker writes into
+  the debug log header is the value actually sent on the request.
 
 Existing cases in `src/agent/tool-handlers.test.ts` need updating for the new
-schema.
+schema. `src/ai/client.agent.test.ts` and `src/ai/client.test.ts` need updating
+for the model id, the `thinking` parameter, and the cache breakpoints.
 
 ## Out of scope
 
