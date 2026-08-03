@@ -125,63 +125,76 @@ describe('ToolHandlers', () => {
   });
 
   describe('lookup_ingredient', () => {
-    it('returns ingredient from database if found', async () => {
-      const result = await handlers.handle('lookup_ingredient', {
+    it('returns one result per query, in request order', async () => {
+      const result = (await handlers.handle('lookup_ingredient', {
+        names: ['chicken breast', 'brown rice'],
+      })) as { results: Array<{ query: string }> };
+
+      expect(result.results).toHaveLength(2);
+      expect(result.results[0].query).toBe('chicken breast');
+      expect(result.results[1].query).toBe('brown rice');
+    });
+
+    it('returns an id and full macros for a confident match', async () => {
+      const result = (await handlers.handle('lookup_ingredient', {
+        names: ['chicken breast'],
+      })) as { results: Array<Record<string, unknown>> };
+
+      expect(result.results[0]).toMatchObject({
+        query: 'chicken breast',
+        found: true,
         name: 'chicken breast',
+        proteinPer100g: 31,
+        carbsPer100g: 0,
+        fatPer100g: 3.6,
+        fiberPer100g: 0,
+        pricePerGram: 0.01,
       });
-
-      expect(result).toMatchObject({
-        found: true,
-        ingredient: {
-          name: 'chicken breast',
-          matchedName: 'chicken breast',
-          proteinPer100g: 31,
-          carbsPer100g: 0,
-          fatPer100g: 3.6,
-          fiberPer100g: 0,
-          pricePerGram: 0.01,
-        },
-      });
-      expect(
-        (result as { ingredient: { similarity: number } }).ingredient.similarity
-      ).toBeGreaterThan(0);
+      expect(typeof result.results[0].id).toBe('number');
     });
 
-    it('rejects low-confidence matches and returns suggestions', async () => {
-      // "eggs" should not match "chicken breast" with high confidence
-      const result = await handlers.handle('lookup_ingredient', {
-        name: 'eggs',
-      });
+    it('carries ids on suggestions so a near miss needs no second call', async () => {
+      const result = (await handlers.handle('lookup_ingredient', {
+        names: ['eggs'],
+      })) as {
+        results: Array<{
+          found: boolean;
+          suggestions: Array<{ id: number; name: string }>;
+        }>;
+      };
 
-      expect(result).toMatchObject({
-        found: false,
-      });
-      expect((result as { suggestions: unknown[] }).suggestions).toBeDefined();
+      expect(result.results[0].found).toBe(false);
+      expect(result.results[0].suggestions.length).toBeGreaterThan(0);
+      for (const s of result.results[0].suggestions) {
+        expect(typeof s.id).toBe('number');
+        expect(typeof s.name).toBe('string');
+      }
     });
 
-    it('accepts high-confidence matches', async () => {
-      const result = await handlers.handle('lookup_ingredient', {
-        name: 'breast of chicken',
-      });
+    it('handles an empty list without calling the database', async () => {
+      const result = (await handlers.handle('lookup_ingredient', {
+        names: [],
+      })) as { results: unknown[] };
 
+      expect(result.results).toEqual([]);
+    });
+  });
+
+  describe('search_knowledge_base', () => {
+    it('is no longer a registered tool', async () => {
+      const result = await handlers.handle('search_knowledge_base', {
+        query: 'chicken',
+      });
       expect(result).toMatchObject({
-        found: true,
-        ingredient: {
-          matchedName: 'chicken breast',
-        },
+        error: 'Unknown tool: search_knowledge_base',
       });
     });
 
-    it('suggests being more specific when match is ambiguous', async () => {
-      const result = await handlers.handle('lookup_ingredient', {
-        name: 'meat',
-      });
-
-      // Should suggest specific options
-      expect(result).toHaveProperty('suggestions');
-      expect((result as { message: string }).message).toContain(
-        'more specific'
+    it('is absent from both tool lists', () => {
+      const names = [...PLANNING_TOOLS, ...DAY_PLANNING_TOOLS].map(
+        (t) => t.name
       );
+      expect(names).not.toContain('search_knowledge_base');
     });
   });
 

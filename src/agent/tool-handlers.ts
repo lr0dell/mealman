@@ -9,7 +9,6 @@ import type {
   ModifyMealInput,
   RemoveMealInput,
   LookupIngredientInput,
-  SearchKnowledgeBaseInput,
   CheckDailyTotalsInput,
   FinalizePlanInput,
 } from './types.js';
@@ -215,86 +214,75 @@ export function createToolHandlers(
     };
   }
 
-  async function handleLookupIngredient(input: LookupIngredientInput): Promise<
-    | {
-        found: true;
-        ingredient: {
-          id: number;
-          name: string;
-          matchedName: string;
-          similarity: number;
-          proteinPer100g: number;
-          carbsPer100g: number;
-          fatPer100g: number;
-          fiberPer100g: number;
-          pricePerGram: number;
-        };
-      }
-    | {
-        found: false;
-        message: string;
-        suggestions: Array<{ name: string; similarity: number }>;
-      }
-  > {
-    const matches = await ingredientDb.searchIngredients(input.name, 5);
-
-    if (matches.length === 0) {
-      return {
-        found: false,
-        message: `No ingredients found for "${input.name}".`,
-        suggestions: [],
-      };
-    }
-
-    const topMatch = matches[0];
-
-    if (topMatch.similarity >= MINIMUM_SIMILARITY) {
-      return {
-        found: true,
-        ingredient: {
-          id: topMatch.ingredient.id,
-          name: input.name,
-          matchedName: topMatch.ingredient.name,
-          similarity: topMatch.similarity,
-          proteinPer100g: topMatch.ingredient.proteinPer100g,
-          carbsPer100g: topMatch.ingredient.carbsPer100g,
-          fatPer100g: topMatch.ingredient.fatPer100g,
-          fiberPer100g: topMatch.ingredient.fiberPer100g,
-          pricePerGram: topMatch.ingredient.pricePerGram,
-        },
-      };
-    }
-
-    // Low confidence - return suggestions
-    const suggestions = matches.map((m) => ({
-      name: m.ingredient.name,
-      similarity: m.similarity,
-    }));
-
-    return {
-      found: false,
-      message: `No confident match for "${input.name}". Please be more specific (e.g., "black beans" instead of "beans", "chicken breast" instead of "chicken").`,
-      suggestions,
-    };
+  interface LookupHit {
+    query: string;
+    found: true;
+    id: number;
+    name: string;
+    similarity: number;
+    proteinPer100g: number;
+    carbsPer100g: number;
+    fatPer100g: number;
+    fiberPer100g: number;
+    pricePerGram: number;
   }
 
-  async function handleSearchKnowledgeBase(
-    input: SearchKnowledgeBaseInput
-  ): Promise<{
-    results: Array<{
-      name: string;
-      similarity: number;
-      proteinPer100g: number;
-    }>;
-  }> {
-    const matches = await ingredientDb.searchIngredients(input.query, 10);
-    return {
-      results: matches.map((m) => ({
-        name: m.ingredient.name,
-        similarity: m.similarity,
-        proteinPer100g: m.ingredient.proteinPer100g,
-      })),
-    };
+  interface LookupMiss {
+    query: string;
+    found: false;
+    message: string;
+    suggestions: Array<{ id: number; name: string; similarity: number }>;
+  }
+
+  async function handleLookupIngredient(
+    input: LookupIngredientInput
+  ): Promise<{ results: Array<LookupHit | LookupMiss> }> {
+    const results: Array<LookupHit | LookupMiss> = [];
+
+    for (const query of input.names) {
+      const matches = await ingredientDb.searchIngredients(query, 5);
+
+      if (matches.length === 0) {
+        results.push({
+          query,
+          found: false,
+          message: `No ingredients found for "${query}".`,
+          suggestions: [],
+        });
+        continue;
+      }
+
+      const top = matches[0];
+
+      if (top.similarity >= MINIMUM_SIMILARITY) {
+        results.push({
+          query,
+          found: true,
+          id: top.ingredient.id,
+          name: top.ingredient.name,
+          similarity: top.similarity,
+          proteinPer100g: top.ingredient.proteinPer100g,
+          carbsPer100g: top.ingredient.carbsPer100g,
+          fatPer100g: top.ingredient.fatPer100g,
+          fiberPer100g: top.ingredient.fiberPer100g,
+          pricePerGram: top.ingredient.pricePerGram,
+        });
+        continue;
+      }
+
+      results.push({
+        query,
+        found: false,
+        message: `No confident match for "${query}". Use one of the suggested ids, or retry with a more specific name (e.g. "black beans" instead of "beans").`,
+        suggestions: matches.map((m) => ({
+          id: m.ingredient.id,
+          name: m.ingredient.name,
+          similarity: m.similarity,
+        })),
+      });
+    }
+
+    return { results };
   }
 
   function handleCheckDailyTotals(input: CheckDailyTotalsInput): {
@@ -373,8 +361,6 @@ export function createToolHandlers(
           return handleRemoveMeal(input as RemoveMealInput);
         case 'lookup_ingredient':
           return handleLookupIngredient(input as LookupIngredientInput);
-        case 'search_knowledge_base':
-          return handleSearchKnowledgeBase(input as SearchKnowledgeBaseInput);
         case 'check_daily_totals':
           return handleCheckDailyTotals(input as CheckDailyTotalsInput);
         case 'finalize_plan':

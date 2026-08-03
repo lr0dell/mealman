@@ -112,25 +112,17 @@ export const PLANNING_TOOLS: ToolDefinition[] = [
   {
     name: 'lookup_ingredient',
     description:
-      'Look up nutrition data for an ingredient. Returns calories, protein, carbs, fat, fiber per 100g and price. Data comes from knowledge base, USDA, or AI estimate.',
+      'Look up ingredients by name. Pass every name you need in one call. Returns, for each name, the numeric id to use in add_meal plus nutrition per 100g and price. Do not call this for items already listed in the pantry or shopping list, which include their id and nutrition.',
     input_schema: {
       type: 'object',
       properties: {
-        name: { type: 'string', description: 'Ingredient name to look up' },
+        names: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Ingredient names to look up, all in one call',
+        },
       },
-      required: ['name'],
-    },
-  },
-  {
-    name: 'search_knowledge_base',
-    description:
-      'Search for ingredients in the knowledge base by partial name match.',
-    input_schema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string', description: 'Search query' },
-      },
-      required: ['query'],
+      required: ['names'],
     },
   },
   {

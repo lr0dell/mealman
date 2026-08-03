@@ -42,11 +42,7 @@ export interface RemoveMealInput {
 }
 
 export interface LookupIngredientInput {
-  name: string;
-}
-
-export interface SearchKnowledgeBaseInput {
-  query: string;
+  names: string[];
 }
 
 export interface CheckDailyTotalsInput {
