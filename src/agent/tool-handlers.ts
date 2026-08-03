@@ -84,6 +84,12 @@ export function createToolHandlers(
     const ingredientsWithNutrition: IngredientWithNutrition[] = [];
 
     for (const ing of input.ingredients) {
+      if (!(Number.isFinite(ing.amountGrams) && ing.amountGrams > 0)) {
+        return {
+          success: false,
+          error: `amountGrams must be a number greater than 0, got ${ing.amountGrams} for ingredientId ${ing.ingredientId}.`,
+        };
+      }
       const entry = ingredientDb.getIngredientById(ing.ingredientId);
       if (!entry) {
         return {

@@ -439,6 +439,31 @@ describe('ToolHandlers', () => {
       expect(planState.getMeal('2026-01-26', 'breakfast')).toBeNull();
     });
 
+    it.each([
+      ['zero', 0],
+      ['negative', -50],
+      ['NaN', NaN],
+    ])(
+      'rejects amountGrams that is %s instead of saving a broken meal',
+      async (_label, amountGrams) => {
+        const chickenBreast = await idOf('chicken breast');
+
+        const result = (await handlers.handle('add_meal', {
+          date: '2026-01-26',
+          slot: 'breakfast',
+          name: 'Broken meal',
+          recipe: 'n/a',
+          ingredients: [{ ingredientId: chickenBreast, amountGrams }],
+          prepTime: 5,
+          servings: 1,
+        })) as { success: boolean; error?: string };
+
+        expect(result.success).toBe(false);
+        expect(result.error).toContain(String(chickenBreast));
+        expect(planState.getMeal('2026-01-26', 'breakfast')).toBeNull();
+      }
+    );
+
     it('does not embed anything on the add_meal path', async () => {
       const lean93 = await idOf('beef, ground, 93% lean meat / 7% fat, raw');
       const spy = vi.spyOn(ingredientDb, 'searchIngredients');

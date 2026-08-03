@@ -12,7 +12,11 @@ const MEAL_INGREDIENTS_SCHEMA = {
         description:
           'Numeric id from the pantry list, the shopping list, or lookup_ingredient',
       },
-      amountGrams: { type: 'number', description: 'Amount in grams' },
+      amountGrams: {
+        type: 'number',
+        minimum: 0,
+        description: 'Amount in grams. Must be greater than 0.',
+      },
     },
     required: ['ingredientId', 'amountGrams'],
   },
