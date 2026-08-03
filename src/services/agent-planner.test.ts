@@ -232,8 +232,58 @@ describe('AgentPlanner', () => {
       new Map()
     );
 
-    expect(message).toContain('mystery item (id 999999): 10 g');
+    expect(message).toContain('- mystery item (id 999999): 10 g\n');
     expect(message).not.toContain('per 100g');
+    expect(message).not.toContain('undefined');
+  });
+
+  it('prints per-100g nutrition and price on shopping-list lines', () => {
+    const planner = new AgentPlanner({
+      anthropicApiKey: 'test-key',
+      dataDir: testDir,
+    });
+
+    const facts = new Map([
+      [
+        5964,
+        {
+          proteinPer100g: 20.8,
+          carbsPer100g: 0,
+          fatPer100g: 7,
+          fiberPer100g: 0,
+          pricePerGram: 0.012,
+        },
+      ],
+    ]);
+
+    const message = planner.buildDayInitialMessage(
+      [],
+      [
+        {
+          ingredientId: 5964,
+          name: 'beef, ground, 93% lean meat / 7% fat, raw',
+          amount: 650,
+        },
+      ],
+      10,
+      '2026-08-02',
+      {
+        caloriesSoFar: 0,
+        costSoFar: 0,
+        daysRemaining: 7,
+        weeklyCalTarget: 14000,
+        paceCalories: 2000,
+        paceCost: 21.43,
+        calorieBand: { min: 13500, max: 14500 },
+        weeklyBudget: 150,
+      },
+      '',
+      facts
+    );
+
+    expect(message).toContain('(id 5964): 650 g');
+    expect(message).toContain('per 100g P20.8 C0 F7 Fb0');
+    expect(message).toContain('$0.012/g');
   });
 
   it('runs one conversation per day with a date-locked handler', async () => {
