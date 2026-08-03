@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createToolHandlers } from './tool-handlers.js';
 import { PLANNING_TOOLS, DAY_PLANNING_TOOLS } from './tools.js';
 import { PlanState } from '../services/plan-state.js';
@@ -61,6 +61,12 @@ describe('ToolHandlers', () => {
   let ingredientDb: IngredientDatabase;
   let handlers: ReturnType<typeof createToolHandlers>;
 
+  async function idOf(name: string): Promise<number> {
+    const match = await ingredientDb.searchIngredient(name);
+    if (!match) throw new Error(`fixture missing: ${name}`);
+    return match.ingredient.id;
+  }
+
   beforeEach(async () => {
     // Create fresh test database
     if (existsSync(testDir)) {
@@ -105,6 +111,29 @@ describe('ToolHandlers', () => {
       fiberPer100g: 2.6,
       pricePerGram: 0.004,
       category: 'produce',
+    });
+
+    // The pair from the 2026-07-27 logs. Embeddings cannot discriminate the
+    // numerals, so a name search for "ground beef, 93% lean" ranks the 97%
+    // entry first by 0.0028.
+    await ingredientDb.addIngredient({
+      name: 'beef, ground, 93% lean meat / 7% fat, raw',
+      proteinPer100g: 20.8,
+      carbsPer100g: 0,
+      fatPer100g: 7,
+      fiberPer100g: 0,
+      pricePerGram: 0.012,
+      category: 'meat',
+    });
+
+    await ingredientDb.addIngredient({
+      name: 'beef, ground, 97% lean meat / 3% fat, raw',
+      proteinPer100g: 22,
+      carbsPer100g: 0,
+      fatPer100g: 3,
+      fiberPer100g: 0,
+      pricePerGram: 0.012,
+      category: 'meat',
     });
 
     handlers = createToolHandlers(planState, ingredientDb);
@@ -209,12 +238,13 @@ describe('ToolHandlers', () => {
 
   describe('add_meal duplicate slot protection', () => {
     it('rejects add_meal when slot is already filled', async () => {
+      const chickenBreast = await idOf('chicken breast');
       const mealInput = {
         date: '2026-01-27',
         slot: 'breakfast',
         name: 'First Meal',
         recipe: 'Cook it',
-        ingredients: [{ name: 'chicken breast', amountGrams: 200 }],
+        ingredients: [{ ingredientId: chickenBreast, amountGrams: 200 }],
         prepTime: 20,
         servings: 1,
       };
@@ -233,12 +263,13 @@ describe('ToolHandlers', () => {
     });
 
     it('keeps the original meal when a duplicate add_meal is rejected', async () => {
+      const chickenBreast = await idOf('chicken breast');
       const mealInput = {
         date: '2026-01-27',
         slot: 'breakfast',
         name: 'First Meal',
         recipe: 'Cook it',
-        ingredients: [{ name: 'chicken breast', amountGrams: 200 }],
+        ingredients: [{ ingredientId: chickenBreast, amountGrams: 200 }],
         prepTime: 20,
         servings: 1,
       };
@@ -251,12 +282,13 @@ describe('ToolHandlers', () => {
     });
 
     it('allows modify_meal to overwrite an existing slot', async () => {
+      const chickenBreast = await idOf('chicken breast');
       const mealInput = {
         date: '2026-01-27',
         slot: 'breakfast',
         name: 'First Meal',
         recipe: 'Cook it',
-        ingredients: [{ name: 'chicken breast', amountGrams: 200 }],
+        ingredients: [{ ingredientId: chickenBreast, amountGrams: 200 }],
         prepTime: 20,
         servings: 1,
       };
@@ -304,12 +336,13 @@ describe('ToolHandlers', () => {
       })) as { success: boolean; error?: string };
       expect(removeOff.success).toBe(false);
 
+      const chickenBreast = await idOf('chicken breast');
       const onDate = (await locked.handle('add_meal', {
         date: '2026-01-26',
         slot: 'breakfast',
         name: 'Chicken plate',
         recipe: 'cook',
-        ingredients: [{ name: 'chicken breast', amountGrams: 150 }],
+        ingredients: [{ ingredientId: chickenBreast, amountGrams: 150 }],
         prepTime: 10,
         servings: 1,
       })) as { success: boolean };
@@ -320,12 +353,13 @@ describe('ToolHandlers', () => {
   describe('finalize_plan', () => {
     it('generates accurate notes from actual plan state', async () => {
       // Add a meal first
+      const chickenBreast = await idOf('chicken breast');
       await handlers.handle('add_meal', {
         date: '2026-01-27',
         slot: 'breakfast',
         name: 'Test meal',
         recipe: 'Cook it',
-        ingredients: [{ name: 'chicken breast', amountGrams: 200 }],
+        ingredients: [{ ingredientId: chickenBreast, amountGrams: 200 }],
         prepTime: 20,
         servings: 2,
       });
@@ -338,6 +372,89 @@ describe('ToolHandlers', () => {
       expect(typedResult.autoNotes).toBeDefined();
       expect(typedResult.autoNotes).not.toContain('9999');
       expect(typedResult.autoNotes).toContain('Calories');
+    });
+  });
+
+  describe('add_meal ingredient binding', () => {
+    it('binds exactly the id it was given, never a near neighbour', async () => {
+      const lean93 = await idOf('beef, ground, 93% lean meat / 7% fat, raw');
+      const lean97 = await idOf('beef, ground, 97% lean meat / 3% fat, raw');
+      expect(lean93).not.toBe(lean97);
+
+      const result = (await handlers.handle('add_meal', {
+        date: '2026-01-26',
+        slot: 'dinner',
+        name: 'Beef bowl',
+        recipe: 'Brown the beef.',
+        ingredients: [{ ingredientId: lean93, amountGrams: 200 }],
+        prepTime: 15,
+        servings: 1,
+      })) as {
+        success: boolean;
+        ingredients: Array<{ ingredientId: number; name: string }>;
+      };
+
+      expect(result.success).toBe(true);
+      expect(result.ingredients[0].ingredientId).toBe(lean93);
+      expect(result.ingredients[0].name).toBe(
+        'beef, ground, 93% lean meat / 7% fat, raw'
+      );
+
+      const meal = planState.getMeal('2026-01-26', 'dinner');
+      expect(meal?.ingredients[0].ingredientId).toBe(lean93);
+    });
+
+    it('computes nutrition from the id, not from a name search', async () => {
+      const lean93 = await idOf('beef, ground, 93% lean meat / 7% fat, raw');
+
+      await handlers.handle('add_meal', {
+        date: '2026-01-26',
+        slot: 'lunch',
+        name: 'Plain beef',
+        recipe: 'Cook it.',
+        ingredients: [{ ingredientId: lean93, amountGrams: 100 }],
+        prepTime: 10,
+        servings: 1,
+      });
+
+      const meal = planState.getMeal('2026-01-26', 'lunch');
+      // 93% lean is 20.8g protein and 7g fat per 100g; 97% lean would be 22 and 3.
+      expect(meal?.macros.protein).toBeCloseTo(20.8, 5);
+      expect(meal?.macros.fat).toBeCloseTo(7, 5);
+    });
+
+    it('rejects an unknown id instead of binding something close', async () => {
+      const result = (await handlers.handle('add_meal', {
+        date: '2026-01-26',
+        slot: 'breakfast',
+        name: 'Nonsense',
+        recipe: 'n/a',
+        ingredients: [{ ingredientId: 987654, amountGrams: 50 }],
+        prepTime: 5,
+        servings: 1,
+      })) as { success: boolean; error: string };
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('987654');
+      expect(planState.getMeal('2026-01-26', 'breakfast')).toBeNull();
+    });
+
+    it('does not embed anything on the add_meal path', async () => {
+      const lean93 = await idOf('beef, ground, 93% lean meat / 7% fat, raw');
+      const spy = vi.spyOn(ingredientDb, 'searchIngredients');
+
+      await handlers.handle('add_meal', {
+        date: '2026-01-27',
+        slot: 'dinner',
+        name: 'Beef again',
+        recipe: 'Cook.',
+        ingredients: [{ ingredientId: lean93, amountGrams: 100 }],
+        prepTime: 10,
+        servings: 1,
+      });
+
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
     });
   });
 });

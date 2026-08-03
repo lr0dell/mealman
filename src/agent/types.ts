@@ -8,33 +8,24 @@ export interface ToolDefinition {
   };
 }
 
+export interface MealIngredientInput {
+  /** Numeric id from the pantry list, the shopping list, or lookup_ingredient. */
+  ingredientId: number;
+  amountGrams: number;
+}
+
 export interface AddMealInput {
   date: string;
   slot: 'breakfast' | 'lunch' | 'dinner';
   name: string;
   recipe: string;
-  ingredients: Array<{
-    name: string;
-    amountGrams: number;
-  }>;
+  ingredients: MealIngredientInput[];
   prepTime: number;
   servings: number;
   leftoverOf?: string;
 }
 
-export interface ModifyMealInput {
-  date: string;
-  slot: 'breakfast' | 'lunch' | 'dinner';
-  name: string;
-  recipe: string;
-  ingredients: Array<{
-    name: string;
-    amountGrams: number;
-  }>;
-  prepTime: number;
-  servings: number;
-  leftoverOf?: string;
-}
+export type ModifyMealInput = AddMealInput;
 
 export interface RemoveMealInput {
   date: string;

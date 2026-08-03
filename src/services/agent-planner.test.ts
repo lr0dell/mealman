@@ -84,7 +84,7 @@ describe('AgentPlanner', () => {
     expect(prompt).toContain('Protein: 100-150g');
     expect(prompt).toContain('Fiber: 25-40g');
     expect(prompt).toContain('finalize_plan');
-    expect(prompt).toContain('recipe-accurate ingredient names');
+    expect(prompt).toContain('recipe-accurate names in lookup queries');
     expect(prompt).toContain('chicken breast');
     expect(prompt).toContain('black beans');
     expect(prompt).not.toContain('MUST use pantry');

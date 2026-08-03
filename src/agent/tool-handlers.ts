@@ -45,7 +45,7 @@ export function createToolHandlers(
     };
   }
 
-  async function storeMeal(input: AddMealInput): Promise<
+  function storeMeal(input: AddMealInput):
     | { success: false; error: string }
     | {
         success: true;
@@ -60,6 +60,11 @@ export function createToolHandlers(
           };
           cost: number;
         };
+        ingredients: Array<{
+          ingredientId: number;
+          name: string;
+          amountGrams: number;
+        }>;
         dayTotals:
           | {
               calories: number;
@@ -73,21 +78,19 @@ export function createToolHandlers(
             }
           | undefined;
         remainingBudget: ReturnType<typeof planState.getRemainingBudget>;
-      }
-  > {
+      } {
     // Look up all ingredients
     const ingredientIds: number[] = [];
     const ingredientsWithNutrition: IngredientWithNutrition[] = [];
 
     for (const ing of input.ingredients) {
-      const match = await ingredientDb.searchIngredient(ing.name);
-      if (!match) {
+      const entry = ingredientDb.getIngredientById(ing.ingredientId);
+      if (!entry) {
         return {
           success: false,
-          error: `Ingredient "${ing.name}" not found. Try a different search term.`,
+          error: `Unknown ingredientId ${ing.ingredientId}. Use an id from the pantry list, the shopping list, or lookup_ingredient.`,
         };
       }
-      const entry = match.ingredient;
       ingredientIds.push(entry.id);
       ingredientsWithNutrition.push({
         name: entry.name,
@@ -133,14 +136,17 @@ export function createToolHandlers(
         macros: meal.macros,
         cost: meal.estimatedCost,
       },
+      ingredients: meal.ingredients.map((i) => ({
+        ingredientId: i.ingredientId,
+        name: i.name,
+        amountGrams: i.amount,
+      })),
       dayTotals,
       remainingBudget: planState.getRemainingBudget(),
     };
   }
 
-  async function handleAddMeal(
-    input: AddMealInput
-  ): ReturnType<typeof storeMeal> {
+  function handleAddMeal(input: AddMealInput): ReturnType<typeof storeMeal> {
     if (lockedDate && input.date !== lockedDate) {
       return {
         success: false,
@@ -156,7 +162,7 @@ export function createToolHandlers(
     return storeMeal(input);
   }
 
-  async function handleModifyMeal(input: ModifyMealInput): Promise<
+  function handleModifyMeal(input: ModifyMealInput):
     | { success: false; error: string }
     | {
         success: true;
@@ -171,6 +177,11 @@ export function createToolHandlers(
           };
           cost: number;
         };
+        ingredients: Array<{
+          ingredientId: number;
+          name: string;
+          amountGrams: number;
+        }>;
         dayTotals:
           | {
               calories: number;
@@ -184,8 +195,7 @@ export function createToolHandlers(
             }
           | undefined;
         remainingBudget: ReturnType<typeof planState.getRemainingBudget>;
-      }
-  > {
+      } {
     if (lockedDate && input.date !== lockedDate) {
       return {
         success: false,

@@ -1,6 +1,23 @@
 // src/agent/tools.ts
 import type { ToolDefinition } from './types.js';
 
+/** Shared by add_meal and modify_meal, which take identical ingredient lists. */
+const MEAL_INGREDIENTS_SCHEMA = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      ingredientId: {
+        type: 'number',
+        description:
+          'Numeric id from the pantry list, the shopping list, or lookup_ingredient',
+      },
+      amountGrams: { type: 'number', description: 'Amount in grams' },
+    },
+    required: ['ingredientId', 'amountGrams'],
+  },
+};
+
 export const PLANNING_TOOLS: ToolDefinition[] = [
   {
     name: 'get_plan_state',
@@ -14,7 +31,7 @@ export const PLANNING_TOOLS: ToolDefinition[] = [
   {
     name: 'add_meal',
     description:
-      'Add a meal to a specific day and slot (breakfast/lunch/dinner). Provide the meal details and ingredients with amounts in grams. The system will calculate nutrition from the knowledge base.',
+      'Add a meal to a specific day and slot (breakfast/lunch/dinner). Ingredients are identified by numeric ingredientId, not by name. The system calculates nutrition from the id.',
     input_schema: {
       type: 'object',
       properties: {
@@ -22,17 +39,7 @@ export const PLANNING_TOOLS: ToolDefinition[] = [
         slot: { type: 'string', enum: ['breakfast', 'lunch', 'dinner'] },
         name: { type: 'string', description: 'Name of the meal' },
         recipe: { type: 'string', description: 'Brief cooking instructions' },
-        ingredients: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              name: { type: 'string' },
-              amountGrams: { type: 'number', description: 'Amount in grams' },
-            },
-            required: ['name', 'amountGrams'],
-          },
-        },
+        ingredients: MEAL_INGREDIENTS_SCHEMA,
         prepTime: {
           type: 'number',
           description: 'Preparation time in minutes',
@@ -65,17 +72,7 @@ export const PLANNING_TOOLS: ToolDefinition[] = [
         slot: { type: 'string', enum: ['breakfast', 'lunch', 'dinner'] },
         name: { type: 'string', description: 'Name of the meal' },
         recipe: { type: 'string', description: 'Brief cooking instructions' },
-        ingredients: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              name: { type: 'string' },
-              amountGrams: { type: 'number', description: 'Amount in grams' },
-            },
-            required: ['name', 'amountGrams'],
-          },
-        },
+        ingredients: MEAL_INGREDIENTS_SCHEMA,
         prepTime: {
           type: 'number',
           description: 'Preparation time in minutes',
