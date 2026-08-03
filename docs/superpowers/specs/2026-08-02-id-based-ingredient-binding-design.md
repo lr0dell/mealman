@@ -231,12 +231,16 @@ rather than continue to omit it.
 
 Two consequences follow:
 
-- Sonnet 5 reaches for tools less readily with thinking off. This agent does all
-  of its work through tools, so add an explicit trigger instruction to the
-  system prompt's process section, in the style the API guidance recommends:
-  state when each tool must be called rather than only what it does. This
-  applies to `lookup_ingredient` and `check_daily_totals` in particular, since
-  those are the calls the agent can most plausibly skip.
+- Sonnet 5 with thinking off reaches for tools less readily **than Sonnet 5 with
+  thinking on**. This is a within-model comparison. There is no documented
+  Sonnet 5 against Haiku 4.5 tool-eagerness comparison, so whether this
+  configuration is more or less tool-eager than today's Haiku 4.5 setup is
+  unknown and is settled empirically by the validation runs below, not by this
+  spec. As a precaution, add explicit trigger instructions to the system
+  prompt's process section, in the style the API guidance recommends: state when
+  each tool must be called rather than only what it does. This matters most for
+  `check_daily_totals` and `modify_meal`, the two calls the agent can most
+  plausibly skip and the two the redesign leaves otherwise untouched.
 - No `thinking` blocks are returned, so `assistantContent` at
   `src/ai/client.ts:150-165` needs no change. That code rebuilds the assistant
   turn from scratch handling only `text` and `tool_use`, and would have silently
@@ -246,11 +250,20 @@ Two consequences follow:
   precondition: **re-enabling thinking later requires updating that loop and the
   `MessageContent` union first.**
 
-**Effort.** Sonnet 5 defaults to `high`. Set `output_config: { effort: 'medium' }`
-explicitly. This workload is structured and tool-driven rather than
+**Effort.** Sonnet 5 defaults to `high`. Ship `output_config: { effort: 'medium' }`
+as the starting value. This workload is structured and tool-driven rather than
 reasoning-heavy, and per the migration guidance Sonnet 5 at `medium` is
-comparable to Sonnet 4.6 at `high`. Sweep `low` and `medium` against a real week
-before settling.
+comparable to Sonnet 4.6 at `high`.
+
+Note that `medium` and thinking-off are **both** documented as reducing tool
+usage, and higher effort is documented to show substantially more of it. This
+spec therefore ships two tool-reducing settings at once while also naming tool
+eagerness as a risk. That tension is deliberate but unvalidated, so effort is a
+variable in the validation runs rather than a settled choice.
+
+**Make model, thinking, and effort configurable** rather than hardcoded, so the
+validation runs need no patch. Environment overrides on top of the single
+constant are sufficient.
 
 **`max_tokens` stays at 4096.** With thinking disabled it is not shared with a
 thinking budget. The call is non-streaming, which is fine below roughly 16,000.
@@ -292,6 +305,53 @@ million.
 Existing cases in `src/agent/tool-handlers.test.ts` need updating for the new
 schema. `src/ai/client.agent.test.ts` and `src/ai/client.test.ts` need updating
 for the model id, the `thinking` parameter, and the cache breakpoints.
+
+## Validation runs
+
+Run after sections 1 through 6 are implemented, not before. Measuring tool
+eagerness on today's tool surface would not transfer, because the redesign
+deliberately removes most `lookup_ingredient` calls. The signals that do
+transfer are `check_daily_totals`, `modify_meal`, and plan quality.
+
+Four runs of `plan week` over identical inputs:
+
+| Run | Model | Thinking | Effort |
+| --- | --- | --- | --- |
+| 1 | `claude-haiku-4-5-20251001` | off | n/a |
+| 2 | `claude-sonnet-5` | disabled | medium |
+| 3 | `claude-sonnet-5` | adaptive | medium |
+| 4 | `claude-sonnet-5` | disabled | high |
+
+Run 1 is the baseline: the previous model on the new tool surface, which
+separates the effect of the redesign from the effect of the model change.
+
+**Run 3 has a prerequisite.** Adaptive thinking returns `thinking` blocks, which
+the assistant-turn rebuild at `src/ai/client.ts:150-165` currently drops. That
+must be fixed, along with the `MessageContent` union, before run 3 executes,
+even though the shipped default is thinking-off. Do not run 3 against the
+unfixed loop.
+
+Metrics per run: tool calls broken out by tool, iterations per day,
+`modify_meal` count as a self-correction proxy, input and output tokens,
+`cache_read_input_tokens`, whether weekly calories and cost land in band, and
+pantry-mismatch count (planned ingredient ids that are near-duplicates of an
+unconsumed pantry id, which should be zero once section 2 lands).
+
+Isolation: point `MEAL_DATA_DIR` at a copy of the real data directory. Do not
+write to `~/.meal-planner/data/plans/` or mutate `pantry.json`.
+
+Estimated cost: roughly $1 to $3 per run, $6 to $10 total, with run 3 the most
+expensive because adaptive thinking bills output at $15 per million tokens.
+
+Decision rules, fixed in advance:
+
+- If run 2 meets macro and calorie targets with a `modify_meal` count no worse
+  than run 1, keep the shipped configuration.
+- If run 2 skips `check_daily_totals` or under-corrects, prefer run 4's higher
+  effort before enabling thinking. Effort is the cheaper lever.
+- Enable thinking only if run 3 is materially better on plan quality, since it
+  costs output tokens at $15 per million and carries the `client.ts`
+  precondition above.
 
 ## Out of scope
 
