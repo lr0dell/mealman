@@ -52,12 +52,13 @@ export class AIClient {
   }
 
   async chat(userMessage: string, options: ChatOptions = {}): Promise<string> {
-    const { systemPrompt, maxTokens = 4096 } = options;
+    const { systemPrompt, maxTokens = PLANNING_MAX_TOKENS } = options;
 
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: maxTokens,
       system: systemPrompt,
+      thinking: { type: 'disabled' },
       messages: [{ role: 'user', content: userMessage }],
     });
 
