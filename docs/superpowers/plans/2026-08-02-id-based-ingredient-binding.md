@@ -1028,24 +1028,31 @@ export type ModifyMealInput = AddMealInput;
 
 - [ ] **Step 4: Update the tool schemas**
 
-In `src/agent/tools.ts`, in **both** `add_meal` and `modify_meal`, replace the `ingredients` property with this exact block (repeat it in both; do not factor it into a shared variable, so each schema reads standalone):
+In `src/agent/tools.ts`, define the ingredient schema once, above `PLANNING_TOOLS`:
 
 ```typescript
-        ingredients: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              ingredientId: {
-                type: 'number',
-                description:
-                  'Numeric id from the pantry list, the shopping list, or lookup_ingredient',
-              },
-              amountGrams: { type: 'number', description: 'Amount in grams' },
-            },
-            required: ['ingredientId', 'amountGrams'],
-          },
-        },
+/** Shared by add_meal and modify_meal, which take identical ingredient lists. */
+const MEAL_INGREDIENTS_SCHEMA = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: {
+      ingredientId: {
+        type: 'number',
+        description:
+          'Numeric id from the pantry list, the shopping list, or lookup_ingredient',
+      },
+      amountGrams: { type: 'number', description: 'Amount in grams' },
+    },
+    required: ['ingredientId', 'amountGrams'],
+  },
+};
+```
+
+Then in **both** `add_meal` and `modify_meal`, replace the `ingredients` property with a reference to it:
+
+```typescript
+        ingredients: MEAL_INGREDIENTS_SCHEMA,
 ```
 
 Also update the `add_meal` description string to:
