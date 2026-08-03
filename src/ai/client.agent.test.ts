@@ -1,9 +1,23 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { AIClient } from './client.js';
 import type { ToolDefinition } from '../agent/types.js';
+import type { PlanningModelConfig } from './model-config.js';
+
+// A fixed, explicit config so these tests never resolve from the real
+// process.env — a developer with MEAL_MODEL/MEAL_THINKING/MEAL_EFFORT
+// exported for a validation run should still get a green suite.
+const TEST_MODEL_CONFIG: PlanningModelConfig = {
+  model: 'claude-sonnet-5',
+  thinking: 'disabled',
+  effort: 'medium',
+};
 
 // We'll test the loop logic by mocking the Anthropic client
 describe('AIClient.runAgentLoop', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   function makeClient(): {
     client: AIClient;
     mockCreate: ReturnType<typeof vi.fn>;
@@ -58,6 +72,7 @@ describe('AIClient.runAgentLoop', () => {
       initialMessage: 'Get the data',
       tools,
       toolHandler: vi.fn().mockResolvedValue({ data: 'test-value' }),
+      modelConfig: TEST_MODEL_CONFIG,
     });
 
     expect(result.finalText).toBe('Done!');
@@ -79,6 +94,7 @@ describe('AIClient.runAgentLoop', () => {
       tools,
       toolHandler: vi.fn().mockResolvedValue({}),
       contextWindow: 2,
+      modelConfig: TEST_MODEL_CONFIG,
     });
 
     // 4th API call should have: initial message + 2 pairs (= 5 messages), not 7
@@ -105,6 +121,7 @@ describe('AIClient.runAgentLoop', () => {
       tools,
       toolHandler: vi.fn().mockResolvedValue({}),
       contextWindow: 10,
+      modelConfig: TEST_MODEL_CONFIG,
     });
 
     // 2nd API call: initial + 1 pair = 3 messages — all within window of 10
@@ -115,6 +132,32 @@ describe('AIClient.runAgentLoop', () => {
   });
 
   it('sends the resolved model, thinking mode, and effort', async () => {
+    const { client, mockCreate } = makeClient();
+    mockCreate.mockResolvedValueOnce(endResponse);
+
+    await client.runAgentLoop({
+      systemPrompt: 'sys',
+      initialMessage: 'go',
+      tools,
+      toolHandler: vi.fn().mockResolvedValue({}),
+      modelConfig: TEST_MODEL_CONFIG,
+    });
+
+    const request = mockCreate.mock.calls[0][0];
+    expect(request.model).toBe('claude-sonnet-5');
+    expect(request.thinking).toEqual({ type: 'disabled' });
+    expect(request.output_config).toEqual({ effort: 'medium' });
+    expect(request.max_tokens).toBe(4096);
+  });
+
+  it('resolves the shipped defaults from process.env when no modelConfig is passed', async () => {
+    // Controls the env explicitly so this test can't leak a developer's
+    // real MEAL_MODEL/MEAL_THINKING/MEAL_EFFORT into a false failure, while
+    // still exercising the real default-resolution path (no modelConfig).
+    vi.stubEnv('MEAL_MODEL', undefined);
+    vi.stubEnv('MEAL_THINKING', undefined);
+    vi.stubEnv('MEAL_EFFORT', undefined);
+
     const { client, mockCreate } = makeClient();
     mockCreate.mockResolvedValueOnce(endResponse);
 
@@ -141,6 +184,7 @@ describe('AIClient.runAgentLoop', () => {
       initialMessage: 'go',
       tools,
       toolHandler: vi.fn().mockResolvedValue({}),
+      modelConfig: TEST_MODEL_CONFIG,
     });
 
     const request = mockCreate.mock.calls[0][0];
@@ -158,6 +202,7 @@ describe('AIClient.runAgentLoop', () => {
       initialMessage: 'day one',
       tools,
       toolHandler: () => Promise.resolve({}),
+      modelConfig: TEST_MODEL_CONFIG,
     });
 
     const request = mockCreate.mock.calls[0][0];
@@ -182,6 +227,7 @@ describe('AIClient.runAgentLoop', () => {
       initialMessage: 'day one',
       tools,
       toolHandler: () => Promise.resolve({ ok: true }),
+      modelConfig: TEST_MODEL_CONFIG,
     });
 
     const request = mockCreate.mock.calls[1][0];
