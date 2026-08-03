@@ -353,6 +353,29 @@ Decision rules, fixed in advance:
   costs output tokens at $15 per million and carries the `client.ts`
   precondition above.
 
+## Measured outcomes
+
+Recorded 2026-08-03, from a real `plan week` against `~/.meal-planner/data` on the
+implemented branch (`Model: claude-sonnet-5`, thinking disabled, effort medium).
+This is not one of the four validation runs below; it is a single production run
+that happens to match run 2's configuration.
+
+| Metric | Pre-fix baseline (week of 2026-07-27) | This run |
+| --- | --- | --- |
+| `lookup_ingredient` calls per day | 11 to 17 | 1 to 4 |
+| Iterations per day | 6 to 13 | 5 to 9 |
+| Pantry mismatches in the saved plan | 4 | 1 |
+
+The single remaining mismatch is a false positive of the analyzer's name-similarity
+heuristic: planned id 254 `Chicken, thigh, boneless, skinless, raw` against pantry
+id 253 `chicken, breast, boneless, skinless, raw`, jaccard 0.67. Under id-based
+binding the agent passed 254 explicitly, so a search substitution cannot have
+occurred. It chose thigh. 27 of the 40 distinct planned ingredients were pantry
+ids.
+
+Still unmeasured: `cache_read_input_tokens` has never been observed against the
+live API, so section 5's breakpoints are verified for request shape only.
+
 ## Out of scope
 
 - A `find_in_pantry` tool wrapping the currently unused
