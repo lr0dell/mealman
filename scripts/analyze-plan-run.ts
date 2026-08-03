@@ -62,14 +62,23 @@ function main(): void {
         .sort()
     : [];
 
-  let mismatches = 0;
+  interface Mismatch {
+    id: number;
+    name: string;
+    pantryId: number;
+    pantryName: string;
+    score: number;
+  }
+
+  let planFileUsed: string | null = null;
+  let mismatches: Mismatch[] = [];
+  let pantryMissing = false;
   let distinctIngredients = 0;
   let totals = { calories: 0, cost: 0 };
 
   if (planFiles.length > 0) {
-    const plan = JSON.parse(
-      readFileSync(join(planDir, planFiles[planFiles.length - 1]), 'utf8')
-    ) as {
+    planFileUsed = planFiles[planFiles.length - 1];
+    const plan = JSON.parse(readFileSync(join(planDir, planFileUsed), 'utf8')) as {
       days: Array<{
         meals: Record<
           string,
@@ -78,9 +87,6 @@ function main(): void {
       }>;
       totals: { calories: number; estimatedCost: number };
     };
-    const pantry = JSON.parse(
-      readFileSync(join(dataDir, 'pantry.json'), 'utf8')
-    ) as PantryFile;
 
     totals = {
       calories: Math.round(plan.totals.calories),
@@ -98,14 +104,35 @@ function main(): void {
     }
     distinctIngredients = used.size;
 
-    // A mismatch is a planned ingredient that is not a pantry id but is a
-    // close name-neighbour of one, i.e. the bug this change removes.
-    for (const [id, name] of used) {
-      if (pantry.items.some((p) => p.ingredientId === id)) continue;
-      const near = pantry.items.some(
-        (p) => p.ingredientId !== id && jaccard(name, p.name) >= 0.5
-      );
-      if (near) mismatches++;
+    const pantryPath = join(dataDir, 'pantry.json');
+    if (existsSync(pantryPath)) {
+      const pantry = JSON.parse(readFileSync(pantryPath, 'utf8')) as PantryFile;
+
+      // A mismatch is a planned ingredient that is not a pantry id but is a
+      // close name-neighbour of one, i.e. the bug this change removes. When
+      // an id has multiple near-neighbours, report the closest one.
+      for (const [id, name] of used) {
+        if (pantry.items.some((p) => p.ingredientId === id)) continue;
+        let best: { p: PantryFile['items'][number]; score: number } | null = null;
+        for (const p of pantry.items) {
+          if (p.ingredientId === id) continue;
+          const score = jaccard(name, p.name);
+          if (score >= 0.5 && (!best || score > best.score)) {
+            best = { p, score };
+          }
+        }
+        if (best) {
+          mismatches.push({
+            id,
+            name,
+            pantryId: best.p.ingredientId,
+            pantryName: best.p.name,
+            score: best.score,
+          });
+        }
+      }
+    } else {
+      pantryMissing = true;
     }
   }
 
@@ -113,13 +140,29 @@ function main(): void {
     console.log(`  ${k.padEnd(26)} ${v}`);
 
   console.log(`\n=== ${label} ===`);
-  line('planning sessions', logs.length);
-  line('iterations', iterations);
+  console.log(
+    '  (tool/iteration counts below cover every log in debug/; distinct'
+  );
+  console.log(
+    '   ingredients, mismatches, and totals cover only "plan analyzed")'
+  );
+  line('planning sessions (debug/)', logs.length);
+  line('iterations (debug/)', iterations);
   for (const [tool, n] of [...toolCounts].sort((a, b) => b[1] - a[1])) {
     line(`  ${tool}`, n);
   }
+  line('plan analyzed', planFileUsed ?? '(no plan files found)');
   line('distinct ingredients', distinctIngredients);
-  line('PANTRY MISMATCHES', mismatches);
+  if (pantryMissing) {
+    line('PANTRY MISMATCHES', 'not measured (pantry.json missing)');
+  } else {
+    line('PANTRY MISMATCHES', mismatches.length);
+    for (const m of mismatches) {
+      console.log(
+        `    id=${m.id} "${m.name}"  ~  pantry id=${m.pantryId} "${m.pantryName}"  (jaccard ${m.score.toFixed(2)})`
+      );
+    }
+  }
   line('weekly calories', totals.calories);
   line('weekly cost', `$${totals.cost.toFixed(2)}`);
 }
