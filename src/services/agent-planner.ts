@@ -223,7 +223,7 @@ Add today's breakfast, lunch, and dinner with add_meal (date ${date}). Call fina
         week,
         dataDir,
         debugDir,
-        modelConfig.model,
+        modelConfig,
         systemPrompt,
         initialMessage
       );

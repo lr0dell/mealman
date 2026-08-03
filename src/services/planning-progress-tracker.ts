@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import type { WriteStream } from 'node:fs';
 import type { AgentProgressEvent } from '../ai/client.js';
 import type { AddMealInput } from '../agent/types.js';
+import type { PlanningModelConfig } from '../ai/model-config.js';
 
 export class PlanningProgressTracker {
   private logFilePath: string;
@@ -11,7 +12,7 @@ export class PlanningProgressTracker {
   private sessionStart: string;
   private week: string;
   private dataDir: string;
-  private model: string;
+  private modelConfig: PlanningModelConfig;
   private systemPrompt: string;
   private initialMessage: string;
 
@@ -24,13 +25,13 @@ export class PlanningProgressTracker {
     week: string,
     dataDir: string,
     debugDir: string,
-    model: string,
+    modelConfig: PlanningModelConfig,
     systemPrompt: string,
     initialMessage: string
   ) {
     this.week = week;
     this.dataDir = dataDir;
-    this.model = model;
+    this.modelConfig = modelConfig;
     this.systemPrompt = systemPrompt;
     this.initialMessage = initialMessage;
     this.startTime = Date.now();
@@ -70,7 +71,9 @@ MEAL PLANNING SESSION
 ================================
 Week: ${this.week}
 Started: ${this.sessionStart}
-Model: ${this.model}
+Model: ${this.modelConfig.model}
+Thinking: ${this.modelConfig.thinking}
+Effort: ${this.modelConfig.effort}
 Data Dir: ${this.dataDir}
 
 ================================
