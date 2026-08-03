@@ -1,5 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { ToolDefinition } from '../agent/types.js';
+import {
+  resolvePlanningModelConfig,
+  DEFAULT_PLANNING_MODEL,
+  PLANNING_MAX_TOKENS,
+  type PlanningModelConfig,
+} from './model-config.js';
 
 export interface ChatOptions {
   systemPrompt?: string;
@@ -12,7 +18,7 @@ export interface AgentLoopOptions {
   tools: ToolDefinition[];
   toolHandler: (name: string, input: unknown) => Promise<unknown>;
   maxIterations?: number;
-  model?: string;
+  modelConfig?: PlanningModelConfig;
   onProgress?: (event: AgentProgressEvent) => void;
   /** Maximum number of assistant+tool-result pairs to keep in context. Older pairs are dropped. Default: unlimited. */
   contextWindow?: number;
@@ -39,7 +45,7 @@ export type AgentProgressEvent =
 
 export class AIClient {
   private client: Anthropic;
-  private model = 'claude-sonnet-4-20250514';
+  private model = DEFAULT_PLANNING_MODEL;
 
   constructor(apiKey: string) {
     this.client = new Anthropic({ apiKey });
@@ -98,12 +104,13 @@ export class AIClient {
       tools,
       toolHandler,
       maxIterations = 100,
-      model = 'claude-haiku-4-5-20251001',
       onProgress,
       contextWindow,
     } = options;
 
-    const safeProgress = (event: AgentProgressEvent) => {
+    const modelConfig = options.modelConfig ?? resolvePlanningModelConfig();
+
+    const safeProgress = (event: AgentProgressEvent): void => {
       if (!onProgress) return;
       try {
         onProgress(event);
@@ -139,9 +146,11 @@ export class AIClient {
           : [...messages];
 
       const response = await this.client.messages.create({
-        model,
-        max_tokens: 4096,
+        model: modelConfig.model,
+        max_tokens: PLANNING_MAX_TOKENS,
         system: systemPrompt,
+        thinking: { type: modelConfig.thinking },
+        output_config: { effort: modelConfig.effort },
         tools: tools as Anthropic.Tool[],
         messages: contextMessages as Anthropic.MessageParam[],
       });

@@ -10,6 +10,7 @@ import type { WeeklyPlan } from '../schemas/plan.js';
 import { getWeekDates } from '../utils/week.js';
 import type { PaceContext } from './plan-state.js';
 import type { IngredientRequirement } from './pantry-math.js';
+import { resolvePlanningModelConfig } from '../ai/model-config.js';
 
 export interface AgentPlannerOptions {
   anthropicApiKey: string;
@@ -147,6 +148,7 @@ Add today's breakfast, lunch, and dinner with add_meal (date ${date}). Use looku
     const planState = new PlanState(week, profile, pantry);
     const dates = getWeekDates(week);
     const debugDir = join(dataDir, 'debug');
+    const modelConfig = resolvePlanningModelConfig();
 
     for (const date of dates) {
       const pace = planState.getPaceContext(date);
@@ -168,7 +170,7 @@ Add today's breakfast, lunch, and dinner with add_meal (date ${date}). Use looku
         week,
         dataDir,
         debugDir,
-        'claude-haiku-4-5-20251001',
+        modelConfig.model,
         systemPrompt,
         initialMessage
       );
@@ -181,6 +183,7 @@ Add today's breakfast, lunch, and dinner with add_meal (date ${date}). Use looku
           toolHandler: handlers.handle,
           maxIterations: 100,
           contextWindow: 15,
+          modelConfig,
           onProgress: tracker.handleEvent.bind(tracker),
         });
         console.log(

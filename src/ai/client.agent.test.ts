@@ -4,7 +4,10 @@ import type { ToolDefinition } from '../agent/types.js';
 
 // We'll test the loop logic by mocking the Anthropic client
 describe('AIClient.runAgentLoop', () => {
-  function makeClient() {
+  function makeClient(): {
+    client: AIClient;
+    mockCreate: ReturnType<typeof vi.fn>;
+  } {
     const client = new AIClient('test-key');
     const mockCreate = vi.fn();
     (
@@ -15,7 +18,15 @@ describe('AIClient.runAgentLoop', () => {
     return { client, mockCreate };
   }
 
-  function toolUseResponse(id: string) {
+  function toolUseResponse(id: string): {
+    content: Array<{
+      type: string;
+      id: string;
+      name: string;
+      input: Record<string, string>;
+    }>;
+    stop_reason: string;
+  } {
     return {
       content: [
         { type: 'tool_use', id, name: 'get_data', input: { key: 'test' } },
@@ -101,5 +112,40 @@ describe('AIClient.runAgentLoop', () => {
       role: string;
     }>;
     expect(secondCallMessages).toHaveLength(3);
+  });
+
+  it('sends the resolved model, thinking mode, and effort', async () => {
+    const { client, mockCreate } = makeClient();
+    mockCreate.mockResolvedValueOnce(endResponse);
+
+    await client.runAgentLoop({
+      systemPrompt: 'sys',
+      initialMessage: 'go',
+      tools,
+      toolHandler: vi.fn().mockResolvedValue({}),
+    });
+
+    const request = mockCreate.mock.calls[0][0];
+    expect(request.model).toBe('claude-sonnet-5');
+    expect(request.thinking).toEqual({ type: 'disabled' });
+    expect(request.output_config).toEqual({ effort: 'medium' });
+    expect(request.max_tokens).toBe(4096);
+  });
+
+  it('never sends sampling parameters, which 400 on Sonnet 5', async () => {
+    const { client, mockCreate } = makeClient();
+    mockCreate.mockResolvedValueOnce(endResponse);
+
+    await client.runAgentLoop({
+      systemPrompt: 'sys',
+      initialMessage: 'go',
+      tools,
+      toolHandler: vi.fn().mockResolvedValue({}),
+    });
+
+    const request = mockCreate.mock.calls[0][0];
+    expect(request).not.toHaveProperty('temperature');
+    expect(request).not.toHaveProperty('top_p');
+    expect(request).not.toHaveProperty('top_k');
   });
 });
