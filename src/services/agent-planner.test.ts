@@ -111,7 +111,8 @@ describe('AgentPlanner', () => {
       30,
       '2026-01-27',
       pace,
-      '2026-01-26: Big Breakfast'
+      '2026-01-26: Big Breakfast',
+      new Map()
     );
 
     expect(msg).toContain('2026-01-27');
@@ -141,9 +142,98 @@ describe('AgentPlanner', () => {
       30,
       '2026-01-26',
       pace,
-      ''
+      '',
+      new Map()
     );
     expect(msg.toLowerCase()).toContain('first day');
+  });
+
+  it('prints per-100g nutrition and price on pantry lines', () => {
+    const planner = new AgentPlanner({
+      anthropicApiKey: 'test-key',
+      dataDir: testDir,
+    });
+
+    const facts = new Map([
+      [
+        5964,
+        {
+          proteinPer100g: 20.8,
+          carbsPer100g: 0,
+          fatPer100g: 7,
+          fiberPer100g: 0,
+          pricePerGram: 0.012,
+        },
+      ],
+    ]);
+
+    const message = planner.buildDayInitialMessage(
+      [
+        {
+          ingredientId: 5964,
+          name: 'beef, ground, 93% lean meat / 7% fat, raw',
+          quantity: 650,
+          unit: 'g',
+          addedDate: '2026-07-27',
+        },
+      ],
+      [],
+      10,
+      '2026-08-02',
+      {
+        caloriesSoFar: 0,
+        costSoFar: 0,
+        daysRemaining: 7,
+        weeklyCalTarget: 14000,
+        paceCalories: 2000,
+        paceCost: 21.43,
+        calorieBand: { min: 13500, max: 14500 },
+        weeklyBudget: 150,
+      },
+      '',
+      facts
+    );
+
+    expect(message).toContain('(id 5964): 650 g');
+    expect(message).toContain('per 100g P20.8 C0 F7 Fb0');
+    expect(message).toContain('$0.012/g');
+  });
+
+  it('omits nutrition for an id missing from the facts map', () => {
+    const planner = new AgentPlanner({
+      anthropicApiKey: 'test-key',
+      dataDir: testDir,
+    });
+
+    const message = planner.buildDayInitialMessage(
+      [
+        {
+          ingredientId: 999999,
+          name: 'mystery item',
+          quantity: 10,
+          unit: 'g',
+          addedDate: '2026-07-27',
+        },
+      ],
+      [],
+      10,
+      '2026-08-02',
+      {
+        caloriesSoFar: 0,
+        costSoFar: 0,
+        daysRemaining: 7,
+        weeklyCalTarget: 14000,
+        paceCalories: 2000,
+        paceCost: 21.43,
+        calorieBand: { min: 13500, max: 14500 },
+        weeklyBudget: 150,
+      },
+      '',
+      new Map()
+    );
+
+    expect(message).toContain('mystery item (id 999999): 10 g');
+    expect(message).not.toContain('per 100g');
   });
 
   it('runs one conversation per day with a date-locked handler', async () => {

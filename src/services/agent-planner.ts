@@ -12,6 +12,14 @@ import type { PaceContext } from './plan-state.js';
 import type { IngredientRequirement } from './pantry-math.js';
 import { resolvePlanningModelConfig } from '../ai/model-config.js';
 
+export interface IngredientFacts {
+  proteinPer100g: number;
+  carbsPer100g: number;
+  fatPer100g: number;
+  fiberPer100g: number;
+  pricePerGram: number;
+}
+
 export interface AgentPlannerOptions {
   anthropicApiKey: string;
   dataDir: string;
@@ -87,22 +95,44 @@ If lookup_ingredient returns found: false, use one of the suggested names.
 - Reusing an ingredient already on the shopping list avoids growing it. Variety and reuse both matter — balance them; don't collapse the week onto one ingredient set just to keep the list short, and don't avoid buying a needed staple just because the pantry is large.`;
   }
 
-  private formatAvailablePantry(items: PantryItem[]): string {
+  private formatFacts(
+    ingredientId: number,
+    facts: Map<number, IngredientFacts>
+  ): string {
+    const f = facts.get(ingredientId);
+    if (!f) return '';
+    return (
+      ` | per 100g P${f.proteinPer100g} C${f.carbsPer100g}` +
+      ` F${f.fatPer100g} Fb${f.fiberPer100g} | $${f.pricePerGram}/g`
+    );
+  }
+
+  private formatAvailablePantry(
+    items: PantryItem[],
+    facts: Map<number, IngredientFacts>
+  ): string {
     if (items.length === 0) return 'Empty';
     return items
-      .map((i) => `- ${i.name} (id ${i.ingredientId}): ${i.quantity} ${i.unit}`)
+      .map(
+        (i) =>
+          `- ${i.name} (id ${i.ingredientId}): ${i.quantity} ${i.unit}` +
+          this.formatFacts(i.ingredientId, facts)
+      )
       .join('\n');
   }
 
   private formatShoppingList(
     items: IngredientRequirement[],
-    limit: number
+    limit: number,
+    facts: Map<number, IngredientFacts>
   ): string {
     if (items.length === 0) {
       return 'Nothing yet — the pantry covers everything planned so far.';
     }
     const lines = items.map(
-      (i) => `- ${i.name} (id ${i.ingredientId}): ${i.amount} g`
+      (i) =>
+        `- ${i.name} (id ${i.ingredientId}): ${i.amount} g` +
+        this.formatFacts(i.ingredientId, facts)
     );
     lines.push(`${items.length} items (aim to stay under ${limit}).`);
     return lines.join('\n');
@@ -114,7 +144,8 @@ If lookup_ingredient returns found: false, use one of the suggested names.
     shoppingLimit: number,
     date: string,
     pace: PaceContext,
-    mealsSoFar: string
+    mealsSoFar: string,
+    facts: Map<number, IngredientFacts>
   ): string {
     const priorSection = mealsSoFar
       ? `Already on the menu earlier this week (plan today like a person would — lean toward something different when it's easy, but reusing a staple or ingredient is fine; don't force novelty, and don't just repeat these):\n${mealsSoFar}`
@@ -129,12 +160,28 @@ Today's pace targets (to stay on track for the weekly goals):
 ${priorSection}
 
 Available pantry (quantities remaining after meals already planned this week):
-${this.formatAvailablePantry(availablePantry)}
+${this.formatAvailablePantry(availablePantry, facts)}
 
 Shopping list so far (ingredients planned this week the pantry does not cover):
-${this.formatShoppingList(shoppingList, shoppingLimit)}
+${this.formatShoppingList(shoppingList, shoppingLimit, facts)}
 
-Add today's breakfast, lunch, and dinner with add_meal (date ${date}). Use lookup_ingredient for any ingredient before using it. Call finalize_plan when the day is complete.`;
+Add today's breakfast, lunch, and dinner with add_meal (date ${date}). Call finalize_plan when the day is complete.`;
+  }
+
+  private collectFacts(ids: number[]): Map<number, IngredientFacts> {
+    const facts = new Map<number, IngredientFacts>();
+    for (const id of new Set(ids)) {
+      const ing = this.ingredientDb.getIngredientById(id);
+      if (!ing) continue;
+      facts.set(id, {
+        proteinPer100g: ing.proteinPer100g,
+        carbsPer100g: ing.carbsPer100g,
+        fatPer100g: ing.fatPer100g,
+        fiberPer100g: ing.fiberPer100g,
+        pricePerGram: ing.pricePerGram,
+      });
+    }
+    return facts;
   }
 
   async generateWeeklyPlan(
@@ -157,13 +204,20 @@ Add today's breakfast, lunch, and dinner with add_meal (date ${date}). Use looku
         lockedDate: date,
       });
       const systemPrompt = this.buildDaySystemPrompt(profile);
+      const availablePantry = planState.getAvailablePantry();
+      const shoppingList = planState.getShoppingList();
+      const facts = this.collectFacts([
+        ...availablePantry.map((i) => i.ingredientId),
+        ...shoppingList.map((i) => i.ingredientId),
+      ]);
       const initialMessage = this.buildDayInitialMessage(
-        planState.getAvailablePantry(),
-        planState.getShoppingList(),
+        availablePantry,
+        shoppingList,
         planState.getShoppingListLimit(),
         date,
         pace,
-        mealsSoFar
+        mealsSoFar,
+        facts
       );
 
       const tracker = new PlanningProgressTracker(
