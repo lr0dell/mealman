@@ -148,4 +148,44 @@ describe('AIClient.runAgentLoop', () => {
     expect(request).not.toHaveProperty('top_p');
     expect(request).not.toHaveProperty('top_k');
   });
+
+  it('caches the week-stable system block and the per-day planning message', async () => {
+    const { client, mockCreate } = makeClient();
+    mockCreate.mockResolvedValueOnce(endResponse);
+
+    await client.runAgentLoop({
+      systemPrompt: 'sys',
+      initialMessage: 'day one',
+      tools,
+      toolHandler: () => Promise.resolve({}),
+    });
+
+    const request = mockCreate.mock.calls[0][0];
+
+    expect(request.system).toEqual([
+      { type: 'text', text: 'sys', cache_control: { type: 'ephemeral' } },
+    ]);
+    expect(request.messages[0].content[0]).toEqual({
+      type: 'text',
+      text: 'day one',
+      cache_control: { type: 'ephemeral' },
+    });
+  });
+
+  it('does not mark later turns, so only two breakpoints are ever sent', async () => {
+    const { client, mockCreate } = makeClient();
+    mockCreate.mockResolvedValueOnce(toolUseResponse('t1'));
+    mockCreate.mockResolvedValueOnce(endResponse);
+
+    await client.runAgentLoop({
+      systemPrompt: 'sys',
+      initialMessage: 'day one',
+      tools,
+      toolHandler: () => Promise.resolve({ ok: true }),
+    });
+
+    const request = mockCreate.mock.calls[1][0];
+    const marked = JSON.stringify(request).match(/cache_control/g) ?? [];
+    expect(marked).toHaveLength(2);
+  });
 });

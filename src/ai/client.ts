@@ -122,14 +122,32 @@ export class AIClient {
     };
 
     type MessageContent =
-      | { type: 'text'; text: string }
+      | {
+          type: 'text';
+          text: string;
+          cache_control?: { type: 'ephemeral' };
+        }
       | { type: 'tool_use'; id: string; name: string; input: unknown }
       | { type: 'tool_result'; tool_use_id: string; content: string };
 
     const messages: Array<{
       role: 'user' | 'assistant';
       content: MessageContent[];
-    }> = [{ role: 'user', content: [{ type: 'text', text: initialMessage }] }];
+    }> = [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: initialMessage,
+            // Breakpoint 2: rewritten each day. The per-day pace targets live
+            // in this block, so each day writes its own entry and no day can
+            // read another day's calorie budget.
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
+      },
+    ];
 
     let iterations = 0;
     let toolCalls = 0;
@@ -149,7 +167,16 @@ export class AIClient {
       const response = await this.client.messages.create({
         model: modelConfig.model,
         max_tokens: PLANNING_MAX_TOKENS,
-        system: systemPrompt,
+        system: [
+          {
+            type: 'text' as const,
+            text: systemPrompt,
+            // Breakpoint 1: tools render before system, and both are
+            // byte-identical for the whole week, so this is read across every
+            // day of a run.
+            cache_control: { type: 'ephemeral' as const },
+          },
+        ],
         thinking: { type: modelConfig.thinking },
         output_config: { effort: modelConfig.effort },
         tools: tools as Anthropic.Tool[],
