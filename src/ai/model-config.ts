@@ -37,6 +37,16 @@ export function resolvePlanningModelConfig(
       `MEAL_THINKING must be "disabled" or "adaptive", got "${thinking}"`
     );
   }
+  if (thinking === 'adaptive') {
+    throw new Error(
+      'MEAL_THINKING=adaptive requires runAgentLoop to preserve thinking blocks first. ' +
+        'Sonnet 5 returns thinking blocks that must be echoed back unchanged, but the ' +
+        'assistant-turn rebuild in runAgentLoop handles only text and tool_use and would ' +
+        'drop them, causing a 400 on replay. Update assistantContent and the MessageContent ' +
+        'union, then delete this guard. See docs/superpowers/specs/2026-08-02-id-based-' +
+        'ingredient-binding-design.md section 6.'
+    );
+  }
 
   const effort = (env.MEAL_EFFORT?.trim() || 'medium').toLowerCase();
   if (!(EFFORT_LEVELS as readonly string[]).includes(effort)) {

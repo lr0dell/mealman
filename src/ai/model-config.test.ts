@@ -17,18 +17,24 @@ describe('resolvePlanningModelConfig', () => {
     expect(DEFAULT_PLANNING_MODEL).toBe('claude-sonnet-5');
   });
 
-  it('applies env overrides for the validation sweep', () => {
+  it('applies env overrides for model and effort', () => {
     expect(
       resolvePlanningModelConfig({
         MEAL_MODEL: 'claude-haiku-4-5-20251001',
-        MEAL_THINKING: 'adaptive',
+        MEAL_THINKING: 'disabled',
         MEAL_EFFORT: 'high',
       })
     ).toEqual({
       model: 'claude-haiku-4-5-20251001',
-      thinking: 'adaptive',
+      thinking: 'disabled',
       effort: 'high',
     });
+  });
+
+  it('rejects MEAL_THINKING=adaptive until runAgentLoop preserves thinking blocks', () => {
+    expect(() =>
+      resolvePlanningModelConfig({ MEAL_THINKING: 'adaptive' })
+    ).toThrow(/runAgentLoop/);
   });
 
   it('rejects an unknown thinking mode instead of silently defaulting', () => {
