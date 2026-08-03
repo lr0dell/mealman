@@ -256,6 +256,23 @@ Replace the legacy field at line 42:
   private model = DEFAULT_PLANNING_MODEL;
 ```
 
+That field is read by the legacy `chat()` method, which does not send `thinking`. Pointing it at Sonnet 5 without also sending `thinking` would silently enable adaptive thinking there, the exact defect the Global Constraints forbid. So `chat()` must send it too, and should use the shared token constant rather than a bare literal:
+
+```typescript
+  async chat(userMessage: string, options: ChatOptions = {}): Promise<string> {
+    const { systemPrompt, maxTokens = PLANNING_MAX_TOKENS } = options;
+
+    const response = await this.client.messages.create({
+      model: this.model,
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      thinking: { type: 'disabled' },
+      messages: [{ role: 'user', content: userMessage }],
+    });
+```
+
+Do not otherwise restructure `chat()`/`chatJSON()`, and do not modify `src/services/planner.ts` or `src/ai/prompts.ts`.
+
 In `runAgentLoop`, remove `model = 'claude-haiku-4-5-20251001',` from the destructuring block (line 101) and add this immediately after the destructuring closes:
 
 ```typescript
