@@ -48,3 +48,21 @@ export function getWeekDates(weekKey: string): string[] {
 export function getCurrentWeekKey(): string {
   return toWeekKey(getWeekRange());
 }
+
+const WEEKDAY_NAMES = [
+  'sunday',
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+] as const;
+
+export type WeekdayName = (typeof WEEKDAY_NAMES)[number];
+
+export function getWeekdayName(date: string): WeekdayName {
+  // Midday avoids the UTC-parsing shift that moves a bare YYYY-MM-DD
+  // onto the previous day in negative-offset zones.
+  return WEEKDAY_NAMES[new Date(date + 'T12:00:00').getDay()];
+}

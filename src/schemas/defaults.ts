@@ -23,14 +23,15 @@ export function createDefaultProfile(): Profile {
     preferences: {
       cuisines: [],
       maxPrepTime: {
-        monday: 30,
-        tuesday: 30,
-        wednesday: 30,
-        thursday: 30,
-        friday: 30,
-        saturday: 60,
-        sunday: 60,
+        monday: { breakfast: 15, lunch: 15, dinner: 30 },
+        tuesday: { breakfast: 15, lunch: 15, dinner: 30 },
+        wednesday: { breakfast: 15, lunch: 15, dinner: 30 },
+        thursday: { breakfast: 15, lunch: 15, dinner: 30 },
+        friday: { breakfast: 15, lunch: 15, dinner: 30 },
+        saturday: { breakfast: 30, lunch: 30, dinner: 60 },
+        sunday: { breakfast: 30, lunch: 30, dinner: 60 },
       },
+      slotNotes: { breakfast: '', lunch: '', dinner: '' },
       complexityTolerance: 'medium',
     },
     constraints: {

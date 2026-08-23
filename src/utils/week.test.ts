@@ -5,6 +5,7 @@ import {
   parseWeekKey,
   getWeekDates,
   getCurrentWeekKey,
+  getWeekdayName,
 } from './week.js';
 
 describe('week utilities', () => {
@@ -86,5 +87,21 @@ describe('week utilities', () => {
       vi.setSystemTime(new Date('2026-02-10T12:00:00'));
       expect(getCurrentWeekKey()).toBe('2026-02-09--2026-02-15');
     });
+  });
+});
+
+describe('getWeekdayName', () => {
+  it('names each day of a week without drifting across the date boundary', () => {
+    const dates = getWeekDates('2026-08-24--2026-08-30');
+
+    expect(dates.map(getWeekdayName)).toEqual([
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ]);
   });
 });

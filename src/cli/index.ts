@@ -462,21 +462,39 @@ export function createProgram(): Command {
             'Preferred cuisines (comma-separated)',
             profileData.preferences.cuisines
           );
-          const days = [
+          const weekdays = [
             'monday',
             'tuesday',
             'wednesday',
             'thursday',
             'friday',
-            'saturday',
-            'sunday',
           ] as const;
-          for (const day of days) {
-            profileData.preferences.maxPrepTime[day] = await promptNumber(
-              `Max prep time on ${day} (min)`,
-              profileData.preferences.maxPrepTime[day],
+          const weekend = ['saturday', 'sunday'] as const;
+          const slots = ['breakfast', 'lunch', 'dinner'] as const;
+          const prepTime = profileData.preferences.maxPrepTime;
+          for (const slot of slots) {
+            const weekdayMinutes = await promptNumber(
+              `Max ${slot} prep time on weekdays (min)`,
+              prepTime.monday[slot],
               true
             );
+            const weekendMinutes = await promptNumber(
+              `Max ${slot} prep time on weekends (min)`,
+              prepTime.saturday[slot],
+              true
+            );
+            for (const day of weekdays) {
+              prepTime[day][slot] = weekdayMinutes;
+            }
+            for (const day of weekend) {
+              prepTime[day][slot] = weekendMinutes;
+            }
+          }
+          for (const slot of slots) {
+            profileData.preferences.slotNotes[slot] = await input({
+              message: `Notes for ${slot} (how it has to fit your day; blank for none)`,
+              default: profileData.preferences.slotNotes[slot],
+            });
           }
           profileData.preferences.complexityTolerance = await select({
             message: 'Complexity tolerance',

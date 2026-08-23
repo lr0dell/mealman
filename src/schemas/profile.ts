@@ -37,19 +37,32 @@ export const DietarySchema = z.object({
   dislikes: z.array(z.string()),
 });
 
+export const SlotPrepTimeSchema = z.object({
+  breakfast: z.number().positive(),
+  lunch: z.number().positive(),
+  dinner: z.number().positive(),
+});
+
 export const PrepTimeSchema = z.object({
-  monday: z.number().positive(),
-  tuesday: z.number().positive(),
-  wednesday: z.number().positive(),
-  thursday: z.number().positive(),
-  friday: z.number().positive(),
-  saturday: z.number().positive(),
-  sunday: z.number().positive(),
+  monday: SlotPrepTimeSchema,
+  tuesday: SlotPrepTimeSchema,
+  wednesday: SlotPrepTimeSchema,
+  thursday: SlotPrepTimeSchema,
+  friday: SlotPrepTimeSchema,
+  saturday: SlotPrepTimeSchema,
+  sunday: SlotPrepTimeSchema,
+});
+
+export const SlotNotesSchema = z.object({
+  breakfast: z.string(),
+  lunch: z.string(),
+  dinner: z.string(),
 });
 
 export const PreferencesSchema = z.object({
   cuisines: z.array(z.string()),
   maxPrepTime: PrepTimeSchema,
+  slotNotes: SlotNotesSchema,
   complexityTolerance: z.enum(['low', 'medium', 'high']),
 });
 
@@ -74,3 +87,5 @@ export const ProfileSchema = z.object({
 });
 
 export type Profile = z.infer<typeof ProfileSchema>;
+export type SlotPrepTime = z.infer<typeof SlotPrepTimeSchema>;
+export type SlotNotes = z.infer<typeof SlotNotesSchema>;

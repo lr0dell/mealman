@@ -35,14 +35,15 @@ describe('AgentPlanner', () => {
     preferences: {
       cuisines: [],
       maxPrepTime: {
-        monday: 30,
-        tuesday: 30,
-        wednesday: 30,
-        thursday: 30,
-        friday: 30,
-        saturday: 60,
-        sunday: 60,
+        monday: { breakfast: 10, lunch: 15, dinner: 45 },
+        tuesday: { breakfast: 10, lunch: 15, dinner: 45 },
+        wednesday: { breakfast: 10, lunch: 15, dinner: 45 },
+        thursday: { breakfast: 10, lunch: 15, dinner: 45 },
+        friday: { breakfast: 10, lunch: 15, dinner: 45 },
+        saturday: { breakfast: 30, lunch: 30, dinner: 60 },
+        sunday: { breakfast: 30, lunch: 30, dinner: 60 },
       },
+      slotNotes: { breakfast: '', lunch: '', dinner: '' },
       complexityTolerance: 'medium',
     },
     constraints: { skillLevel: 'intermediate', kitchenware: [] },
@@ -110,6 +111,7 @@ describe('AgentPlanner', () => {
       [],
       30,
       '2026-01-27',
+      { breakfast: 10, lunch: 15, dinner: 45 },
       pace,
       '2026-01-26: Big Breakfast',
       new Map()
@@ -141,6 +143,7 @@ describe('AgentPlanner', () => {
       [],
       30,
       '2026-01-26',
+      { breakfast: 10, lunch: 15, dinner: 45 },
       pace,
       '',
       new Map()
@@ -180,6 +183,7 @@ describe('AgentPlanner', () => {
       [],
       10,
       '2026-08-02',
+      { breakfast: 10, lunch: 15, dinner: 45 },
       {
         caloriesSoFar: 0,
         costSoFar: 0,
@@ -218,6 +222,7 @@ describe('AgentPlanner', () => {
       [],
       10,
       '2026-08-02',
+      { breakfast: 10, lunch: 15, dinner: 45 },
       {
         caloriesSoFar: 0,
         costSoFar: 0,
@@ -267,6 +272,7 @@ describe('AgentPlanner', () => {
       ],
       10,
       '2026-08-02',
+      { breakfast: 10, lunch: 15, dinner: 45 },
       {
         caloriesSoFar: 0,
         costSoFar: 0,

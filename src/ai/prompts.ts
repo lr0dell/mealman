@@ -89,6 +89,27 @@ function formatPantryForPrompt(pantry: Pantry): string {
   return lines.join('\n');
 }
 
+function formatPrepTimeForPrompt(
+  prepTime: Profile['preferences']['maxPrepTime']
+): string {
+  return (
+    [
+      ['monday', 'Monday'],
+      ['tuesday', 'Tuesday'],
+      ['wednesday', 'Wednesday'],
+      ['thursday', 'Thursday'],
+      ['friday', 'Friday'],
+      ['saturday', 'Saturday'],
+      ['sunday', 'Sunday'],
+    ] as const
+  )
+    .map(([day, label]) => {
+      const slots = prepTime[day];
+      return `${label}: ${slots.breakfast}/${slots.lunch}/${slots.dinner}`;
+    })
+    .join('\n');
+}
+
 function formatProfileForPrompt(profile: Profile): string {
   const { goals, dietary, preferences, constraints, household } = profile;
 
@@ -101,13 +122,8 @@ Dietary restrictions: ${dietary.restrictions.length ? dietary.restrictions.join(
 Dislikes: ${dietary.dislikes.length ? dietary.dislikes.join(', ') : 'none'}
 
 Preferred cuisines: ${preferences.cuisines.length ? preferences.cuisines.join(', ') : 'any'}
-Max prep time: ${preferences.maxPrepTime.monday}min Monday,
-${preferences.maxPrepTime.tuesday}min Tuesday,
-${preferences.maxPrepTime.wednesday}min Wednesday,
-${preferences.maxPrepTime.thursday}min Thursday,
-${preferences.maxPrepTime.friday}min Friday,
-${preferences.maxPrepTime.saturday}min Saturday,
-${preferences.maxPrepTime.sunday}min Sunday
+Max prep time (breakfast/lunch/dinner, minutes):
+${formatPrepTimeForPrompt(preferences.maxPrepTime)}
 Complexity tolerance: ${preferences.complexityTolerance}
 Skill level: ${constraints.skillLevel}
 Kitchen equipment: ${constraints.kitchenware.join(', ')}`;

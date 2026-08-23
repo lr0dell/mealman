@@ -13,7 +13,7 @@ import type {
   FinalizePlanInput,
 } from './types.js';
 import type { Meal } from '../schemas/plan.js';
-import { parseWeekKey } from '../utils/week.js';
+import { getWeekdayName, parseWeekKey } from '../utils/week.js';
 
 const MINIMUM_SIMILARITY = 0.8;
 
@@ -79,6 +79,19 @@ export function createToolHandlers(
           | undefined;
         remainingBudget: ReturnType<typeof planState.getRemainingBudget>;
       } {
+    const prepBudget =
+      planState.getProfile().preferences.maxPrepTime[
+        getWeekdayName(input.date)
+      ][input.slot];
+    if (input.prepTime > prepBudget) {
+      return {
+        success: false,
+        error:
+          `prepTime ${input.prepTime} min exceeds the ${input.slot} budget of ` +
+          `${prepBudget} min on ${input.date}. Plan a quicker dish for this slot.`,
+      };
+    }
+
     // Look up all ingredients
     const ingredientIds: number[] = [];
     const ingredientsWithNutrition: IngredientWithNutrition[] = [];

@@ -5,9 +5,15 @@ import { createToolHandlers } from '../agent/tool-handlers.js';
 import { DAY_PLANNING_TOOLS } from '../agent/tools.js';
 import { PlanningProgressTracker } from './planning-progress-tracker.js';
 import { join } from 'node:path';
-import type { Profile, Pantry, PantryItem } from '../schemas/index.js';
+import type {
+  Profile,
+  Pantry,
+  PantryItem,
+  SlotPrepTime,
+  SlotNotes,
+} from '../schemas/index.js';
 import type { WeeklyPlan } from '../schemas/plan.js';
-import { getWeekDates } from '../utils/week.js';
+import { getWeekDates, getWeekdayName } from '../utils/week.js';
 import type { PaceContext } from './plan-state.js';
 import type { IngredientRequirement } from './pantry-math.js';
 import { resolvePlanningModelConfig } from '../ai/model-config.js';
@@ -25,6 +31,18 @@ export interface AgentPlannerOptions {
   dataDir: string;
   aiClient?: AIClient;
   ingredientDb?: IngredientDatabase;
+}
+
+function formatSlotNotes(notes: SlotNotes): string {
+  const lines = (['breakfast', 'lunch', 'dinner'] as const)
+    .filter((slot) => notes[slot].trim().length > 0)
+    .map(
+      (slot) =>
+        `- ${slot[0].toUpperCase()}${slot.slice(1)}: ${notes[slot].trim()}`
+    );
+  return lines.length > 0
+    ? lines.join('\n')
+    : 'No additional constraints on individual slots.';
 }
 
 export class AgentPlanner {
@@ -68,6 +86,10 @@ The planning message gives this day's calorie and cost pace targets. Aim within 
 ## Preferences
 - Cuisines: ${preferences.cuisines.length ? preferences.cuisines.join(', ') : 'any'}
 - Complexity: ${preferences.complexityTolerance}
+
+## Slot Constraints
+The planning message gives this day's prep-time budget per slot. A meal whose prepTime exceeds its slot's budget is rejected, so plan within it rather than rounding the estimate down.
+${formatSlotNotes(preferences.slotNotes)}
 
 ## Variety
 Plan meals the way a person actually eats across a week. Some repetition is natural — a recurring breakfast staple or a favorite ingredient is fine — but avoid the exact same dish two days running, and let dishes vary in preparation and cuisine even when they share a core ingredient (e.g. chicken cooked differently, not the same plate nightly). Don't force seven unique meals.
@@ -142,6 +164,7 @@ Use recipe-accurate names in lookup queries: "chicken breast" not "chicken", "bl
     shoppingList: IngredientRequirement[],
     shoppingLimit: number,
     date: string,
+    prepBudget: SlotPrepTime,
     pace: PaceContext,
     mealsSoFar: string,
     facts: Map<number, IngredientFacts>
@@ -155,6 +178,11 @@ Use recipe-accurate names in lookup queries: "chicken breast" not "chicken", "bl
 Today's pace targets (to stay on track for the weekly goals):
 - Calories: ~${pace.paceCalories} kcal
 - Cost: ~$${pace.paceCost.toFixed(2)}
+
+Today's prep-time budget (hard limit per slot):
+- Breakfast: ${prepBudget.breakfast} min
+- Lunch: ${prepBudget.lunch} min
+- Dinner: ${prepBudget.dinner} min
 
 ${priorSection}
 
@@ -214,6 +242,7 @@ Add today's breakfast, lunch, and dinner with add_meal (date ${date}). Call fina
         shoppingList,
         planState.getShoppingListLimit(),
         date,
+        profile.preferences.maxPrepTime[getWeekdayName(date)],
         pace,
         mealsSoFar,
         facts

@@ -23,14 +23,15 @@ describe('ToolHandlers', () => {
     preferences: {
       cuisines: [],
       maxPrepTime: {
-        monday: 30,
-        tuesday: 30,
-        wednesday: 30,
-        thursday: 30,
-        friday: 30,
-        saturday: 60,
-        sunday: 60,
+        monday: { breakfast: 10, lunch: 15, dinner: 45 },
+        tuesday: { breakfast: 10, lunch: 15, dinner: 45 },
+        wednesday: { breakfast: 10, lunch: 15, dinner: 45 },
+        thursday: { breakfast: 10, lunch: 15, dinner: 45 },
+        friday: { breakfast: 10, lunch: 15, dinner: 45 },
+        saturday: { breakfast: 30, lunch: 30, dinner: 60 },
+        sunday: { breakfast: 30, lunch: 30, dinner: 60 },
       },
+      slotNotes: { breakfast: '', lunch: '', dinner: '' },
       complexityTolerance: 'medium',
     },
     constraints: { skillLevel: 'intermediate', kitchenware: [] },
@@ -245,7 +246,7 @@ describe('ToolHandlers', () => {
         name: 'First Meal',
         recipe: 'Cook it',
         ingredients: [{ ingredientId: chickenBreast, amountGrams: 200 }],
-        prepTime: 20,
+        prepTime: 10,
         servings: 1,
       };
 
@@ -270,7 +271,7 @@ describe('ToolHandlers', () => {
         name: 'First Meal',
         recipe: 'Cook it',
         ingredients: [{ ingredientId: chickenBreast, amountGrams: 200 }],
-        prepTime: 20,
+        prepTime: 10,
         servings: 1,
       };
 
@@ -289,7 +290,7 @@ describe('ToolHandlers', () => {
         name: 'First Meal',
         recipe: 'Cook it',
         ingredients: [{ ingredientId: chickenBreast, amountGrams: 200 }],
-        prepTime: 20,
+        prepTime: 10,
         servings: 1,
       };
 
@@ -301,6 +302,34 @@ describe('ToolHandlers', () => {
       });
 
       expect(result).toMatchObject({ success: true });
+    });
+  });
+
+  describe('prep time budget', () => {
+    async function addBreakfast(prepTime: number): Promise<unknown> {
+      // 2026-01-27 is a Tuesday: breakfast budget 10 minutes.
+      return handlers.handle('add_meal', {
+        date: '2026-01-27',
+        slot: 'breakfast',
+        name: 'Scramble',
+        recipe: 'Cook it',
+        ingredients: [
+          { ingredientId: await idOf('chicken breast'), amountGrams: 200 },
+        ],
+        prepTime,
+        servings: 1,
+      });
+    }
+
+    it("rejects a meal that overruns its slot's budget for that weekday", async () => {
+      expect(await addBreakfast(25)).toMatchObject({
+        success: false,
+        error: expect.stringContaining('10'),
+      });
+    });
+
+    it('accepts a meal that lands exactly on the budget', async () => {
+      expect(await addBreakfast(10)).toMatchObject({ success: true });
     });
   });
 
@@ -360,7 +389,7 @@ describe('ToolHandlers', () => {
         name: 'Test meal',
         recipe: 'Cook it',
         ingredients: [{ ingredientId: chickenBreast, amountGrams: 200 }],
-        prepTime: 20,
+        prepTime: 10,
         servings: 2,
       });
 

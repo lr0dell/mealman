@@ -38,16 +38,27 @@ export function formatProfile(profile: Profile): string {
   lines.push(
     `Cuisines: ${profile.preferences.cuisines.length ? profile.preferences.cuisines.join(', ') : 'any'}`
   );
-  lines.push(
-    `Max Prep Time: ` +
-      `Mon ${profile.preferences.maxPrepTime.monday}min, ` +
-      `Tue ${profile.preferences.maxPrepTime.tuesday}min, ` +
-      `Wed ${profile.preferences.maxPrepTime.wednesday}min, ` +
-      `Thu ${profile.preferences.maxPrepTime.thursday}min, ` +
-      `Fri ${profile.preferences.maxPrepTime.friday}min, ` +
-      `Sat ${profile.preferences.maxPrepTime.saturday}min, ` +
-      `Sun ${profile.preferences.maxPrepTime.sunday}min`
-  );
+  lines.push('Max Prep Time (breakfast / lunch / dinner):');
+  for (const [day, label] of [
+    ['monday', 'Mon'],
+    ['tuesday', 'Tue'],
+    ['wednesday', 'Wed'],
+    ['thursday', 'Thu'],
+    ['friday', 'Fri'],
+    ['saturday', 'Sat'],
+    ['sunday', 'Sun'],
+  ] as const) {
+    const slots = profile.preferences.maxPrepTime[day];
+    lines.push(
+      `  ${label}: ${slots.breakfast} / ${slots.lunch} / ${slots.dinner} min`
+    );
+  }
+  for (const slot of ['breakfast', 'lunch', 'dinner'] as const) {
+    const note = profile.preferences.slotNotes[slot].trim();
+    if (note) {
+      lines.push(`${slot[0].toUpperCase()}${slot.slice(1)} notes: ${note}`);
+    }
+  }
   lines.push(`Complexity: ${profile.preferences.complexityTolerance}`);
 
   lines.push('');
