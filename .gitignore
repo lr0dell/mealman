@@ -22,5 +22,3 @@ Thumbs.db
 
 # Subagent-driven-development scratch (ledgers, briefs, review packages)
 .superpowers/
-# Test scratch
-test-data-*/

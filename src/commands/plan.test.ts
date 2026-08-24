@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { WeeklyPlan, DayPlan } from '../schemas/index.js';
-import { mkdirSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DataStore } from '../data/index.js';
 import {
@@ -185,25 +186,20 @@ describe('formatDayPlanSummary', () => {
 });
 
 describe('viewPlan', () => {
-  const testDir = join(process.cwd(), 'test-data-plan-view');
+  let testDir: string;
   let store: DataStore;
 
   beforeEach(async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-02-10T12:00:00'));
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
-    mkdirSync(testDir, { recursive: true });
+    testDir = mkdtempSync(join(tmpdir(), 'mealman-plan-view-'));
     store = new DataStore(testDir);
     await store.init();
   });
 
   afterEach(() => {
     vi.useRealTimers();
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
+    rmSync(testDir, { recursive: true });
   });
 
   const samplePlan: WeeklyPlan = {
@@ -330,24 +326,19 @@ describe('formatConsumeResult', () => {
 });
 
 describe('generateWeekPlan', () => {
-  const testDir = join(process.cwd(), 'test-data-generate-week');
+  let testDir: string;
 
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-02-10T12:00:00'));
     vi.stubEnv('ANTHROPIC_API_KEY', 'test-key');
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
-    mkdirSync(testDir, { recursive: true });
+    testDir = mkdtempSync(join(tmpdir(), 'mealman-generate-week-'));
   });
 
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllEnvs();
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
+    rmSync(testDir, { recursive: true });
   });
 
   it('saves the plan under the passed week, not the current week', async () => {

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { AgentPlanner } from '../services/agent-planner.js';
 import type { Profile, Pantry } from '../schemas/index.js';
@@ -7,7 +8,7 @@ import type { Profile, Pantry } from '../schemas/index.js';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 describe.skipIf(!ANTHROPIC_API_KEY)('AgentPlanner Integration', () => {
-  const testDir = join(process.cwd(), 'test-data-agent');
+  let testDir: string;
   let planner: AgentPlanner;
 
   const mockProfile: Profile = {
@@ -74,10 +75,7 @@ describe.skipIf(!ANTHROPIC_API_KEY)('AgentPlanner Integration', () => {
   };
 
   beforeEach(() => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
-    mkdirSync(testDir, { recursive: true });
+    testDir = mkdtempSync(join(tmpdir(), 'mealman-agent-'));
 
     planner = new AgentPlanner({
       anthropicApiKey: ANTHROPIC_API_KEY!,

@@ -1,8 +1,17 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterAll,
+  vi,
+} from 'vitest';
 import { createToolHandlers } from './tool-handlers.js';
 import { PlanState } from '../services/plan-state.js';
 import { IngredientDatabase } from '../services/ingredient-database.js';
-import { mkdirSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Profile, Pantry } from '../schemas/index.js';
 
@@ -56,7 +65,7 @@ describe('ToolHandlers', () => {
 
   const mockPantry: Pantry = { items: [] };
 
-  const testDir = join(process.cwd(), 'test-data-tool-handlers');
+  let testDir: string;
   let planState: PlanState;
   let ingredientDb: IngredientDatabase;
   let handlers: ReturnType<typeof createToolHandlers>;
@@ -67,17 +76,11 @@ describe('ToolHandlers', () => {
     return match.ingredient.id;
   }
 
-  beforeEach(async () => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
-    mkdirSync(testDir, { recursive: true });
-
-    planState = new PlanState(
-      '2026-01-26--2026-02-01',
-      mockProfile,
-      mockPantry
-    );
+  // The ingredient database is read-only for these tests and costs seconds to
+  // build (every insert embeds the name and fsyncs), so it is built once. Only
+  // PlanState is mutable, and it is rebuilt per test below.
+  beforeAll(async () => {
+    testDir = mkdtempSync(join(tmpdir(), 'mealman-tool-handlers-'));
     ingredientDb = new IngredientDatabase(join(testDir, 'test-ingredients.db'));
     await ingredientDb.init();
 
@@ -133,13 +136,20 @@ describe('ToolHandlers', () => {
       pricePerGram: 0.012,
       category: 'meat',
     });
-
-    handlers = createToolHandlers(planState, ingredientDb);
   });
 
-  afterEach(() => {
+  afterAll(() => {
     ingredientDb.close();
     rmSync(testDir, { recursive: true });
+  });
+
+  beforeEach(() => {
+    planState = new PlanState(
+      '2026-01-26--2026-02-01',
+      mockProfile,
+      mockPantry
+    );
+    handlers = createToolHandlers(planState, ingredientDb);
   });
 
   describe('get_plan_state', () => {

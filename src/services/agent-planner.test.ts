@@ -1,23 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { AgentPlanner } from './agent-planner.js';
 import type { Profile } from '../schemas/index.js';
 
 describe('AgentPlanner', () => {
-  const testDir = join(process.cwd(), 'test-data-agent-planner');
+  let testDir: string;
 
   beforeEach(() => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
-    mkdirSync(testDir, { recursive: true });
+    testDir = mkdtempSync(join(tmpdir(), 'mealman-agent-planner-'));
   });
 
   afterEach(() => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
+    rmSync(testDir, { recursive: true });
   });
 
   const mockProfile: Profile = {

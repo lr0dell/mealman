@@ -1,26 +1,22 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DataStore } from './store.js';
 import { ProfileSchema, PantrySchema } from '../schemas/index.js';
 import { writeFile } from 'node:fs/promises';
 
 describe('DataStore', () => {
-  const testDir = join(process.cwd(), 'test-data');
+  let testDir: string;
   let store: DataStore;
 
   beforeEach(() => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
-    mkdirSync(testDir, { recursive: true });
+    testDir = mkdtempSync(join(tmpdir(), 'mealman-store-'));
     store = new DataStore(testDir);
   });
 
   afterEach(() => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
+    rmSync(testDir, { recursive: true });
   });
 
   it('creates data directory structure on init', async () => {

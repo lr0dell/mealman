@@ -1,17 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { IngredientDatabase } from './ingredient-database.js';
 
 describe('IngredientDatabase', () => {
-  const testDir = join(process.cwd(), 'test-data-ingredient-db');
+  let testDir: string;
   let db: IngredientDatabase;
 
   beforeEach(async () => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
-    mkdirSync(testDir, { recursive: true });
+    testDir = mkdtempSync(join(tmpdir(), 'mealman-ingredient-db-'));
     db = new IngredientDatabase(join(testDir, 'ingredients.db'));
     await db.init();
   });

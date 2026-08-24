@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DataStore } from '../data/index.js';
 import {
@@ -10,22 +11,17 @@ import {
 } from './pantry.js';
 
 describe('Pantry Commands', () => {
-  const testDir = join(process.cwd(), 'test-data-pantry');
+  let testDir: string;
   let store: DataStore;
 
   beforeEach(async () => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
-    mkdirSync(testDir, { recursive: true });
+    testDir = mkdtempSync(join(tmpdir(), 'mealman-pantry-'));
     store = new DataStore(testDir);
     await store.init();
   });
 
   afterEach(() => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
+    rmSync(testDir, { recursive: true });
   });
 
   describe('listPantry', () => {
