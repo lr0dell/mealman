@@ -59,18 +59,13 @@ describe('PlanState', () => {
     state = new PlanState('2026-01-26--2026-02-01', mockProfile, mockPantry);
   });
 
-  it('initializes with empty days', () => {
-    const summary = state.getSummary();
-    expect(summary.mealsPlanned).toBe(0);
-    expect(summary.weeklyTotals.calories).toBe(0);
-  });
-
   it('weekly calorie budget uses dailyCalories*7 with a ±500 band', () => {
     const remaining = state.getRemainingBudget();
     // 2000*7 = 14000, band ±500 => [13500, 14500], nothing planned yet
     expect(remaining.calories.min).toBe(13500);
     expect(remaining.calories.max).toBe(14500);
     expect(remaining.calories.status).toBe('under');
+    expect(remaining.macros.protein.status).toBe('under');
   });
 
   it('adds a meal to a day/slot', () => {
@@ -153,14 +148,6 @@ describe('PlanState', () => {
   });
 
   describe('getRemainingBudget status field', () => {
-    it('returns "under" status when below minimum', () => {
-      // No meals added, protein is 0, weekly min is 700 (100*7)
-      const remaining = state.getRemainingBudget();
-
-      expect(remaining.macros.protein.status).toBe('under');
-      expect(remaining.calories.status).toBe('under');
-    });
-
     it('returns "in_range" status when between min and max', () => {
       // Add meals to put protein in range (700-1050 weekly)
       // Need ~750g protein total (7 meals at ~107g each)

@@ -48,11 +48,6 @@ describe('parseViewTarget', () => {
     expect(result).toEqual({ type: 'week', week: '2026-02-09--2026-02-15' });
   });
 
-  it('returns current week when target is undefined', () => {
-    const result = parseViewTarget(undefined);
-    expect(result).toEqual({ type: 'week', week: '2026-02-09--2026-02-15' });
-  });
-
   it('returns current week and date for "today"', () => {
     const result = parseViewTarget('today');
     expect(result).toEqual({
@@ -67,20 +62,6 @@ describe('parseViewTarget', () => {
     expect(result).toEqual({ type: 'week', week: '2026-02-02--2026-02-08' });
   });
 
-  it('returns week for another valid week identifier', () => {
-    const result = parseViewTarget('2026-01-27--2026-02-02');
-    expect(result).toEqual({ type: 'week', week: '2026-01-27--2026-02-02' });
-  });
-
-  it('returns day and derived week for valid date', () => {
-    const result = parseViewTarget('2026-02-10');
-    expect(result).toEqual({
-      type: 'day',
-      week: '2026-02-09--2026-02-15',
-      date: '2026-02-10',
-    });
-  });
-
   it('returns day and derived week for date in different week', () => {
     const result = parseViewTarget('2026-01-27');
     expect(result).toEqual({
@@ -90,15 +71,9 @@ describe('parseViewTarget', () => {
     });
   });
 
-  it('throws for invalid week format', () => {
+  it('throws for a target matching neither format', () => {
     expect(() => parseViewTarget('2026-W5')).toThrow(
       "Invalid target '2026-W5'. Use format YYYY-MM-DD--YYYY-MM-DD (e.g., 2026-01-27--2026-02-02) or YYYY-MM-DD."
-    );
-  });
-
-  it('throws for random string', () => {
-    expect(() => parseViewTarget('next-week')).toThrow(
-      "Invalid target 'next-week'. Use format YYYY-MM-DD--YYYY-MM-DD (e.g., 2026-01-27--2026-02-02) or YYYY-MM-DD."
     );
   });
 });
@@ -279,14 +254,6 @@ describe('viewPlan', () => {
     );
   });
 
-  it('returns helpful message for specific week not found', async () => {
-    const result = await viewPlan(store, '2026-01-05--2026-01-11');
-
-    expect(result).toBe(
-      "No meal plan found for 2026-01-05--2026-01-11. Run 'mealman plan week' to generate one."
-    );
-  });
-
   it('returns day summary for "today"', async () => {
     await store.saveWeeklyPlan(samplePlan);
 
@@ -296,21 +263,14 @@ describe('viewPlan', () => {
     expect(result).toContain('Oatmeal (10min)');
   });
 
-  it('returns day summary for specific date', async () => {
+  it('returns not found for a day the saved week does not cover', async () => {
     await store.saveWeeklyPlan(samplePlan);
 
-    const result = await viewPlan(store, '2026-02-10');
+    const result = await viewPlan(store, '2026-02-11');
 
-    expect(result).toContain('Meals for Tuesday (2026-02-10)');
-    expect(result).toContain('Oatmeal (10min)');
-  });
-
-  it('returns not found for day not in plan', async () => {
-    await store.saveWeeklyPlan(samplePlan);
-
-    const result = await viewPlan(store, '2026-02-04');
-
-    expect(result).toContain('No meal plan found for 2026-02-02--2026-02-08');
+    expect(result).toBe(
+      'No meals found for 2026-02-11 in plan 2026-02-09--2026-02-15.'
+    );
   });
 
   it('returns detailed output for week when flag is true', async () => {

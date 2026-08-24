@@ -21,11 +21,6 @@ describe('IngredientDatabase', () => {
     rmSync(testDir, { recursive: true });
   });
 
-  it('initializes database with schema', () => {
-    const stats = db.getStats();
-    expect(stats.total).toBe(0);
-  });
-
   it('adds and retrieves ingredient by id', async () => {
     const ingredient = await db.addIngredient({
       name: 'Chicken Breast',

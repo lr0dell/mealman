@@ -1,12 +1,9 @@
-// src/agent/agent.integration.test.ts
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { AgentPlanner } from '../services/agent-planner.js';
 import type { Profile, Pantry } from '../schemas/index.js';
 
-// This test requires ANTHROPIC_API_KEY to be set
-// Skip in CI by checking for the key
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 describe.skipIf(!ANTHROPIC_API_KEY)('AgentPlanner Integration', () => {
@@ -103,5 +100,5 @@ describe.skipIf(!ANTHROPIC_API_KEY)('AgentPlanner Integration', () => {
     expect(plan.week).toBe('2026-01-26--2026-02-01');
     expect(plan.days.length).toBeGreaterThan(0);
     expect(plan.totals.calories).toBeGreaterThan(0);
-  }, 120000); // 2 minute timeout for API calls
+  }, 120000);
 });

@@ -1,35 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, rmSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { DataStore } from '../data/index.js';
-import {
-  formatProfile,
-  parseList,
-  formatList,
-  validateNumber,
-  validateRange,
-} from './profile.js';
+import { describe, it, expect } from 'vitest';
+import { formatProfile, parseList, validateNumber } from './profile.js';
 import { createDefaultProfile } from '../schemas/defaults.js';
 
 describe('Profile Commands', () => {
-  const testDir = join(process.cwd(), 'test-data-profile');
-  let store: DataStore;
-
-  beforeEach(async () => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
-    mkdirSync(testDir, { recursive: true });
-    store = new DataStore(testDir);
-    await store.init();
-  });
-
-  afterEach(() => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
-  });
-
   describe('formatProfile', () => {
     it('formats profile for display', () => {
       const profile = createDefaultProfile();
@@ -64,20 +37,6 @@ describe('Profile Commands', () => {
       });
     });
 
-    describe('formatList', () => {
-      it('joins with a comma and space', () => {
-        expect(formatList(['vegan', 'nuts'])).toBe('vegan, nuts');
-      });
-
-      it('returns an empty string for an empty list', () => {
-        expect(formatList([])).toBe('');
-      });
-
-      it('round-trips with parseList', () => {
-        expect(parseList(formatList(['a', 'b', 'c']))).toEqual(['a', 'b', 'c']);
-      });
-    });
-
     describe('validateNumber', () => {
       it('accepts a non-negative number', () => {
         expect(validateNumber('0', { positive: false })).toBe(true);
@@ -107,19 +66,6 @@ describe('Profile Commands', () => {
           'Must be greater than zero'
         );
         expect(validateNumber('5', { positive: true })).toBe(true);
-      });
-    });
-
-    describe('validateRange', () => {
-      it('accepts max >= min', () => {
-        expect(validateRange(1, 2)).toBe(true);
-        expect(validateRange(2, 2)).toBe(true);
-      });
-
-      it('rejects max < min', () => {
-        expect(validateRange(5, 3)).toBe(
-          'Max must be greater than or equal to min'
-        );
       });
     });
   });

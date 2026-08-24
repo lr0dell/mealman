@@ -69,28 +69,8 @@ describe('DataStore', () => {
     expect(loaded.items).toHaveLength(1);
     expect(loaded.items[0].name).toBe('eggs');
   });
-});
-
-describe('getPantry validation', () => {
-  const testDir = join(process.cwd(), 'test-data');
-  let store: DataStore;
-
-  beforeEach(() => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
-    mkdirSync(testDir, { recursive: true });
-    store = new DataStore(testDir);
-  });
-
-  afterEach(() => {
-    if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true });
-    }
-  });
 
   it('filters out pantry items missing ingredientId', async () => {
-    // Write raw JSON with a mix of valid and invalid items
     const pantryData = {
       items: [
         {

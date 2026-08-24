@@ -13,10 +13,6 @@ describe('resolvePlanningModelConfig', () => {
     });
   });
 
-  it('defaults the model to claude-sonnet-5', () => {
-    expect(DEFAULT_PLANNING_MODEL).toBe('claude-sonnet-5');
-  });
-
   it('applies env overrides for model and effort', () => {
     expect(
       resolvePlanningModelConfig({

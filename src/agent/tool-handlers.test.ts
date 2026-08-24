@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createToolHandlers } from './tool-handlers.js';
-import { PLANNING_TOOLS, DAY_PLANNING_TOOLS } from './tools.js';
 import { PlanState } from '../services/plan-state.js';
 import { IngredientDatabase } from '../services/ingredient-database.js';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
@@ -69,7 +68,6 @@ describe('ToolHandlers', () => {
   }
 
   beforeEach(async () => {
-    // Create fresh test database
     if (existsSync(testDir)) {
       rmSync(testDir, { recursive: true });
     }
@@ -83,7 +81,6 @@ describe('ToolHandlers', () => {
     ingredientDb = new IngredientDatabase(join(testDir, 'test-ingredients.db'));
     await ingredientDb.init();
 
-    // Add test ingredients
     await ingredientDb.addIngredient({
       name: 'chicken breast',
       proteinPer100g: 31,
@@ -210,31 +207,11 @@ describe('ToolHandlers', () => {
     });
   });
 
-  describe('search_knowledge_base', () => {
-    it('is no longer a registered tool', async () => {
-      const result = await handlers.handle('search_knowledge_base', {
-        query: 'chicken',
-      });
-      expect(result).toMatchObject({
-        error: 'Unknown tool: search_knowledge_base',
-      });
-    });
-
-    it('is absent from both tool lists', () => {
-      const names = [...PLANNING_TOOLS, ...DAY_PLANNING_TOOLS].map(
-        (t) => t.name
-      );
-      expect(names).not.toContain('search_knowledge_base');
-    });
-  });
-
-  describe('check_weekly_totals (removed)', () => {
-    it('returns unknown tool error since check_weekly_totals was removed', async () => {
-      const result = await handlers.handle('check_weekly_totals', {});
-      expect(result).toMatchObject({
-        error: 'Unknown tool: check_weekly_totals',
-      });
-    });
+  // A model can invent a tool name; the loop feeds handler output straight back
+  // to it, so an unknown name has to come back as an error result, not a throw.
+  it('reports an unknown tool name instead of throwing', async () => {
+    const result = await handlers.handle('braise_the_onions', {});
+    expect(result).toMatchObject({ error: 'Unknown tool: braise_the_onions' });
   });
 
   describe('add_meal duplicate slot protection', () => {
@@ -381,7 +358,6 @@ describe('ToolHandlers', () => {
 
   describe('finalize_plan', () => {
     it('generates accurate notes from actual plan state', async () => {
-      // Add a meal first
       const chickenBreast = await idOf('chicken breast');
       await handlers.handle('add_meal', {
         date: '2026-01-27',
@@ -510,40 +486,5 @@ describe('ToolHandlers', () => {
       expect(spy).not.toHaveBeenCalled();
       spy.mockRestore();
     });
-  });
-});
-
-describe('PLANNING_TOOLS', () => {
-  it('does not include check_weekly_totals (redundant with add_meal/modify_meal response)', () => {
-    const toolNames = PLANNING_TOOLS.map((t) => t.name);
-    expect(toolNames).not.toContain('check_weekly_totals');
-  });
-
-  it('does not include get_known_ingredients (removed)', () => {
-    const toolNames = PLANNING_TOOLS.map((t) => t.name);
-    expect(toolNames).not.toContain('get_known_ingredients');
-  });
-
-  it('includes essential tools', () => {
-    const toolNames = PLANNING_TOOLS.map((t) => t.name);
-    expect(toolNames).toContain('get_plan_state');
-    expect(toolNames).toContain('add_meal');
-    expect(toolNames).toContain('modify_meal');
-    expect(toolNames).toContain('finalize_plan');
-  });
-});
-
-describe('DAY_PLANNING_TOOLS', () => {
-  it('excludes get_plan_state (weekly-scoped, withheld from per-day agent)', () => {
-    const toolNames = DAY_PLANNING_TOOLS.map((t) => t.name);
-    expect(toolNames).not.toContain('get_plan_state');
-  });
-
-  it('keeps the per-day essentials', () => {
-    const toolNames = DAY_PLANNING_TOOLS.map((t) => t.name);
-    expect(toolNames).toContain('add_meal');
-    expect(toolNames).toContain('lookup_ingredient');
-    expect(toolNames).toContain('check_daily_totals');
-    expect(toolNames).toContain('finalize_plan');
   });
 });

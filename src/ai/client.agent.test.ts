@@ -12,7 +12,6 @@ const TEST_MODEL_CONFIG: PlanningModelConfig = {
   effort: 'medium',
 };
 
-// We'll test the loop logic by mocking the Anthropic client
 describe('AIClient.runAgentLoop', () => {
   afterEach(() => {
     vi.unstubAllEnvs();

@@ -6,7 +6,6 @@ import {
   createDefaultPantry,
 } from '../schemas/defaults.js';
 
-// Mock AI client
 const mockChatJSON = vi.fn();
 vi.mock('../ai', () => ({
   AIClient: class AIClient {

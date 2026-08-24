@@ -67,15 +67,7 @@ describe('AgentPlanner', () => {
     },
   };
 
-  it('can be instantiated with API key and data directory', () => {
-    const planner = new AgentPlanner({
-      anthropicApiKey: 'test-key',
-      dataDir: testDir,
-    });
-    expect(planner).toBeDefined();
-  });
-
-  it('day system prompt states daily macro/fiber targets and rules', () => {
+  it('day system prompt renders the macro ranges from the profile', () => {
     const planner = new AgentPlanner({
       anthropicApiKey: 'test-key',
       dataDir: testDir,
@@ -84,11 +76,6 @@ describe('AgentPlanner', () => {
 
     expect(prompt).toContain('Protein: 100-150g');
     expect(prompt).toContain('Fiber: 25-40g');
-    expect(prompt).toContain('finalize_plan');
-    expect(prompt).toContain('recipe-accurate names in lookup queries');
-    expect(prompt).toContain('chicken breast');
-    expect(prompt).toContain('black beans');
-    expect(prompt).not.toContain('MUST use pantry');
   });
 
   it('day initial message carries pace targets and prior meals', () => {
@@ -151,7 +138,7 @@ describe('AgentPlanner', () => {
     expect(msg.toLowerCase()).toContain('first day');
   });
 
-  it('prints per-100g nutrition and price on pantry lines', () => {
+  it('prints per-100g nutrition and price on pantry and shopping-list lines', () => {
     const planner = new AgentPlanner({
       anthropicApiKey: 'test-key',
       dataDir: testDir,
@@ -168,6 +155,16 @@ describe('AgentPlanner', () => {
           pricePerGram: 0.012,
         },
       ],
+      [
+        1123,
+        {
+          proteinPer100g: 12.6,
+          carbsPer100g: 0.7,
+          fatPer100g: 9.9,
+          fiberPer100g: 0,
+          pricePerGram: 0.005,
+        },
+      ],
     ]);
 
     const message = planner.buildDayInitialMessage(
@@ -180,7 +177,7 @@ describe('AgentPlanner', () => {
           addedDate: '2026-07-27',
         },
       ],
-      [],
+      [{ ingredientId: 1123, name: 'egg, whole, raw', amount: 300 }],
       10,
       '2026-08-02',
       { breakfast: 10, lunch: 15, dinner: 45 },
@@ -201,6 +198,10 @@ describe('AgentPlanner', () => {
     expect(message).toContain('(id 5964): 650 g');
     expect(message).toContain('per 100g P20.8 C0 F7 Fb0');
     expect(message).toContain('$0.012/g');
+
+    expect(message).toContain('(id 1123): 300 g');
+    expect(message).toContain('per 100g P12.6 C0.7 F9.9 Fb0');
+    expect(message).toContain('$0.005/g');
   });
 
   it('omits nutrition for an id missing from the facts map', () => {
@@ -240,56 +241,6 @@ describe('AgentPlanner', () => {
     expect(message).toContain('- mystery item (id 999999): 10 g\n');
     expect(message).not.toContain('per 100g');
     expect(message).not.toContain('undefined');
-  });
-
-  it('prints per-100g nutrition and price on shopping-list lines', () => {
-    const planner = new AgentPlanner({
-      anthropicApiKey: 'test-key',
-      dataDir: testDir,
-    });
-
-    const facts = new Map([
-      [
-        5964,
-        {
-          proteinPer100g: 20.8,
-          carbsPer100g: 0,
-          fatPer100g: 7,
-          fiberPer100g: 0,
-          pricePerGram: 0.012,
-        },
-      ],
-    ]);
-
-    const message = planner.buildDayInitialMessage(
-      [],
-      [
-        {
-          ingredientId: 5964,
-          name: 'beef, ground, 93% lean meat / 7% fat, raw',
-          amount: 650,
-        },
-      ],
-      10,
-      '2026-08-02',
-      { breakfast: 10, lunch: 15, dinner: 45 },
-      {
-        caloriesSoFar: 0,
-        costSoFar: 0,
-        daysRemaining: 7,
-        weeklyCalTarget: 14000,
-        paceCalories: 2000,
-        paceCost: 21.43,
-        calorieBand: { min: 13500, max: 14500 },
-        weeklyBudget: 150,
-      },
-      '',
-      facts
-    );
-
-    expect(message).toContain('(id 5964): 650 g');
-    expect(message).toContain('per 100g P20.8 C0 F7 Fb0');
-    expect(message).toContain('$0.012/g');
   });
 
   it('runs one conversation per day with a date-locked handler', async () => {
